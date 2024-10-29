@@ -175,3 +175,6 @@ lightning_logs/
 
 # Ignored generated animation files
 media/
+
+# Ignore checkpoint files
+ckpts/
