@@ -22,7 +22,14 @@ def main():
     # ================================================
     # Initialize the Testing datasets
     # Swap legs to evaluate the model on the opposite leg
-    swap_legs = (0,3) # Swap tuple: FR: 0, FL: 1, RR: 2, RL: 3, None: no swap
+    swap_legs = None # Swap tuple: FR: 0, FL: 1, RR: 2, RL: 3, None: no swap
+    legs_dict = {0: 'FR', 1: 'FL', 2: 'RR', 3: 'RL'}
+    print("================================================")
+    if swap_legs:
+        print(f"Swapping legs: {legs_dict[swap_legs[0]]} and {legs_dict[swap_legs[1]]}")
+    else:
+        print("No legs swapped")
+    print("================================================")
 
     air_jumping_gait = linData.LinTzuYaunDataset_air_jumping_gait(
         Path(Path('.').parent, 'datasets', 'LinTzuYaun-AJG').absolute(), path_to_urdf, 'package://yobotics_description/', 'mini-cheetah-gazebo-urdf/yobo_model/yobotics_description', model_type, history_length, normalize=True, swap_legs=swap_legs)
