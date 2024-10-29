@@ -83,9 +83,89 @@ class LinTzuYaunDataset(FlexibleDataset):
         j_T = np.array(self.mat_data['tau_est'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)
         f_p = np.array(self.mat_data['p'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)
         f_v = np.array(self.mat_data['v'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)
-        contact_labels = np.squeeze(np.array(self.mat_data['contacts'][seq_num:seq_num+self.history_length])[-1])
+        contact_labels = np.squeeze(np.array(self.mat_data['contacts'][seq_num:seq_num+self.history_length])[-1]) # shape: (4,)
 
         return lin_acc, ang_vel, j_p, j_v, None, f_p, f_v, contact_labels, None, None, None
+
+    def swap_legs_data(self, data_dict, leg1_idx, leg2_idx):
+        """
+        Swap data between two legs
+        leg_idx mapping: FR=0, FL=1, RR=2, RL=3
+        (Based on mapping in get_urdf_name_to_dataset_array_index)
+        
+        Args:
+            data_dict: Dictionary containing various data arrays
+            leg1_idx, leg2_idx: Indices of the two legs to swap
+        """
+        # Calculate index ranges in joint arrays (3 joints per leg)
+        # Note: This is based on the assumption that each leg has 3 joints
+        leg1_start = leg1_idx * 3
+        leg1_end = leg1_start + 3
+        leg2_start = leg2_idx * 3
+        leg2_end = leg2_start + 3
+        
+        # Swap joint position data
+        if 'j_p' in data_dict and data_dict['j_p'] is not None:
+            data_dict['j_p'][:, leg1_start:leg1_end], data_dict['j_p'][:, leg2_start:leg2_end] = \
+                data_dict['j_p'][:, leg2_start:leg2_end].copy(), data_dict['j_p'][:, leg1_start:leg1_end].copy()
+        
+        # Swap joint velocity data
+        if 'j_v' in data_dict and data_dict['j_v'] is not None:
+            data_dict['j_v'][:, leg1_start:leg1_end], data_dict['j_v'][:, leg2_start:leg2_end] = \
+                data_dict['j_v'][:, leg2_start:leg2_end].copy(), data_dict['j_v'][:, leg1_start:leg1_end].copy()
+        
+        # Swap foot position data
+        if 'f_p' in data_dict and data_dict['f_p'] is not None:
+            data_dict['f_p'][:, leg1_start:leg1_end], data_dict['f_p'][:, leg2_start:leg2_end] = \
+                data_dict['f_p'][:, leg2_start:leg2_end].copy(), data_dict['f_p'][:, leg1_start:leg1_end].copy()
+        
+        # Swap foot velocity data
+        if 'f_v' in data_dict and data_dict['f_v'] is not None:
+            data_dict['f_v'][:, leg1_start:leg1_end], data_dict['f_v'][:, leg2_start:leg2_end] = \
+                data_dict['f_v'][:, leg2_start:leg2_end].copy(), data_dict['f_v'][:, leg1_start:leg1_end].copy()
+        
+        # Swap contact state labels
+        if 'contact_labels' in data_dict and data_dict['contact_labels'] is not None:
+            data_dict['contact_labels'][leg1_idx], data_dict['contact_labels'][leg2_idx] = \
+                data_dict['contact_labels'][leg2_idx].copy(), data_dict['contact_labels'][leg1_idx].copy()
+        
+        return data_dict
+
+    def load_data_at_dataset_seq_with_swap(self, seq_num: int, swap_legs=None):
+        """
+        Extended data loading function that supports leg data swapping
+        
+        Args:
+            seq_num: Data sequence number
+            swap_legs: tuple of (leg1_idx, leg2_idx) specifying which two legs to swap
+                      e.g. (0,1) means swap FR and FL legs
+        """
+        # Get original data
+        lin_acc, ang_vel, j_p, j_v, j_T, f_p, f_v, contact_labels, r_p, r_o, timestamps = \
+            self.load_data_at_dataset_seq(seq_num)
+        
+        # j_T, r_p, r_o, and timestamps are not used in this dataset
+        if swap_legs is not None:
+            # Create data dictionary
+            data_dict = {
+                'j_p': j_p,
+                'j_v': j_v,
+                'f_p': f_p,
+                'f_v': f_v,
+                'contact_labels': contact_labels
+            }
+            
+            # Execute data swapping
+            data_dict = self.swap_legs_data(data_dict, swap_legs[0], swap_legs[1])
+            
+            # Update data
+            j_p = data_dict['j_p']
+            j_v = data_dict['j_v']
+            f_p = data_dict['f_p']
+            f_v = data_dict['f_v']
+            contact_labels = data_dict['contact_labels']
+        
+        return lin_acc, ang_vel, j_p, j_v, j_T, f_p, f_v, contact_labels, None, None, None
     
 # ================================================================
 # ===================== DATASET SEQUENCES ========================

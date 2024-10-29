@@ -7,7 +7,7 @@ import numpy as np
 
 def main():
     # ================================= CHANGE THIS ====================================
-    path_to_checkpoint = None # Path to specific checkpoint file
+    path_to_checkpoint = "ckpts/Classification Experiment/Main Experiment/leafy-totem-5/epoch=10-val_CE_loss=0.30258.ckpt" # Path to specific checkpoint file
     # ==================================================================================
 
     # Check that the user filled in the necessary parameters
