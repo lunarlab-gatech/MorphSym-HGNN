@@ -32,7 +32,8 @@ class FlexibleDataset(Dataset):
                  urdf_path_dynamics: Path = None,
                  transform=None,
                  pre_transform=None,
-                 pre_filter=None):
+                 pre_filter=None,
+                 swap_legs=None):
         """
         Parameters:
                 root (Path): The path to where the dataset is found (or where
@@ -58,6 +59,8 @@ class FlexibleDataset(Dataset):
                 urdf_path_dynamics (Path): The path to a similar URDF file to 'urdf_path',
                     but not pruned of non-kinematic joints. This allows pinnochio full
                     access to the URDF information necessary for dynamics calculations.
+                swap_legs (tuple): A tuple of (leg1_idx, leg2_idx) specifying which two legs to swap
+                    e.g. (0,1) means swap FR and FL legs
         """
         # Check for valid data format
         self.data_format = data_format
@@ -65,6 +68,9 @@ class FlexibleDataset(Dataset):
             raise ValueError(
                 "Parameter 'data_format' must be 'dynamics', 'mlp', or 'heterogeneous_gnn'."
             )
+
+        # Set the swap legs parameter
+        self.swap_legs = swap_legs
 
         # Setup the directories for raw and processed data, download it, 
         # and process
@@ -350,7 +356,10 @@ class FlexibleDataset(Dataset):
             values inside arrays have been sorted (and potentially
             normalized).
         """
-        lin_acc, ang_vel, j_p, j_v, j_T, f_p, f_v, labels, r_p, r_o, timestamps = self.load_data_at_dataset_seq(seq_num)
+        if self.swap_legs is not None:
+            lin_acc, ang_vel, j_p, j_v, j_T, f_p, f_v, labels, r_p, r_o, timestamps = self.load_data_at_dataset_seq_with_swap(seq_num, self.swap_legs)
+        else:
+            lin_acc, ang_vel, j_p, j_v, j_T, f_p, f_v, labels, r_p, r_o, timestamps = self.load_data_at_dataset_seq(seq_num)
 
         # Sort the joint information
         unsorted_list = [j_p, j_v, j_T]
