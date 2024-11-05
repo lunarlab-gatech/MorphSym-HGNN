@@ -8,18 +8,6 @@ import numpy as np
 def main():
     # ================================= CHANGE THIS ====================================
     path_to_checkpoint = "ckpts/Classification Experiment/Main Experiment/leafy-totem-5/epoch=10-val_CE_loss=0.30258.ckpt" # Path to specific checkpoint file
-    # ==================================================================================
-
-    # Check that the user filled in the necessary parameters
-    if path_to_checkpoint is None:
-        raise ValueError("Please provide a checkpoint path by editing this file!")
-
-    # Set parameters
-    history_length = 150
-    model_type = 'heterogeneous_gnn'
-    path_to_urdf = Path('urdf_files', 'MiniCheetah', 'miniCheetah.urdf').absolute()
-
-    # ================================================
     # Initialize the Testing datasets
     # Swap legs to evaluate the model on the opposite leg
     swap_legs = None # Swap tuple: FR: 0, FL: 1, RR: 2, RL: 3, None: no swap
@@ -30,6 +18,16 @@ def main():
     else:
         print("No legs swapped")
     print("================================================")
+    # ==================================================================================
+
+    # Check that the user filled in the necessary parameters
+    if path_to_checkpoint is None:
+        raise ValueError("Please provide a checkpoint path by editing this file!")
+
+    # Set parameters
+    history_length = 150
+    model_type = 'heterogeneous_gnn'
+    path_to_urdf = Path('urdf_files', 'MiniCheetah', 'miniCheetah.urdf').absolute()
 
     air_jumping_gait = linData.LinTzuYaunDataset_air_jumping_gait(
         Path(Path('.').parent, 'datasets', 'LinTzuYaun-AJG').absolute(), path_to_urdf, 'package://yobotics_description/', 'mini-cheetah-gazebo-urdf/yobo_model/yobotics_description', model_type, history_length, normalize=True, swap_legs=swap_legs)
