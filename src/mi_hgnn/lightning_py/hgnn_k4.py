@@ -54,8 +54,6 @@ class GRF_HGNN_K4(torch.nn.Module):
                 source_node, edge_name, target_node = edge_type
                 
                 if edge_name == 'gt':
-                    # set unique key for each leg pair
-                    leg_pair_key = f"{source_node}_{target_node}"
                     # create independent convolution layers for each leg pair
                     conv_dict[edge_type] = GraphConv(
                         hidden_channels,
@@ -65,7 +63,6 @@ class GRF_HGNN_K4(torch.nn.Module):
                     
                 elif edge_name == 'gs':
                     # create independent convolution layers for each leg pair
-                    leg_pair_key = f"{source_node}_{target_node}"
                     conv_dict[edge_type] = GraphConv(
                         hidden_channels,
                         hidden_channels,

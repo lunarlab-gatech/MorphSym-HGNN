@@ -193,6 +193,80 @@ class LinTzuYaunDataset_NewGraph(LinTzuYaunDataset):
 
         return data
 
+    def visualize_graph_structure(self, data):
+        """
+        Visualize the heterogeneous graph structure using networkx
+        """
+        import networkx as nx
+        import matplotlib.pyplot as plt
+        
+        # Create a new graph
+        G = nx.Graph()
+        
+        # Add nodes with different colors for different types
+        # Base nodes (4 nodes)
+        base_positions = {
+            1: (-1, 1),   # FL
+            3: (1, 1),    # FR
+            0: (-1, -1),  # BL
+            2: (1, -1)    # BR
+        }
+        for i in range(4):
+            G.add_node(f'base_{i}', color='lightblue', pos=base_positions[i])
+        
+        # Joint nodes (12 nodes, 3 for each leg)
+        joint_positions = {}
+        for i in range(12):
+            leg_idx = i // 3
+            joint_idx = i % 3
+            base_pos = base_positions[leg_idx]
+            # Position joints between base and foot
+            x = base_pos[0] * (0.7 - joint_idx * 0.2)
+            y = base_pos[1] * (0.7 - joint_idx * 0.2)
+            joint_positions[i] = (x, y)
+            G.add_node(f'joint_{i}', color='lightgreen', pos=joint_positions[i])
+        
+        # Foot nodes (4 nodes)
+        foot_positions = {}
+        for i in range(4):
+            base_pos = base_positions[i]
+            foot_positions[i] = (base_pos[0] * 0.3, base_pos[1] * 0.3)
+            G.add_node(f'foot_{i}', color='pink', pos=foot_positions[i])
+        
+        # Add edges
+        # Connect edges
+        for i, j in data['base', 'connect', 'joint'].edge_index.t():
+            G.add_edge(f'base_{i.item()}', f'joint_{j.item()}', color='gray')
+        for i, j in data['joint', 'connect', 'foot'].edge_index.t():
+            G.add_edge(f'joint_{i.item()}', f'foot_{j.item()}', color='gray')
+        
+        # GT edges (between front/back bases)
+        for i, j in data['base', 'gt', 'base'].edge_index.t():
+            G.add_edge(f'base_{i.item()}', f'base_{j.item()}', color='red')
+        
+        # GS edges (between left/right bases)
+        for i, j in data['base', 'gs', 'base'].edge_index.t():
+            G.add_edge(f'base_{i.item()}', f'base_{j.item()}', color='blue')
+        
+        # Draw the graph
+        plt.figure(figsize=(10, 10))
+        pos = nx.get_node_attributes(G, 'pos')
+        
+        # Draw nodes
+        node_colors = [G.nodes[node]['color'] for node in G.nodes()]
+        nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=500)
+        
+        # Draw edges with different colors
+        edge_colors = [G[u][v]['color'] for u, v in G.edges()]
+        nx.draw_networkx_edges(G, pos, edge_color=edge_colors, width=2)
+        
+        # Add labels
+        nx.draw_networkx_labels(G, pos)
+        
+        plt.title("Heterogeneous Graph Structure")
+        plt.axis('off')
+        plt.show()
+
 
 class LinTzuYaunDataset_air_jumping_gait(LinTzuYaunDataset_NewGraph):
     def get_file_id_and_loc(self):
