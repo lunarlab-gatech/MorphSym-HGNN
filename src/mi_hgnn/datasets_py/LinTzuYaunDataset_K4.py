@@ -193,10 +193,63 @@ class LinTzuYaunDataset_NewGraph(LinTzuYaunDataset):
 
         return data
 
-class LinTzuYaunDataset_air_walking_gait_K4(LinTzuYaunDataset_NewGraph):
+
+class LinTzuYaunDataset_air_jumping_gait(LinTzuYaunDataset_NewGraph):
+    def get_file_id_and_loc(self):
+        return "17h4kMUKMymG_GzTZTMHPgj-ImDKZMg3R", "Google"
+    
+class LinTzuYaunDataset_air_walking_gait(LinTzuYaunDataset_NewGraph):
     def get_file_id_and_loc(self):
         return "17c_E-S_yTeeV_DCmcgVT7_J90cRIwg0z", "Google"
     
-class LinTzuYaunDataset_concrete_pronking_K4(LinTzuYaunDataset_NewGraph):
+class LinTzuYaunDataset_asphalt_road(LinTzuYaunDataset_NewGraph):
+    def get_file_id_and_loc(self):
+        return "1jty0yqd7gywNJEkS_V2hivZ-79BGuCgA", "Google"
+    
+class LinTzuYaunDataset_old_asphalt_road(LinTzuYaunDataset_NewGraph):
+    def get_file_id_and_loc(self):
+        return "1Y4SHVLqQKQ14leBdpfEQv1Tq5uQUIEK8", "Google"
+    
+class LinTzuYaunDataset_concrete_right_circle(LinTzuYaunDataset_NewGraph):
+    def get_file_id_and_loc(self):
+        return "1NnEnd0PFFT6XozErUNi3ORGVSuFkyjeJ", "Google"
+    
+class LinTzuYaunDataset_concrete_pronking(LinTzuYaunDataset_NewGraph):
     def get_file_id_and_loc(self):
         return "1XWdEIKUtFKmZd9W5M7636-HVdusqglhd", "Google"
+
+class LinTzuYaunDataset_concrete_left_circle(LinTzuYaunDataset_NewGraph):
+    def get_file_id_and_loc(self):
+        return "1K9hUMqc0oBCv6VtgS0rYXbRjq9XiFOv5", "Google"
+    
+class LinTzuYaunDataset_concrete_galloping(LinTzuYaunDataset_NewGraph):
+    def get_file_id_and_loc(self):
+        return "1oInoPLowARNsL0h_qPVgjLCLICR7zw7W", "Google"
+    
+class LinTzuYaunDataset_concrete_difficult_slippery(LinTzuYaunDataset_NewGraph):
+    def get_file_id_and_loc(self):
+        return "1i7MNbJNCBkIfW5TOU94YHnb5G0jXkSAf", "Google"
+    
+class LinTzuYaunDataset_forest(LinTzuYaunDataset_NewGraph):
+    def get_file_id_and_loc(self):
+        return "1qMriGIWAUXFN3a-ewfdVAZlDsi_jZRNi", "Google"
+    
+class LinTzuYaunDataset_grass(LinTzuYaunDataset_NewGraph):
+    def get_file_id_and_loc(self):
+        return "1yVRmhPZN6wpKhsT947Jkr8mlels8WM7m", "Google"
+    
+class LinTzuYaunDataset_middle_pebble(LinTzuYaunDataset_NewGraph):
+    def get_file_id_and_loc(self):
+        return "128UAFroCGekx-Ibk-zEAGYlq8mekdzOI", "Google"
+    
+class LinTzuYaunDataset_rock_road(LinTzuYaunDataset_NewGraph):
+    def get_file_id_and_loc(self):
+        return "1Hyo9UQkmAGrA0r49jZgVTAOe40SgnlfU", "Google"
+    
+class LinTzuYaunDataset_sidewalk(LinTzuYaunDataset_NewGraph):
+    def get_file_id_and_loc(self):
+        return "1D1vAmruuZE5KQH8gA_pDhfETHPMhiu2c", "Google"
+    
+class LinTzuYaunDataset_small_pebble(LinTzuYaunDataset_NewGraph):
+    def get_file_id_and_loc(self):
+        return "1cmjzHD9CKAXmKxZkDbPsEPKGvDI5Grec", "Google"

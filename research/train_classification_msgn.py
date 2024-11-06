@@ -1,5 +1,3 @@
-# import mi_hgnn.datasets_py.LinTzuYaunDataset as linData
-import mi_hgnn.datasets_py.LinTzuYaunDataset_K4 as linDataK4
 from pathlib import Path
 from torch_geometric.loader import DataLoader
 import numpy as np
@@ -649,6 +647,7 @@ def main():
 
     # ================================= CHANGE THESE ===================================
     model_type = 'heterogeneous_gnn_k4' # or `mlp`, `heterogeneous_gnn`
+    print(f"model_type: {model_type}")
     num_layers = 8
     hidden_size = 128
     seed = 0
@@ -658,10 +657,14 @@ def main():
     history_length = 150
     normalize = True
 
+    if model_type == 'heterogeneous_gnn_k4':
+        import mi_hgnn.datasets_py.LinTzuYaunDataset_K4 as linData
+    else:
+        import mi_hgnn.datasets_py.LinTzuYaunDataset as linData
+
     # Initialize the Training/Validation datasets
     path_to_urdf = Path('urdf_files', 'MiniCheetah', 'miniCheetah.urdf').absolute()
-    '''
-	air_walking_gait = linData.LinTzuYaunDataset_air_walking_gait(
+    air_walking_gait = linData.LinTzuYaunDataset_air_walking_gait(
         Path(Path('.').parent, 'datasets', 'LinTzuYaun-AWG').absolute(), path_to_urdf, 'package://yobotics_description/', 'mini-cheetah-gazebo-urdf/yobo_model/yobotics_description', model_type, history_length, normalize=normalize)
     grass = linData.LinTzuYaunDataset_grass(
         Path(Path('.').parent, 'datasets', 'LinTzuYaun-G').absolute(), path_to_urdf, 'package://yobotics_description/', 'mini-cheetah-gazebo-urdf/yobo_model/yobotics_description', model_type, history_length, normalize=normalize)
@@ -682,10 +685,10 @@ def main():
     sidewalk = linData.LinTzuYaunDataset_sidewalk(
         Path(Path('.').parent, 'datasets', 'LinTzuYaun-S').absolute(), path_to_urdf, 'package://yobotics_description/', 'mini-cheetah-gazebo-urdf/yobo_model/yobotics_description', model_type, history_length, normalize=normalize)
     train_val_datasets = [air_walking_gait, grass, middle_pebble, concrete_left_circle, concrete_difficult_slippery, asphalt_road, old_asphalt_road, concrete_galloping, rock_road, sidewalk]
-	'''
-    air_walking_gait = linDataK4.LinTzuYaunDataset_air_walking_gait_K4(
-        Path(Path('.').parent, 'datasets', 'LinTzuYaun-AWG').absolute(), path_to_urdf, 'package://yobotics_description/', 'mini-cheetah-gazebo-urdf/yobo_model/yobotics_description', model_type, history_length, normalize=normalize)
-    train_val_datasets = [air_walking_gait]
+
+    # air_walking_gait = linDataK4.LinTzuYaunDataset_air_walking_gait_K4(
+    #     Path(Path('.').parent, 'datasets', 'LinTzuYaun-AWG').absolute(), path_to_urdf, 'package://yobotics_description/', 'mini-cheetah-gazebo-urdf/yobo_model/yobotics_description', model_type, history_length, normalize=normalize)
+    # train_val_datasets = [air_walking_gait]
     
     train_subsets = []
     val_subsets = []
@@ -697,7 +700,6 @@ def main():
     val_dataset = torch.utils.data.ConcatDataset(val_subsets)
 
     # Initialize the Testing datasets
-    '''
     concrete_pronking = linData.LinTzuYaunDataset_concrete_pronking(
         Path(Path('.').parent, 'datasets', 'LinTzuYaun-CP').absolute(), path_to_urdf, 'package://yobotics_description/', 'mini-cheetah-gazebo-urdf/yobo_model/yobotics_description', model_type, history_length, normalize=normalize)
     concrete_right_circle = linData.LinTzuYaunDataset_concrete_right_circle(
@@ -709,10 +711,9 @@ def main():
     forest = linData.LinTzuYaunDataset_forest(
         Path(Path('.').parent, 'datasets', 'LinTzuYaun-F').absolute(), path_to_urdf, 'package://yobotics_description/', 'mini-cheetah-gazebo-urdf/yobo_model/yobotics_description', model_type, history_length, normalize=normalize)
     test_dataset = torch.utils.data.ConcatDataset([concrete_pronking, concrete_right_circle, small_pebble, air_jumping_gait, forest])
-    '''
-    concrete_pronking = linDataK4.LinTzuYaunDataset_concrete_pronking_K4(
-        Path(Path('.').parent, 'datasets', 'LinTzuYaun-CP').absolute(), path_to_urdf, 'package://yobotics_description/', 'mini-cheetah-gazebo-urdf/yobo_model/yobotics_description', model_type, history_length, normalize=normalize)
-    test_dataset = torch.utils.data.ConcatDataset([concrete_pronking])
+    # concrete_pronking = linDataK4.LinTzuYaunDataset_concrete_pronking(
+    #     Path(Path('.').parent, 'datasets', 'LinTzuYaun-CP').absolute(), path_to_urdf, 'package://yobotics_description/', 'mini-cheetah-gazebo-urdf/yobo_model/yobotics_description', model_type, history_length, normalize=normalize)
+    # test_dataset = torch.utils.data.ConcatDataset([concrete_pronking])
 
     # Convert them to subsets
     train_dataset = torch.utils.data.Subset(train_dataset, np.arange(0, train_dataset.__len__()))
@@ -721,7 +722,7 @@ def main():
 
     # Ensure we match MorphoSymm exactly in the way that they split the datasets 
     # TODO: check if this is necessary for K4
-    # ensure_dataset_splits_match_morphoSymm(train_dataset, val_dataset, test_dataset)
+    ensure_dataset_splits_match_morphoSymm(train_dataset, val_dataset, test_dataset)
 
     # Train the model
     train_model(train_dataset, val_dataset, test_dataset, normalize, num_layers=num_layers, hidden_size=hidden_size, 
