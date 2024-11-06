@@ -573,7 +573,7 @@ class HeterogeneousRobotGraph(RobotGraph):
         # Define the number of attributes
         N = 7
 
-        # Get the edge attribute matrices
+        # Get the edge attribute matrices, shape: [2, E], where E is the number of edges
         bj, jb, jj, fj, jf = self.get_edge_index_matrices()
 
         # Get the name to index dictionary

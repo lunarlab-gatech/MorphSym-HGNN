@@ -15,6 +15,7 @@ import torchmetrics.classification
 import pinocchio as pin
 from .customMetrics import CrossEntropyLossMetric, BinaryF1Score
 from .hgnn import GRF_HGNN
+from .hgnn_k4 import GRF_HGNN_K4
 from torch_geometric.profile import count_parameters
 from ..datasets_py.flexibleDataset import FlexibleDataset
 
@@ -385,7 +386,7 @@ class MLP_Lightning(Base_Lightning):
         modules = []
         if num_layers < 2:
             raise ValueError("num_layers must be 2 or greater")
-        elif num_layers is 2:
+        elif num_layers == 2:
             modules.append(nn.Linear(in_channels, hidden_channels))
             modules.append(activation_fn)
             modules.append(nn.Linear(hidden_channels, out_channels))
@@ -452,6 +453,54 @@ class Heterogeneous_GNN_Lightning(Base_Lightning):
         y = torch.reshape(batch.y, (batch_size, 4))
         return y, y_pred
     
+class HGNN_K4_Lightning(Base_Lightning):
+    def __init__(self, hidden_channels: int, num_layers: int, data_metadata,
+                 dummy_batch, optimizer: str = "adam", lr: float = 0.003,
+                 regression: bool = True, activation_fn = nn.ReLU()):
+        """
+        Constructor for Heterogeneous GNN with K4 structure.
+
+        Parameters:
+            dummy_batch: Used to initialize the lazy modules.
+            optimizer (str): String name of the optimizer that should
+                be used.
+            lr (float): The learning rate used by the model.
+
+            See hgnn_k4.py for information on remaining parameters.
+        """
+        super().__init__(optimizer, lr, regression)
+        self.model = GRF_HGNN_K4(hidden_channels=hidden_channels,
+                              num_layers=num_layers,
+                              data_metadata=data_metadata,
+                              regression=regression,
+                              activation_fn=activation_fn)
+        self.regression = regression
+
+        # Initialize lazy modules
+        with torch.no_grad():
+            self.model(x_dict=dummy_batch.x_dict,
+                       edge_index_dict=dummy_batch.edge_index_dict)
+        self.save_hyperparameters()
+    
+    # Rewrite the step helper function to match the base class
+    # Same with Heterogeneous_GNN_Lightning()
+    def step_helper_function(self, batch):
+        # Get the raw foot output
+        out_raw = self.model(x_dict=batch.x_dict,
+                             edge_index_dict=batch.edge_index_dict)
+
+        # Get the outputs from the foot nodes
+        batch_size = None
+        if hasattr(batch, "batch_size"):
+            batch_size = batch.batch_size
+        else:
+            batch_size = 1
+        y_pred = torch.reshape(out_raw.squeeze(), (batch_size, self.model.out_channels_per_foot * 4))
+
+        # Get the labels
+        y = torch.reshape(batch.y, (batch_size, 4))
+        return y, y_pred
+
 class Full_Dynamics_Model_Lightning(Base_Lightning):
 
     def __init__(self, urdf_model_path: Path, urdf_dir: Path, 
@@ -623,6 +672,8 @@ def evaluate_model(path_to_checkpoint: Path, predict_dataset: Subset,
         model = MLP_Lightning.load_from_checkpoint(str(path_to_checkpoint))
     elif model_type == 'heterogeneous_gnn':
         model = Heterogeneous_GNN_Lightning.load_from_checkpoint(str(path_to_checkpoint))
+    elif model_type == 'heterogeneous_gnn_k4':
+        model = HGNN_K4_Lightning.load_from_checkpoint(str(path_to_checkpoint))
     elif model_type == 'dynamics':
         urdf_path = None
         try:
@@ -634,7 +685,7 @@ def evaluate_model(path_to_checkpoint: Path, predict_dataset: Subset,
                                             joint_mapping, foot_mapping)
                                                 
     else:
-        raise ValueError("model_type must be mlp, heterogeneous_gnn, or dynamics.")
+        raise ValueError("model_type must be mlp, heterogeneous_gnn, heterogeneous_gnn_k4, or dynamics.")
     model.eval()
     model.freeze()
 
@@ -654,7 +705,7 @@ def evaluate_model(path_to_checkpoint: Path, predict_dataset: Subset,
         # Return the results
         return pred, labels, model.mse_loss, model.rmse_loss, model.l1_loss
 
-    elif model_type == 'heterogeneous_gnn':
+    elif model_type == 'heterogeneous_gnn' or model_type == 'heterogeneous_gnn_k4':
         pred = torch.zeros((0))
         labels = torch.zeros((0))
         device = 'cpu'  # 'cuda' if torch.cuda.is_available() else
@@ -758,7 +809,7 @@ def train_model(
     # Extract important information from the Subsets
     model_type = train_data_format
     data_metadata = None
-    if model_type == 'heterogeneous_gnn':
+    if model_type == 'heterogeneous_gnn' or model_type == 'heterogeneous_gnn_k4':
         if isinstance(train_dataset.dataset, torch.utils.data.ConcatDataset):
             data_metadata = train_dataset.dataset.datasets[
                 0].dataset.get_data_metadata()
@@ -836,6 +887,16 @@ def train_model(
 
     elif model_type == 'heterogeneous_gnn':
         lightning_model = Heterogeneous_GNN_Lightning(
+            hidden_channels=hidden_size,
+            num_layers=num_layers,
+            data_metadata=data_metadata,
+            dummy_batch=dummy_batch,
+            optimizer=optimizer,
+            lr=lr,
+            regression=regression)
+        model_parameters = count_parameters(lightning_model.model)
+    elif model_type == 'heterogeneous_gnn_k4':
+        lightning_model = HGNN_K4_Lightning(
             hidden_channels=hidden_size,
             num_layers=num_layers,
             data_metadata=data_metadata,
