@@ -685,10 +685,6 @@ def main():
     sidewalk = linData.LinTzuYaunDataset_sidewalk(
         Path(Path('.').parent, 'datasets', 'LinTzuYaun-S').absolute(), path_to_urdf, 'package://yobotics_description/', 'mini-cheetah-gazebo-urdf/yobo_model/yobotics_description', model_type, history_length, normalize=normalize)
     train_val_datasets = [air_walking_gait, grass, middle_pebble, concrete_left_circle, concrete_difficult_slippery, asphalt_road, old_asphalt_road, concrete_galloping, rock_road, sidewalk]
-
-    # air_walking_gait = linDataK4.LinTzuYaunDataset_air_walking_gait_K4(
-    #     Path(Path('.').parent, 'datasets', 'LinTzuYaun-AWG').absolute(), path_to_urdf, 'package://yobotics_description/', 'mini-cheetah-gazebo-urdf/yobo_model/yobotics_description', model_type, history_length, normalize=normalize)
-    # train_val_datasets = [air_walking_gait]
     
     train_subsets = []
     val_subsets = []
@@ -711,9 +707,6 @@ def main():
     forest = linData.LinTzuYaunDataset_forest(
         Path(Path('.').parent, 'datasets', 'LinTzuYaun-F').absolute(), path_to_urdf, 'package://yobotics_description/', 'mini-cheetah-gazebo-urdf/yobo_model/yobotics_description', model_type, history_length, normalize=normalize)
     test_dataset = torch.utils.data.ConcatDataset([concrete_pronking, concrete_right_circle, small_pebble, air_jumping_gait, forest])
-    # concrete_pronking = linDataK4.LinTzuYaunDataset_concrete_pronking(
-    #     Path(Path('.').parent, 'datasets', 'LinTzuYaun-CP').absolute(), path_to_urdf, 'package://yobotics_description/', 'mini-cheetah-gazebo-urdf/yobo_model/yobotics_description', model_type, history_length, normalize=normalize)
-    # test_dataset = torch.utils.data.ConcatDataset([concrete_pronking])
 
     # Convert them to subsets
     train_dataset = torch.utils.data.Subset(train_dataset, np.arange(0, train_dataset.__len__()))
@@ -721,7 +714,6 @@ def main():
     test_dataset = torch.utils.data.Subset(test_dataset, np.arange(0, test_dataset.__len__()))
 
     # Ensure we match MorphoSymm exactly in the way that they split the datasets 
-    # TODO: check if this is necessary for K4
     ensure_dataset_splits_match_morphoSymm(train_dataset, val_dataset, test_dataset)
 
     # Train the model

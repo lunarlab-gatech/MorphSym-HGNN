@@ -117,8 +117,8 @@ def main():
         model_path = "/home/swei303/Documents/proj/MorphSym-HGNN/ckpts/Regression Experiment/hgnns/twilight-bush-24/epoch=22-val_MSE_loss=78.51031.ckpt"
         final_models_to_test.append(model_path)
         final_model_names.append("twilight-bush-24")
-        swap_legs_list = [None, (0, 1), (0, 2), (0, 3)] # Swap tuple: FR: 0, FL: 1, RR: 2, RL: 3, None: no swap
-        legs_dict = {0: 'FR', 1: 'FL', 2: 'RR', 3: 'RL'}
+        swap_legs_list = [None, (1, 3), (1, 0), (1, 2)] # Swap tuple: FR: 0, FL: 1, RR: 2, RL: 3, None: no swap
+        legs_dict = {0: 'RL', 1: 'FL', 2: 'RR', 3: 'FR'}
     # ==================================================================================
 
     # Check that the user filled in the necessary parameters

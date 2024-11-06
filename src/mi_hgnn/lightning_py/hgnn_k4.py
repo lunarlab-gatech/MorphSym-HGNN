@@ -27,6 +27,7 @@ class GRF_HGNN_K4(torch.nn.Module):
 
         # Create convolutions for each layer with special handling for gt and gs edges
         self.convs = torch.nn.ModuleList()
+        '''
         for _ in range(num_layers):
             conv_dict = {}
             for edge_type in data_metadata[1]:
@@ -40,6 +41,38 @@ class GRF_HGNN_K4(torch.nn.Module):
                     )
                 else:
                     # For existing edges, keep the original processing
+                    conv_dict[edge_type] = GraphConv(
+                        hidden_channels,
+                        hidden_channels,
+                        aggr='add'
+                    )
+        '''
+
+        for _ in range(num_layers):
+            conv_dict = {}
+            for edge_type in data_metadata[1]:
+                source_node, edge_name, target_node = edge_type
+                
+                if edge_name == 'gt':
+                    # set unique key for each leg pair
+                    leg_pair_key = f"{source_node}_{target_node}"
+                    # create independent convolution layers for each leg pair
+                    conv_dict[edge_type] = GraphConv(
+                        hidden_channels,
+                        hidden_channels,
+                        aggr='mean'
+                    )
+                    
+                elif edge_name == 'gs':
+                    # create independent convolution layers for each leg pair
+                    leg_pair_key = f"{source_node}_{target_node}"
+                    conv_dict[edge_type] = GraphConv(
+                        hidden_channels,
+                        hidden_channels,
+                        aggr='mean'
+                    )
+                    
+                else:
                     conv_dict[edge_type] = GraphConv(
                         hidden_channels,
                         hidden_channels,
@@ -102,3 +135,16 @@ class GRF_HGNN_K4(torch.nn.Module):
         self.base_transform[0].reset_parameters()
         self.base_transform[2].reset_parameters()
         self.decoder.reset_parameters()
+
+    def check_parameter_sharing(self):
+        # check encoder parameters
+        print("Encoder parameters for different node types:")
+        for node_type in self.encoder.weight_dict:
+            print(f"{node_type}: {self.encoder.weight_dict[node_type].shape}")
+    
+        # check convolution parameters
+        print("\nConvolution parameters for different edge types:")
+        for i, conv in enumerate(self.convs):
+            print(f"Layer {i}:")
+            for edge_type in conv.convs:
+                print(f"{edge_type}: {conv.convs[edge_type].lin.weight.shape}")
