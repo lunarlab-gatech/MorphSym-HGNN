@@ -15,7 +15,8 @@ class LinTzuYaunDataset_NewGraph(LinTzuYaunDataset):
         super().__init__(root, path_to_urdf, urdf_package_name, urdf_package_relative_path,
                         model_type, history_length, normalize, swap_legs)
         
-        if self.model_type == 'heterogeneous_gnn':
+        self.model_type = model_type
+        if self.model_type == 'heterogeneous_gnn_k4':
             # modify the number of base nodes
             self.hgnn_number_nodes = (4, self.hgnn_number_nodes[1], self.hgnn_number_nodes[2])
             # initialize new edges
@@ -66,8 +67,8 @@ class LinTzuYaunDataset_NewGraph(LinTzuYaunDataset):
         self.jf_attr = torch.tensor(jf_attr, dtype=torch.float64)
 
         N = 7
-        self.gt_attr = torch.zeros(self.gt.size(1), N)
-        self.gs_attr = torch.zeros(self.gs.size(1), N)
+        self.gt_attr = np.zeros((self.gt.size(1), N))
+        self.gs_attr = np.zeros((self.gs.size(1), N))
         
         # Assume we know the robot's dimensions #TODO: load from urdf
         robot_width = 0.4   # robot width
@@ -191,3 +192,11 @@ class LinTzuYaunDataset_NewGraph(LinTzuYaunDataset):
         data.num_nodes = sum(self.hgnn_number_nodes)
 
         return data
+
+class LinTzuYaunDataset_air_walking_gait_K4(LinTzuYaunDataset_NewGraph):
+    def get_file_id_and_loc(self):
+        return "17c_E-S_yTeeV_DCmcgVT7_J90cRIwg0z", "Google"
+    
+class LinTzuYaunDataset_concrete_pronking_K4(LinTzuYaunDataset_NewGraph):
+    def get_file_id_and_loc(self):
+        return "1XWdEIKUtFKmZd9W5M7636-HVdusqglhd", "Google"

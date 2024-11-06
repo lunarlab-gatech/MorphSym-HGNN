@@ -64,9 +64,9 @@ class FlexibleDataset(Dataset):
         """
         # Check for valid data format
         self.data_format = data_format
-        if self.data_format != 'dynamics' and self.data_format != 'mlp' and self.data_format != 'heterogeneous_gnn':
+        if self.data_format != 'dynamics' and self.data_format != 'mlp' and self.data_format != 'heterogeneous_gnn' and self.data_format != 'heterogeneous_gnn_k4':
             raise ValueError(
-                "Parameter 'data_format' must be 'dynamics', 'mlp', or 'heterogeneous_gnn'."
+                "Parameter 'data_format' must be 'dynamics', 'mlp', 'heterogeneous_gnn', or 'heterogeneous_gnn_k4'."
             )
 
         # Set the swap legs parameter
@@ -165,7 +165,7 @@ class FlexibleDataset(Dataset):
             raise ValueError("Dataset must provide at least one input.")
 
         # Premake the tensors for edge attributes and connections for HGNN
-        if self.data_format == 'heterogeneous_gnn':
+        if self.data_format == 'heterogeneous_gnn' or self.data_format == 'heterogeneous_gnn_k4':
             bj, jb, jj, fj, jf = self.robotGraph.get_edge_index_matrices()
             self.bj = torch.tensor(bj, dtype=torch.long)
             self.jb = torch.tensor(jb, dtype=torch.long)
@@ -182,7 +182,7 @@ class FlexibleDataset(Dataset):
 
         # Precompute feature matrix sizes for HGNN
         # Calculate the size of the feature matrices
-        if self.data_format == 'heterogeneous_gnn':
+        if self.data_format == 'heterogeneous_gnn' or self.data_format == 'heterogeneous_gnn_k4':
             self.hgnn_number_nodes = self.robotGraph.get_num_of_each_node_type()
             self.base_width = len(self.variables_to_use_base) * 3 * self.history_length
             self.joint_width = len(self.variables_to_use_joint) * self.history_length
@@ -312,9 +312,9 @@ class FlexibleDataset(Dataset):
         Returns the data metadata. Only for use with
         heterogeneous graph data.
         """
-        if self.data_format != 'heterogeneous_gnn':
+        if self.data_format != 'heterogeneous_gnn' and self.data_format != 'heterogeneous_gnn_k4':
             raise TypeError(
-                "This function is only for a data_format of 'heterogeneous_gnn'."
+                "This function is only for a data_format of 'heterogeneous_gnn' or 'heterogeneous_gnn_k4'."
             )
         node_types = ['base', 'joint', 'foot']
         edge_types = [('base', 'connect', 'joint'),
@@ -456,7 +456,7 @@ class FlexibleDataset(Dataset):
             return self.get_helper_dynamics(idx)
         if self.data_format == 'mlp':
             return self.get_helper_mlp(idx)
-        elif self.data_format == 'heterogeneous_gnn':
+        elif self.data_format == 'heterogeneous_gnn' or self.data_format == 'heterogeneous_gnn_k4':
             return self.get_helper_heterogeneous_gnn(idx)
         
     def get_helper_dynamics(self, idx: int):
