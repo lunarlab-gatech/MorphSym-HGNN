@@ -147,7 +147,7 @@ class LinTzuYaunDataset_NewGraph(LinTzuYaunDataset):
         data['base', 'gs', 'base'].edge_attr = self.gs_attr
 
         # create node feature matrices
-        base_x = torch.ones((4, self.base_width), dtype=torch.float64)
+        base_x = torch.ones((self.hgnn_number_nodes[0], self.base_width), dtype=torch.float64)
         joint_x = torch.ones((self.hgnn_number_nodes[1], self.joint_width), dtype=torch.float64)
         foot_x = torch.ones((self.hgnn_number_nodes[2], self.foot_width), dtype=torch.float64)
 
@@ -156,7 +156,7 @@ class LinTzuYaunDataset_NewGraph(LinTzuYaunDataset):
 
         # copy base features to four base nodes
         base_data = [lin_acc, ang_vel]
-        for i in range(4):
+        for i in range(self.hgnn_number_nodes[0]):
             final_input = torch.ones((0), dtype=torch.float64)
             for k in self.variables_to_use_base:
                 final_input = torch.cat((final_input, torch.tensor(base_data[k][:,0:3].flatten('F'), dtype=torch.float64)), axis=0)

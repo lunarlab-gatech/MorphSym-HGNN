@@ -1,15 +1,15 @@
 from pathlib import Path
 from mi_hgnn.lightning_py.gnnLightning import evaluate_model
 import torch
-import mi_hgnn.datasets_py.LinTzuYaunDataset as linData
 import numpy as np
 import pandas
 
 
 def main():
     # ================================= CHANGE THIS ====================================
-    path_to_checkpoint = "/home/swei303/Documents/proj/MorphSym-HGNN/models/effortless-leaf-2/epoch=10-val_CE_loss=0.33491.ckpt" # Path to specific checkpoint file
-    path_to_save_csv = '/home/swei303/Documents/proj/MorphSym-HGNN/paper/classification_results_hgnns_k4.csv' # csv save location and file name
+    import mi_hgnn.datasets_py.LinTzuYaunDataset_K4 as linData # TODO: Use the K4 version
+    path_to_checkpoint = "/home/swei303/Documents/proj/MorphSym-HGNN/models/splendid-armadillo-4/epoch=10-val_CE_loss=0.33491.ckpt" # Path to specific checkpoint file
+    path_to_save_csv = path_to_checkpoint.replace('.ckpt', '.csv') # csv save location and file name
     # Initialize the Testing datasets
     model_type = 'heterogeneous_gnn_k4'
     # ==================================================================================
@@ -58,15 +58,20 @@ def main():
         # Evaluate with model
         pred, labels, acc, f1_leg_0, f1_leg_1, f1_leg_2, f1_leg_3, f1_avg_legs = evaluate_model(path_to_checkpoint, test_dataset)
         # Save to DataFrame
-        df = pandas.concat([df, pandas.DataFrame([[swap_str, acc, f1_leg_0, f1_leg_1, f1_leg_2, f1_leg_3, f1_avg_legs]], columns=columns)], ignore_index=True)
+        df = pandas.concat([df, pandas.DataFrame([[swap_str, acc.item(), f1_leg_0.item(), f1_leg_1.item(), f1_leg_2.item(), f1_leg_3.item(), f1_avg_legs.item()]], columns=columns)], ignore_index=True)
 
         # Print the results
-        print("Model Accuracy: ", acc)
-        print("F1-Score Leg 0: ", f1_leg_0)
-        print("F1-Score Leg 1: ", f1_leg_1)
-        print("F1-Score Leg 2: ", f1_leg_2)
-        print("F1-Score Leg 3: ", f1_leg_3)
-        print("F1-Score Legs Avg: ", f1_avg_legs)
+        print("Model Accuracy: ", acc.item())
+        print("F1-Score Leg 0: ", f1_leg_0.item())
+        print("F1-Score Leg 1: ", f1_leg_1.item())
+        print("F1-Score Leg 2: ", f1_leg_2.item())
+        print("F1-Score Leg 3: ", f1_leg_3.item())
+        print("F1-Score Legs Avg: ", f1_avg_legs.item())
+
+        if swap_legs is None and path_to_save_csv is not None:
+            ckpt_name = path_to_checkpoint.split('/')[-1].replace('.ckpt', '')
+            path_to_save_csv = path_to_save_csv.replace(ckpt_name, ckpt_name + '-acc={}-f1={}'.format(acc.item(), f1_avg_legs.item()))
+        print("Results saving to: ", path_to_save_csv)
 
     # Save to csv
     if path_to_save_csv is not None:
