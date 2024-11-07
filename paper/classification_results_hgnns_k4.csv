@@ -1,5 +1,0 @@
-Swap,Model_Accuracy,F1_Leg_0,F1_Leg_1,F1_Leg_2,F1_Leg_3,F1_Avg_Legs
-None,"tensor(0.7378, device='cuda:0', dtype=torch.float32)","tensor(0.8438, device='cuda:0')","tensor(0.8489, device='cuda:0')","tensor(0.8419, device='cuda:0')","tensor(0.8374, device='cuda:0')","tensor(0.8430, device='cuda:0')"
-FL and FR,"tensor(0.7378, device='cuda:0', dtype=torch.float32)","tensor(0.8489, device='cuda:0')","tensor(0.8438, device='cuda:0')","tensor(0.8419, device='cuda:0')","tensor(0.8374, device='cuda:0')","tensor(0.8430, device='cuda:0')"
-FL and RL,"tensor(0.7378, device='cuda:0', dtype=torch.float32)","tensor(0.8438, device='cuda:0')","tensor(0.8374, device='cuda:0')","tensor(0.8419, device='cuda:0')","tensor(0.8489, device='cuda:0')","tensor(0.8430, device='cuda:0')"
-FL and RR,"tensor(0.7378, device='cuda:0', dtype=torch.float32)","tensor(0.8438, device='cuda:0')","tensor(0.8419, device='cuda:0')","tensor(0.8489, device='cuda:0')","tensor(0.8374, device='cuda:0')","tensor(0.8430, device='cuda:0')"
