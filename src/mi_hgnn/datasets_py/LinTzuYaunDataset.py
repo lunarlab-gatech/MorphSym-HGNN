@@ -137,7 +137,7 @@ class LinTzuYaunDataset(FlexibleDataset):
         
         Args:
             seq_num: Data sequence number
-            swap_legs: tuple of (leg1_idx, leg2_idx) specifying which two legs to swap
+            swap_legs: tuple of (leg1_idx, leg2_idx) specifying which two legs to swap, or tuple of tuples
                       e.g. (0,1) means swap FR and FL legs
         """
         # Get original data
@@ -148,16 +148,20 @@ class LinTzuYaunDataset(FlexibleDataset):
         if swap_legs is not None:
             # Create data dictionary
             data_dict = {
-                'j_p': j_p,
-                'j_v': j_v,
-                'f_p': f_p,
-                'f_v': f_v,
+            'j_p': j_p,
+            'j_v': j_v,
+            'f_p': f_p,
+            'f_v': f_v,
                 'contact_labels': contact_labels
             }
-            
-            # Execute data swapping
-            data_dict = self.swap_legs_data(data_dict, swap_legs[0], swap_legs[1])
-            
+            if len(swap_legs) == 1:
+                # Execute data swapping
+                data_dict = self.swap_legs_data(data_dict, swap_legs[0], swap_legs[1])
+        
+            elif len(swap_legs) == 2:
+                for swap_pair in swap_legs:
+                    data_dict = self.swap_legs_data(data_dict, swap_pair[0], swap_pair[1])
+
             # Update data
             j_p = data_dict['j_p']
             j_v = data_dict['j_v']

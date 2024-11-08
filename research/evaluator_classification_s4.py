@@ -7,16 +7,23 @@ import pandas
 
 def main():
     # ================================= CHANGE THIS ====================================
-    import mi_hgnn.datasets_py.LinTzuYaunDataset_K4 as linData # TODO: Use the K4 version
-    path_to_checkpoint = "/home/swei303/Documents/proj/MorphSym-HGNN/models/splendid-armadillo-4/epoch=10-val_CE_loss=0.33491.ckpt" # Path to specific checkpoint file
+    K4_version = True
+
+    if K4_version:
+        import mi_hgnn.datasets_py.LinTzuYaunDataset_K4 as linData
+        model_type = 'heterogeneous_gnn_k4'
+        path_to_checkpoint = "models/splendid-armadillo-4/epoch=10-val_CE_loss=0.33491.ckpt" # Path to specific checkpoint file
+    else:
+        import mi_hgnn.datasets_py.LinTzuYaunDataset as linData
+        model_type = 'heterogeneous_gnn' # 'heterogeneous_gnn_k4'
+        path_to_checkpoint = "ckpts/Classification Experiment/Main Experiment/leafy-totem-5/epoch=10-val_CE_loss=0.30258.ckpt" # Path to specific checkpoint file
     path_to_save_csv = path_to_checkpoint.replace('.ckpt', '.csv') # csv save location and file name
-    # Initialize the Testing datasets
-    model_type = 'heterogeneous_gnn_k4'
     # ==================================================================================
 
     # Swap legs to evaluate the model on the opposite leg
-    swap_legs_list = [None, (1, 3), (1, 0), (1, 2)] # Swap tuple: FR: 0, FL: 1, RR: 2, RL: 3, None: no swap
-    legs_dict = {0: 'RL', 1: 'FL', 2: 'RR', 3: 'FR'}
+    # swap_legs_list = [(1, 3), (1, 0), (1, 2), None] # Swap tuple: FR: 0, FL: 1, RR: 2, RL: 3, None: no swap
+    swap_legs_list = [((1, 0), (3, 2)), ((1, 3), (2, 0))]
+    legs_dict = {0: 'FR', 1: 'FL', 2: 'RR', 3: 'RL'}
     # Set parameters
     history_length = 150
     path_to_urdf = Path('urdf_files', 'MiniCheetah', 'miniCheetah.urdf').absolute()
@@ -25,16 +32,20 @@ def main():
     if path_to_checkpoint is None:
         raise ValueError("Please provide a checkpoint path by editing this file!")
     
-        # Initialize DataFrame outside the loop
-    columns = ["Swap", "Model_Accuracy", "F1_Leg_0", "F1_Leg_1", "F1_Leg_2", "F1_Leg_3", "F1_Avg_Legs"]
+    # Initialize DataFrame outside the loop
+    columns = ["Swap", "Model Accuracy", "Rear-Left", "Front-Left",	"Rear-Right", "Front-Right", "F1 Avg"]
     df = pandas.DataFrame(None, columns=columns)
 
     # Evaluate each symmetry
     for swap_legs in swap_legs_list:
         print("================================================")
         if swap_legs:
-            print(f"Swapping legs: {legs_dict[swap_legs[0]]} and {legs_dict[swap_legs[1]]}")
-            swap_str = f"{legs_dict[swap_legs[0]]} and {legs_dict[swap_legs[1]]}"
+            if len(swap_legs) == 1:
+                print(f"Swapping legs: {legs_dict[swap_legs[0]]} and {legs_dict[swap_legs[1]]}")
+                swap_str = f"{legs_dict[swap_legs[0]]} and {legs_dict[swap_legs[1]]}"
+            elif len(swap_legs) == 2:
+                print(f"Swapping legs: {legs_dict[swap_legs[0][0]]} and {legs_dict[swap_legs[0][1]]}, {legs_dict[swap_legs[1][0]]} and {legs_dict[swap_legs[1][1]]}")
+                swap_str = f"{legs_dict[swap_legs[0][0]]} and {legs_dict[swap_legs[0][1]]}, {legs_dict[swap_legs[1][0]]} and {legs_dict[swap_legs[1][1]]}"
         else:
             print("No legs swapped")
             swap_str = "None"
