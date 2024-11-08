@@ -148,7 +148,7 @@ class FlexibleDataset(Dataset):
         for urdf_node_name in self.urdf_name_to_graph_index_base.keys():
             graph_node_index = self.urdf_name_to_graph_index_base[urdf_node_name]
             self.base_node_indices_sorted[graph_node_index] = self.get_urdf_name_to_dataset_array_index()[urdf_node_name]
-        self.base_node_indices_sorted = np.array(self.joint_node_indices_sorted, dtype=np.uint)
+        self.base_node_indices_sorted = np.array(self.joint_node_indices_sorted, dtype=np.uint) #TODO: base_node_indices_sorted ?
 
         # Set normalize parameter for use later
         self.normalize = normalize
