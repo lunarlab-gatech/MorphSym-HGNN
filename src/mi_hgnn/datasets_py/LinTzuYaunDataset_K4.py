@@ -13,7 +13,7 @@ class LinTzuYaunDataset_NewGraph(LinTzuYaunDataset):
     def __init__(self, root, path_to_urdf, urdf_package_name, urdf_package_relative_path, 
                  model_type, history_length, normalize=True, swap_legs=None):
         super().__init__(root, path_to_urdf, urdf_package_name, urdf_package_relative_path,
-                        model_type, history_length, normalize, swap_legs)
+                        model_type, history_length, normalize=normalize, swap_legs=swap_legs)
         
         self.model_type = model_type
         if self.model_type == 'heterogeneous_gnn_k4':
