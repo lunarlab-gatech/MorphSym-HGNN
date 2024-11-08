@@ -46,6 +46,8 @@ def main():
             elif len(swap_legs) == 2:
                 print(f"Swapping legs: {legs_dict[swap_legs[0][0]]} and {legs_dict[swap_legs[0][1]]}, {legs_dict[swap_legs[1][0]]} and {legs_dict[swap_legs[1][1]]}")
                 swap_str = f"{legs_dict[swap_legs[0][0]]} and {legs_dict[swap_legs[0][1]]}, {legs_dict[swap_legs[1][0]]} and {legs_dict[swap_legs[1][1]]}"
+            else:
+                raise ValueError("Invalid swap legs")
         else:
             print("No legs swapped")
             swap_str = "None"
