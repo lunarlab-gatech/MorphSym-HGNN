@@ -708,7 +708,7 @@ def evaluate_model(path_to_checkpoint: Path, predict_dataset: Subset,
     elif model_type == 'heterogeneous_gnn' or model_type == 'heterogeneous_gnn_k4':
         pred = torch.zeros((0))
         labels = torch.zeros((0))
-        device = 'cpu'  # 'cuda' if torch.cuda.is_available() else
+        device = 'cpu' # 'cuda' if torch.cuda.is_available() else 'cpu' # TODO: Fix this
         model.model = model.model.to(device)
         with torch.no_grad():
             # Print visual output of prediction step

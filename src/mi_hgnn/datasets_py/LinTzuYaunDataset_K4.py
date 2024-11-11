@@ -11,9 +11,41 @@ class LinTzuYaunDataset_NewGraph(LinTzuYaunDataset):
     - Add gs_edge between left bases and between right bases
     """
     def __init__(self, root, path_to_urdf, urdf_package_name, urdf_package_relative_path, 
-                 model_type, history_length, normalize=True, swap_legs=None):
+                 model_type, history_length, normalize=True, swap_legs=None, leg_swap_mode='Euclidean'):
         super().__init__(root, path_to_urdf, urdf_package_name, urdf_package_relative_path,
-                        model_type, history_length, normalize=normalize, swap_legs=swap_legs)
+                        model_type, history_length, normalize=normalize, swap_legs=swap_legs, leg_swap_mode=leg_swap_mode)
+        
+        if self.swap_legs and self.leg_swap_mode == 'MorphSym':
+            # Joint coefficients for morphological symmetry transformations: E, g_S, g_T, g_R
+            # Shape: [4 legs, 3 joints per leg]
+            # Order: FL, FR, BL, BR legs
+            # Values represent how joint angles transform under symmetry operations
+            self.joint_coefficients = {
+                'e': np.array([ 1,  1,  1], dtype=np.float64),  # FL leg (identity)
+                'gs': np.array([-1,  1,  1], dtype=np.float64), # FR leg (sagittal)
+                'gt': np.array([ 1, -1, -1], dtype=np.float64), # RL leg (transverse) 
+                'gr': np.array([-1, -1, -1], dtype=np.float64)  # R leg (rotational)
+            }
+        elif (self.swap_legs and self.leg_swap_mode == 'Euclidean') or self.swap_legs is None:
+            self.joint_coefficients = {
+                'e': np.array([ 1,  1,  1], dtype=np.float64),  # FL leg (identity)
+                'gs': np.array([ 1,  1,  1], dtype=np.float64), # FR leg (sagittal)
+                'gt': np.array([ 1,  1,  1], dtype=np.float64), # RL leg (transverse) 
+                'gr': np.array([ 1,  1,  1], dtype=np.float64)  # R leg (rotational)
+            }
+        else:
+            raise ValueError(f"Invalid leg swap mode: {self.leg_swap_mode}")
+        
+        if self.swap_legs:
+            # MorphSym情况下需要判断腿的关系并应用reflection
+            self.leg_pairs = {
+                (0, 1): 'gs',  # FR-FL: transverse plane symmetry
+                (2, 3): 'gs',  # RR-RL: -
+                (0, 2): 'gt',  # FR-RR: sagittal plane symmetry
+                (1, 3): 'gt',  # FL-RL: -
+                (0, 3): 'gr',  # FR-RL: rotational symmetry
+                (1, 2): 'gr'   # FL-RR: -
+            }
         
         self.model_type = model_type
         if self.model_type == 'heterogeneous_gnn_k4':
