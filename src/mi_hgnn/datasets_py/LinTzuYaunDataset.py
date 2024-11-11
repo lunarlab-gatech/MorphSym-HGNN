@@ -103,16 +103,18 @@ class LinTzuYaunDataset(FlexibleDataset):
         leg1_end = leg1_start + 3
         leg2_start = leg2_idx * 3
         leg2_end = leg2_start + 3
+
+        coefficient = self.joint_coefficients[self.leg_pairs[(leg1_idx, leg2_idx)]]
         
-        # Swap joint position data
+        # Swap joint position data and apply coefficient
         if 'j_p' in data_dict and data_dict['j_p'] is not None:
             data_dict['j_p'][:, leg1_start:leg1_end], data_dict['j_p'][:, leg2_start:leg2_end] = \
-                data_dict['j_p'][:, leg2_start:leg2_end].copy(), data_dict['j_p'][:, leg1_start:leg1_end].copy()
+                data_dict['j_p'][:, leg2_start:leg2_end].copy() * coefficient, data_dict['j_p'][:, leg1_start:leg1_end].copy() * coefficient
         
-        # Swap joint velocity data
+        # Swap joint velocity data and apply coefficient
         if 'j_v' in data_dict and data_dict['j_v'] is not None:
             data_dict['j_v'][:, leg1_start:leg1_end], data_dict['j_v'][:, leg2_start:leg2_end] = \
-                data_dict['j_v'][:, leg2_start:leg2_end].copy(), data_dict['j_v'][:, leg1_start:leg1_end].copy()
+                data_dict['j_v'][:, leg2_start:leg2_end].copy() * coefficient, data_dict['j_v'][:, leg1_start:leg1_end].copy() * coefficient
         
         # Swap foot position data
         if 'f_p' in data_dict and data_dict['f_p'] is not None:
@@ -131,50 +133,44 @@ class LinTzuYaunDataset(FlexibleDataset):
         
         return data_dict
 
-    def load_data_at_dataset_seq_with_swap(self, seq_num: int, swap_legs=None):
+    def load_data_at_dataset_seq_with_swap(self, seq_num: int, swap_legs: tuple):
         """
         Extended data loading function that supports leg data swapping
         
         Args:
             seq_num: Data sequence number
-            swap_legs: tuple of (leg1_idx, leg2_idx) specifying which two legs to swap, or tuple of tuples
-                      e.g. (0,1) means swap FR and FL legs
+            swap_legs: tuple of tuples, of (leg1_idx, leg2_idx) specifying which two legs to swap
+                      e.g. ((0,1), (2,3)) means swap FR and FL legs, and RR and RL legs
         """
         # Get original data
         lin_acc, ang_vel, j_p, j_v, j_T, f_p, f_v, contact_labels, r_p, r_o, timestamps = \
             self.load_data_at_dataset_seq(seq_num)
         
-        # j_T, r_p, r_o, and timestamps are not used in this dataset
-        if swap_legs is not None:
-            # Create data dictionary
-            data_dict = {
+        # Create data dictionary, j_T, r_p, r_o, and timestamps are not used in this dataset
+        data_dict = {
             'j_p': j_p,
             'j_v': j_v,
             'f_p': f_p,
             'f_v': f_v,
-                'contact_labels': contact_labels
-            }
-            if len(swap_legs) == 1:
-                # Execute data swapping
-                data_dict = self.swap_legs_data(data_dict, swap_legs[0], swap_legs[1])
-        
-            elif len(swap_legs) == 2:
-                for swap_pair in swap_legs:
-                    data_dict = self.swap_legs_data(data_dict, swap_pair[0], swap_pair[1])
+            'contact_labels': contact_labels
+        }
 
-            # Update data
-            j_p = data_dict['j_p']
-            j_v = data_dict['j_v']
-            f_p = data_dict['f_p']
-            f_v = data_dict['f_v']
-            contact_labels = data_dict['contact_labels']
+        for swap_pair in swap_legs:
+            data_dict = self.swap_legs_data(data_dict, swap_pair[0], swap_pair[1])
+
+        # Update data
+        j_p = data_dict['j_p']
+        j_v = data_dict['j_v']
+        f_p = data_dict['f_p']
+        f_v = data_dict['f_v']
+        contact_labels = data_dict['contact_labels']
         
         return lin_acc, ang_vel, j_p, j_v, j_T, f_p, f_v, contact_labels, None, None, None
     
 # ================================================================
 # ===================== DATASET SEQUENCES ========================
 # ================================================================
-
+'''
 class LinTzuYaunDataset_air_jumping_gait(LinTzuYaunDataset):
     def get_file_id_and_loc(self):
         return "17h4kMUKMymG_GzTZTMHPgj-ImDKZMg3R", "Google"
@@ -234,3 +230,4 @@ class LinTzuYaunDataset_sidewalk(LinTzuYaunDataset):
 class LinTzuYaunDataset_small_pebble(LinTzuYaunDataset):
     def get_file_id_and_loc(self):
         return "1cmjzHD9CKAXmKxZkDbPsEPKGvDI5Grec", "Google"
+'''
