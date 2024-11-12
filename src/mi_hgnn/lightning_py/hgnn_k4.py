@@ -1,13 +1,14 @@
 import torch
 from torch import nn
 from torch_geometric.nn import Linear, HeteroConv, HeteroDictLinear, GraphConv
+import yaml
 
 class GRF_HGNN_K4(torch.nn.Module):
     """
     Modified GRF_HGNN for the K4 graph structure with 4 base nodes and new edge types
     """
     def __init__(self, hidden_channels: int, num_layers: int, data_metadata, 
-                 regression: bool = True, activation_fn = nn.ReLU()):
+                 regression: bool = True, activation_fn = nn.ReLU(), symmetry_mode: str = None, group_operator_path: str = None):
         """
         Implementation of the modified MI-HGNN model for K4 structure.
 
@@ -17,36 +18,42 @@ class GRF_HGNN_K4(torch.nn.Module):
             data_metadata (tuple): Contains information on the node and edge types.
             regression (bool): True if regression, false if classification.
             activation_fn (class): The activation function used between layers.
+            symmetry_mode (str): The symmetry mode used for the model.
+            group_operator_path (str): The path to the group operator file.
         """
         super().__init__()
         self.regression = regression
         self.activation = activation_fn
+
+        num_joints_per_leg = 3 # NOTE: hardcoded for mini_cheetah
+        # Initialize the joint coefficients based on the symmetry mode and group operator path
+        if symmetry_mode and group_operator_path:
+            with open(group_operator_path, 'r') as file:
+                group_data = yaml.safe_load(file)
+
+            reflection_Q_js = group_data.get('reflection_Q_js', [])
+
+            gs_coeffs = torch.tensor(reflection_Q_js[0][:num_joints_per_leg], dtype=torch.float64) # sagittal symmetry, shape [num_joints_per_leg]
+            gt_coeffs = torch.tensor(reflection_Q_js[1][:num_joints_per_leg], dtype=torch.float64) # transversal symmetry, shape [num_joints_per_leg]
+            e_coeffs = torch.ones_like(gs_coeffs, dtype=torch.float64) # rotational symmetry, shape [num_joints_per_leg]
+            gr_coeffs = gs_coeffs * gt_coeffs
+        else:
+            gs_coeffs = torch.ones(num_joints_per_leg, dtype=torch.float64)
+            gt_coeffs = torch.ones(num_joints_per_leg, dtype=torch.float64)
+            gr_coeffs = torch.ones(num_joints_per_leg, dtype=torch.float64)
+            e_coeffs = torch.ones(num_joints_per_leg, dtype=torch.float64)
+        weights_array = torch.cat((e_coeffs, gt_coeffs, gs_coeffs, gr_coeffs), dim=0)
+        self.joints_linear_weights = weights_array
+        self.gs_coeffs = gs_coeffs
+        self.gt_coeffs = gt_coeffs
+        self.gr_coeffs = gr_coeffs
+        self.e_coeffs = e_coeffs
 
         # Create the first layer encoder to convert features into embeddings
         self.encoder = HeteroDictLinear(-1, hidden_channels, data_metadata[0])
 
         # Create convolutions for each layer with special handling for gt and gs edges
         self.convs = torch.nn.ModuleList()
-        '''
-        for _ in range(num_layers):
-            conv_dict = {}
-            for edge_type in data_metadata[1]:
-                # Use different aggregation methods for different edge types
-                if edge_type[1] in ['gt', 'gs']:
-                    # For new edges between base nodes, use a special aggregation method
-                    conv_dict[edge_type] = GraphConv(
-                        hidden_channels,
-                        hidden_channels,
-                        aggr='mean',  # Use mean aggregation to handle symmetry
-                    )
-                else:
-                    # For existing edges, keep the original processing
-                    conv_dict[edge_type] = GraphConv(
-                        hidden_channels,
-                        hidden_channels,
-                        aggr='add'
-                    )
-        '''
 
         for _ in range(num_layers):
             conv_dict = {}
@@ -58,7 +65,7 @@ class GRF_HGNN_K4(torch.nn.Module):
                     conv_dict[edge_type] = GraphConv(
                         hidden_channels,
                         hidden_channels,
-                        aggr='add' # 'mean'
+                        aggr='mean' # 'mean' or 'add'
                     )
                     
                 elif edge_name == 'gs':
@@ -66,7 +73,7 @@ class GRF_HGNN_K4(torch.nn.Module):
                     conv_dict[edge_type] = GraphConv(
                         hidden_channels,
                         hidden_channels,
-                        aggr='add' # 'mean'
+                        aggr='mean' # 'mean' or 'add'
                     )
                     
                 else:
@@ -104,9 +111,7 @@ class GRF_HGNN_K4(torch.nn.Module):
         # debug use, check the parameters:
         # self.check_parameter_sharing()
 
-        # debug use, visualize the GNN structure:
-        # save_dir = "/home/swei303/Documents/proj/MorphSym-HGNN/models/debug"
-        # self.visualize_gnn_structure(save_dir+'/hgnn_k4_structure.png')
+        x_dict = self.apply_symmetry(x_dict)
 
         # Initial feature encoding
         x_dict = self.encoder(x_dict)
@@ -130,12 +135,36 @@ class GRF_HGNN_K4(torch.nn.Module):
                 else x_dict_new[key]
                 for key in x_dict_new
             }
-        
+
+        # debug use, visualize the GNN structure:
+        # save_dir = "/home/swei303/Documents/proj/MorphSym-HGNN/models/debug"
+        # self.visualize_gnn_structure(save_dir+'/hgnn_k4_structure.png')
+
         # debug use, check the parameters:
         # self.check_parameter_sharing()
 
         # Final prediction for foot nodes
         return self.decoder(x_dict['foot'])
+    
+    def apply_symmetry(self, x_dict):
+        """
+        Apply the symmetry to the node features
+        """
+        joint_x = x_dict['joint']  # shape: [batch_size * num_joints, num_timesteps * num_variables]
+        num_joints = 12
+        num_timesteps = 150
+        
+        # Reshape the joint data to separate different joints and variables
+        # [batch_size * num_joints, num_timesteps * num_variables] -> [batch_size, num_joints, num_timesteps, num_variables]
+        joint_x = joint_x.view(-1, num_joints, num_timesteps, 2)
+        
+        # Apply the coefficients to each variable separately
+        joint_x = joint_x * self.joints_linear_weights.view(1, -1, 1, 1)
+        
+        # Reshape back to the original shape [batch_size, num_joints, num_timesteps, num_variables] -> [batch_size, num_timesteps * num_variables]
+        x_dict['joint'] = joint_x.reshape(-1, num_timesteps * 2)
+
+        return x_dict
 
     def reset_parameters(self):
         """Reset all learnable parameters"""
