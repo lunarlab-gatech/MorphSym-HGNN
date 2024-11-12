@@ -783,7 +783,9 @@ def train_model(
         devices: int = 1,
         early_stopping: bool = False,
         disable_test: bool = False,
-        train_percentage_to_log = None):
+        train_percentage_to_log = None,
+        symmetry_mode: str = None,
+        group_operator_path: str = None):
     """
     Train a learning model with the input datasets. If 
     'testing_mode' is enabled, limit the batches and epoch size
@@ -911,7 +913,9 @@ def train_model(
             dummy_batch=dummy_batch,
             optimizer=optimizer,
             lr=lr,
-            regression=regression)
+            regression=regression,
+            symmetry_mode=symmetry_mode,
+            group_operator_path=group_operator_path)
         model_parameters = count_parameters(lightning_model.model)
     else:
         raise ValueError("Invalid model type.")

@@ -69,20 +69,21 @@ class LinTzuYaunDataset_NewGraph(LinTzuYaunDataset):
                 self.permutation_Q_js = group_data.get('permutation_Q_js', []) # np array, shape [2, 12]
                 self.reflection_Q_js = group_data.get('reflection_Q_js', []) # np array, shape [2, 12]
 
+                self.permutation_Q_fs = group_data.get('permutation_Q_fs', []) # np array, shape [2, 12]
+                self.reflection_Q_fs = group_data.get('reflection_Q_fs', []) # np array, shape [2, 12]
+
+                self.permutation_Q_bs = group_data.get('permutation_Q_bs', []) # np array, shape [2, 12]
+                self.reflection_Q_bs = group_data.get('reflection_Q_bs', []) # np array, shape [2, 12]
+
                 # Create symmetry coefficients dictionary based on the yaml data
                 if self.symmetry_mode == 'MorphSym':
-                    self.joint_coefficients = {
-                        'gs': np.array(self.reflection_Q_js[0], dtype=np.float64),  # Sagittal symmetry
-                        'gt': np.array(self.reflection_Q_js[1], dtype=np.float64),  # Transversal symmetry
-                        'gr': np.array([x * y for x, y in zip(self.reflection_Q_js[0], self.reflection_Q_js[1])], dtype=np.float64)  # Rotational symmetry
-                    }
+                    self.joint_coefficients = self.create_morphsym_coefficients(self.reflection_Q_js)
+                    self.foot_coefficients = self.create_morphsym_coefficients(self.reflection_Q_fs)
+                    self.base_coefficients = self.create_morphsym_coefficients(self.reflection_Q_bs)
                 elif self.symmetry_mode == 'Euclidean':
-                    self.joint_coefficients = {
-                        'gs': np.ones_like(self.reflection_Q_js[0], dtype=np.float64),  # Sagittal symmetry
-                        'gt': np.ones_like(self.reflection_Q_js[0], dtype=np.float64),  # Transversal symmetry
-                        'gr': np.ones_like(self.reflection_Q_js[0], dtype=np.float64)  # Rotational symmetry
-                    }
-                    
+                    self.joint_coefficients = self.create_coefficient_dict(self.reflection_Q_js)
+                    self.foot_coefficients = self.create_coefficient_dict(self.reflection_Q_fs)
+                    self.base_coefficients = self.create_coefficient_dict(self.reflection_Q_bs)
             except FileNotFoundError:
                 raise ValueError(f"Group operator file not found at {self.group_operator_path}")
             except yaml.YAMLError as e:
@@ -120,7 +121,6 @@ class LinTzuYaunDataset_NewGraph(LinTzuYaunDataset):
         #     raise ValueError(f"Invalid leg swap mode: {self.leg_swap_mode}")
         
         # if self.swap_legs:
-        #     # MorphSym情况下需要判断腿的关系并应用reflection
         #     self.leg_pairs = {
         #         (0, 1): 'gs',  # FR-FL: transverse plane symmetry
         #         (2, 3): 'gs',  # RR-RL: -
@@ -129,6 +129,29 @@ class LinTzuYaunDataset_NewGraph(LinTzuYaunDataset):
         #         (0, 3): 'gr',  # FR-RL: rotational symmetry
         #         (1, 2): 'gr'   # FL-RR: -
         #     }
+
+    def create_coefficient_dict(self, reflection_array):
+        return {
+            'gs': np.ones_like(reflection_array[0], dtype=np.float64),
+            'gt': np.ones_like(reflection_array[0], dtype=np.float64),
+            'gr': np.ones_like(reflection_array[0], dtype=np.float64)
+        }
+
+    def create_morphsym_coefficients(self, reflection_array):
+        """Create coefficient dictionary for MorphSym mode.
+        
+        Args:
+            reflection_array: Array containing sagittal and transversal reflection coefficients
+        Returns:
+            Dictionary containing gs, gt, and gr coefficients
+        """
+        gs = np.array(reflection_array[0], dtype=np.float64)
+        gt = np.array(reflection_array[1], dtype=np.float64)
+        return {
+            'gs': gs,  # Sagittal symmetry
+            'gt': gt,  # Transversal symmetry
+            'gr': gs * gt  # Rotational symmetry (element-wise multiplication)
+        }
 
     def load_data_sorted(self, seq_num: int):
         """
@@ -166,7 +189,7 @@ class LinTzuYaunDataset_NewGraph(LinTzuYaunDataset):
                 sorted_list.append(None)
 
         if self.symmetry_operator is not None:
-            sorted_list = self.apply_symmetry(sorted_list)
+            sorted_list = self.apply_symmetry(sorted_list, part='joint')
 
         # Sort the foot information
         unsorted_foot_list = [f_p, f_v]
@@ -188,6 +211,9 @@ class LinTzuYaunDataset_NewGraph(LinTzuYaunDataset):
         else:
             labels_sorted = labels[self.foot_node_indices_sorted]
 
+        if self.symmetry_operator is not None:
+            labels_sorted = self.apply_symmetry([labels_sorted], part='label')[0]
+
         # Normalize the data if desired
         norm_arrs = [None, None, None, None, None, None, None, None, None]
         if self.normalize:
@@ -202,21 +228,52 @@ class LinTzuYaunDataset_NewGraph(LinTzuYaunDataset):
         else:
             return lin_acc, ang_vel, sorted_list[0], sorted_list[1], sorted_list[2], sorted_foot_list[0], sorted_foot_list[1], labels_sorted, r_p, r_o, timestamps
 
-    def apply_symmetry(self, data_list):
+    def apply_symmetry(self, data_list, part='joint'):
         """Apply the symmetry operator to the data"""
+        if part == 'joint':
+            permutation_Q = self.permutation_Q_js
+            coefficients = self.joint_coefficients
+        elif part == 'foot':
+            permutation_Q = self.permutation_Q_fs
+            coefficients = self.foot_coefficients
+        elif part == 'base':
+            permutation_Q = self.permutation_Q_bs
+            coefficients = self.base_coefficients
+        elif part == 'label': 
+            # for labels, data shape: (4,), for classification task, 
+            # we need to apply Euclidean symmetry to labels
+            permutation_Q = self.permutation_Q_fs
+            coefficients = {
+                'gs': np.ones_like(permutation_Q[0], dtype=np.float64),
+                'gt': np.ones_like(permutation_Q[0], dtype=np.float64),
+                'gr': np.ones_like(permutation_Q[0], dtype=np.float64)
+            }
+        else:
+            raise ValueError(f"Invalid part: {part}")
+
         new_data_list = []
         # data_list: [j_p, j_v, j_T], each shape: [history_length, 12]
         for data in data_list:
             if data is None:
                 new_data_list.append(None)
                 continue
-            if self.symmetry_operator == 'gs':
-                data = data[:, self.permutation_Q_js[0]].copy() * self.joint_coefficients['gs']
-            elif self.symmetry_operator == 'gt':
-                data = data[:, self.permutation_Q_js[1]].copy() * self.joint_coefficients['gt']
-            elif self.symmetry_operator == 'gr':
-                data = data[:, self.permutation_Q_js[0]].copy()
-                data = data[:, self.permutation_Q_js[1]].copy() * self.joint_coefficients['gr']
+            # for labels, data shape: (4,)
+            if data.ndim == 1: 
+                if self.symmetry_operator == 'gs':
+                    data = data[permutation_Q[0]].copy() * coefficients['gs']
+                elif self.symmetry_operator == 'gt':
+                    data = data[permutation_Q[1]].copy() * coefficients['gt']
+                elif self.symmetry_operator == 'gr':
+                    data = data[permutation_Q[0]].copy()
+                    data = data[permutation_Q[1]].copy() * coefficients['gr']
+            else: # for j_p, j_v, j_T, each shape: [history_length, 12] ... 
+                if self.symmetry_operator == 'gs':
+                    data = data[:, permutation_Q[0]].copy() * coefficients['gs']
+                elif self.symmetry_operator == 'gt':
+                    data = data[:, permutation_Q[1]].copy() * coefficients['gt']
+                elif self.symmetry_operator == 'gr':
+                    data = data[:, permutation_Q[0]].copy()
+                    data = data[:, permutation_Q[1]].copy() * coefficients['gr']
             new_data_list.append(data)
         return new_data_list
     

@@ -651,6 +651,8 @@ def main():
     num_layers = 8
     hidden_size = 128
     seed = 0
+    symmetry_mode = 'MorphSym' # Can be 'Euclidean' or 'MorphSym' or None
+    group_operator_path = '/home/swei303/Documents/proj/MorphSym-HGNN/cfg/mini_cheetah-k4.yaml'
     # ==================================================================================
 
     # Set model parameters (so they all match)
@@ -719,7 +721,7 @@ def main():
     # Train the model
     train_model(train_dataset, val_dataset, test_dataset, normalize, num_layers=num_layers, hidden_size=hidden_size, 
                 logger_project_name="class", batch_size=30, regression=False, lr=0.0001, epochs=49, 
-                seed=seed, devices=1, early_stopping=True)
+                seed=seed, devices=1, early_stopping=True, symmetry_mode=symmetry_mode, group_operator_path=group_operator_path)
     
 if __name__ == "__main__":
     main()
