@@ -6,6 +6,7 @@ from torchvision.datasets.utils import download_file_from_google_drive
 import scipy.io as sio
 import numpy as np
 import urllib.request
+import yaml
 
 class FlexibleDataset(Dataset):
     """
@@ -33,8 +34,7 @@ class FlexibleDataset(Dataset):
                  transform=None,
                  pre_transform=None,
                  pre_filter=None,
-                 swap_legs=None,
-                 leg_swap_mode='Euclidean'):
+                ):
         """
         Parameters:
                 root (Path): The path to where the dataset is found (or where
@@ -60,10 +60,6 @@ class FlexibleDataset(Dataset):
                 urdf_path_dynamics (Path): The path to a similar URDF file to 'urdf_path',
                     but not pruned of non-kinematic joints. This allows pinnochio full
                     access to the URDF information necessary for dynamics calculations.
-                swap_legs (tuple | None): Either None, a tuple of (leg1_idx, leg2_idx), or a tuple of tuples
-                    e.g. None means no swap, (0,1) means swap FR and FL legs,
-                    ((0,1), (2,3)) means swap FR-FL and RR-RL legs
-                leg_swap_mode (str): The mode to use for leg swapping. Either 'Euclidean' or 'MorphSym'.
         """
         # Check for valid data format
         self.data_format = data_format
@@ -71,18 +67,6 @@ class FlexibleDataset(Dataset):
             raise ValueError(
                 "Parameter 'data_format' must be 'dynamics', 'mlp', 'heterogeneous_gnn', or 'heterogeneous_gnn_k4'."
             )
-
-        # Set the swap legs parameter
-        if swap_legs is not None:
-            # sort each tuple in swap_legs
-            if isinstance(swap_legs[0], tuple):
-                sorted_swap_legs = tuple(tuple(sorted(swap_pair)) for swap_pair in swap_legs)
-            else:
-                sorted_swap_legs = tuple([tuple(sorted(swap_legs))])
-            self.swap_legs = sorted_swap_legs
-        else:
-            self.swap_legs = None
-        self.leg_swap_mode = leg_swap_mode
 
         # Setup the directories for raw and processed data, download it, 
         # and process
@@ -166,7 +150,7 @@ class FlexibleDataset(Dataset):
         self.normalize = normalize
 
         # Precompute values for variables_to_use
-        lin_acc, ang_vel, j_p, j_v, j_T, f_p, f_v, labels, r_p, r_o, timestamps = self.load_data_sorted(0, precompute=True)
+        lin_acc, ang_vel, j_p, j_v, j_T, f_p, f_v, labels, r_p, r_o, timestamps = self.load_data_sorted(0)
         self.variables_to_use_all = self.find_variables_to_use([lin_acc, ang_vel, j_p, j_v, j_T, f_p, f_v])
         self.variables_to_use_base = self.find_variables_to_use([lin_acc, ang_vel])
         self.variables_to_use_joint = self.find_variables_to_use([j_p, j_v, j_T])
@@ -347,7 +331,7 @@ class FlexibleDataset(Dataset):
     # ======================== DATA LOADING ==========================
     # ================================================================
     
-    def load_data_sorted(self, seq_num: int, precompute: bool = False):
+    def load_data_sorted(self, seq_num: int):
         """
         Loads data from the dataset at the provided sequence number.
         However, the joint and feet are sorted so that they match 
@@ -368,10 +352,7 @@ class FlexibleDataset(Dataset):
             values inside arrays have been sorted (and potentially
             normalized).
         """
-        if self.swap_legs is not None and not precompute:
-            lin_acc, ang_vel, j_p, j_v, j_T, f_p, f_v, labels, r_p, r_o, timestamps = self.load_data_at_dataset_seq_with_swap(seq_num, self.swap_legs)
-        else:
-            lin_acc, ang_vel, j_p, j_v, j_T, f_p, f_v, labels, r_p, r_o, timestamps = self.load_data_at_dataset_seq(seq_num)
+        lin_acc, ang_vel, j_p, j_v, j_T, f_p, f_v, labels, r_p, r_o, timestamps = self.load_data_at_dataset_seq(seq_num)
 
         # Sort the joint information
         unsorted_list = [j_p, j_v, j_T]
