@@ -456,7 +456,8 @@ class Heterogeneous_GNN_Lightning(Base_Lightning):
 class HGNN_K4_Lightning(Base_Lightning):
     def __init__(self, hidden_channels: int, num_layers: int, data_metadata,
                  dummy_batch, optimizer: str = "adam", lr: float = 0.003,
-                 regression: bool = True, activation_fn = nn.ReLU()):
+                 regression: bool = True, activation_fn = nn.ReLU(),
+                 symmetry_mode: str = None, group_operator_path: str = None):
         """
         Constructor for Heterogeneous GNN with K4 structure.
 
@@ -473,7 +474,9 @@ class HGNN_K4_Lightning(Base_Lightning):
                               num_layers=num_layers,
                               data_metadata=data_metadata,
                               regression=regression,
-                              activation_fn=activation_fn)
+                              activation_fn=activation_fn,
+                              symmetry_mode=symmetry_mode,
+                              group_operator_path=group_operator_path)
         self.regression = regression
 
         # Initialize lazy modules
@@ -673,7 +676,12 @@ def evaluate_model(path_to_checkpoint: Path, predict_dataset: Subset,
     elif model_type == 'heterogeneous_gnn':
         model = Heterogeneous_GNN_Lightning.load_from_checkpoint(str(path_to_checkpoint))
     elif model_type == 'heterogeneous_gnn_k4':
-        model = HGNN_K4_Lightning.load_from_checkpoint(str(path_to_checkpoint))
+        model = HGNN_K4_Lightning.load_from_checkpoint(
+            str(path_to_checkpoint),
+            symmetry_mode='MorphSym',
+            group_operator_path='/home/swei303/Documents/proj/MorphSym-HGNN/cfg/mini_cheetah-k4.yaml',
+            strict=False
+        )
     elif model_type == 'dynamics':
         urdf_path = None
         try:

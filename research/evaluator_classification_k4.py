@@ -97,11 +97,6 @@ def main():
         print("F1-Score Leg 3: ", f1_leg_3.item())
         print("F1-Score Legs Avg: ", f1_avg_legs.item())
 
-        # if swap_legs is None and path_to_save_csv is not None:
-        #     save_file_name = path_to_save_csv.split('/')[-1].replace('.csv', '')
-        #     path_to_save_csv = path_to_save_csv.replace(save_file_name, save_file_name + '-acc={}-f1={}'.format(acc.item(), f1_avg_legs.item()))
-        #     print("Note: Results saving path is changed to: ", path_to_save_csv)
-
     # Save to csv
     if path_to_save_csv is not None:
         df.to_csv(path_to_save_csv, index=False)
