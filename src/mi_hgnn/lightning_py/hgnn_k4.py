@@ -42,8 +42,10 @@ class GRF_HGNN_K4(torch.nn.Module):
             gt_coeffs = torch.ones(num_joints_per_leg, dtype=torch.float64)
             gr_coeffs = torch.ones(num_joints_per_leg, dtype=torch.float64)
             e_coeffs = torch.ones(num_joints_per_leg, dtype=torch.float64)
+        # joints = [Back_Left, Frong_Left, Back_Right, Front_Right]
         weights_array = torch.cat((e_coeffs, gt_coeffs, gs_coeffs, gr_coeffs), dim=0)
         self.joints_linear_weights = weights_array
+        print(f'===> self.joints_linear_weights: {self.joints_linear_weights}')
         self.gs_coeffs = gs_coeffs
         self.gt_coeffs = gt_coeffs
         self.gr_coeffs = gr_coeffs
@@ -158,8 +160,9 @@ class GRF_HGNN_K4(torch.nn.Module):
         # [batch_size * num_joints, num_timesteps * num_variables] -> [batch_size, num_joints, num_timesteps, num_variables]
         joint_x = joint_x.view(-1, num_joints, num_timesteps, 2)
         
-        # Apply the coefficients to each variable separately
-        joint_x = joint_x * self.joints_linear_weights.view(1, -1, 1, 1)
+        # Apply the coefficients to each variable separately, ensuring same device
+        weights = self.joints_linear_weights.to(joint_x.device).view(1, -1, 1, 1)
+        joint_x = joint_x * weights
         
         # Reshape back to the original shape [batch_size, num_joints, num_timesteps, num_variables] -> [batch_size, num_timesteps * num_variables]
         x_dict['joint'] = joint_x.reshape(-1, num_timesteps * 2)
