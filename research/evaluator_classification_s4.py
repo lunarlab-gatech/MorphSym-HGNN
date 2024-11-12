@@ -3,7 +3,7 @@ from mi_hgnn.lightning_py.gnnLightning import evaluate_model
 import torch
 import numpy as np
 import pandas
-
+from datetime import datetime
 
 def main():
     # ================================= CHANGE THIS ====================================
@@ -17,11 +17,10 @@ def main():
         import mi_hgnn.datasets_py.LinTzuYaunDataset as linData
         model_type = 'heterogeneous_gnn' # 'heterogeneous_gnn_k4'
         path_to_checkpoint = "ckpts/Classification Experiment/Main Experiment/leafy-totem-5/epoch=10-val_CE_loss=0.30258.ckpt" # Path to specific checkpoint file
-    path_to_save_csv = path_to_checkpoint.replace('.ckpt', '.csv') # csv save location and file name
 
     # Swap legs to evaluate the model on the opposite leg
     # swap_legs_list = [(1, 3), (1, 0), (1, 2), None, ((1, 0), (3, 2)), ((1, 3), (2, 0))] # Swap tuple: FR: 0, FL: 1, RR: 2, RL: 3, None: no swap
-    swap_legs_list = [((1, 0), (3, 2))] # Debugging
+    swap_legs_list = [((1, 0), (3, 2)), ((1, 3), (2, 0))] # Debugging
     leg_swap_mode = 'MorphSym'
     # ==================================================================================
     legs_dict = {0: 'FR', 1: 'FL', 2: 'RR', 3: 'RL'}
@@ -33,6 +32,14 @@ def main():
     if path_to_checkpoint is None:
         raise ValueError("Please provide a checkpoint path by editing this file!")
     
+    # path to save csv
+    path_to_save_csv = path_to_checkpoint.replace('.ckpt', '.csv') # csv save location and file name
+    ckpt_name = path_to_checkpoint.split('/')[-1].replace('.ckpt', '')
+    time_stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    # add the swap legs and leg swap mode to the path
+    path_to_save_csv = path_to_save_csv.replace(ckpt_name, ckpt_name + '-swap_legs={}-leg_swap_mode={}-{}'.format(swap_legs_list, leg_swap_mode, time_stamp))
+    print("Results saving to: ", path_to_save_csv)
+
     # Initialize DataFrame outside the loop
     columns = ["Swap", "Model Accuracy", "Rear-Left", "Front-Left",	"Rear-Right", "Front-Right", "F1 Avg"]
     df = pandas.DataFrame(None, columns=columns)
@@ -86,15 +93,18 @@ def main():
         print("F1-Score Legs Avg: ", f1_avg_legs.item())
 
         if swap_legs is None and path_to_save_csv is not None:
-            ckpt_name = path_to_checkpoint.split('/')[-1].replace('.ckpt', '')
-            path_to_save_csv = path_to_save_csv.replace(ckpt_name, ckpt_name + '-acc={}-f1={}'.format(acc.item(), f1_avg_legs.item()))
-        print("Results saving to: ", path_to_save_csv)
+            save_file_name = path_to_save_csv.split('/')[-1].replace('.csv', '')
+            path_to_save_csv = path_to_save_csv.replace(save_file_name, save_file_name + '-acc={}-f1={}'.format(acc.item(), f1_avg_legs.item()))
+            print("Note: Results saving path is changed to: ", path_to_save_csv)
 
     # Save to csv
     if path_to_save_csv is not None:
         df.to_csv(path_to_save_csv, index=False)
     else:
-        df.to_csv("classification_results_hgnns_k4.csv", index=False)
+        time_stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        path_to_save_csv = path_to_checkpoint.replace('.ckpt', f'_classification_results_{time_stamp}.csv') # csv save location and file name
+        print("Results saving to: ", path_to_save_csv)
+        df.to_csv(path_to_save_csv, index=False)
 
 if __name__ == "__main__":
     main()

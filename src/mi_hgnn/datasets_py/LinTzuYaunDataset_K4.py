@@ -2,50 +2,94 @@ from .LinTzuYaunDataset import LinTzuYaunDataset
 import torch
 from torch_geometric.data import HeteroData
 import numpy as np
-
+import yaml
 class LinTzuYaunDataset_NewGraph(LinTzuYaunDataset):
     """
     Extended LinTzuYaunDataset with new graph structure:
     - Split base node into 4 nodes (FL, FR, BL, BR base)
     - Add gt_edge between front bases and between back bases
     - Add gs_edge between left bases and between right bases
+
+    Parameters (NEW):
+        swap_legs (tuple | None): Either None, a tuple of (leg1_idx, leg2_idx), or a tuple of tuples
+            e.g. None means no swap, (0,1) means swap FR and FL legs,
+            ((0,1), (2,3)) means swap FR-FL and RR-RL legs
+        symmetry_operator (str): The symmetry operator to use for the MorphSym symmetry mode.
+            Can be 'gs' or 'gt' or 'gr' or None.
+        symmetry_mode (str): The mode to use for symmetry. Either 'Euclidean' or 'MorphSym'.
+        group_operator_path (Path): The path to the group operator file. Only used if symmetry_operator is not None.
+
+        NOTE: 
+            * If symmetry_operator is not None, then symmetry_mode must be 'MorphSym' or 'Euclidean'.
+            * swap_legs is not None and symmetry_operator is not None is NOT supported.
     """
-    def __init__(self, root, path_to_urdf, urdf_package_name, urdf_package_relative_path, 
-                 model_type, history_length, normalize=True, swap_legs=None, leg_swap_mode='Euclidean'):
+    def __init__(self, 
+                 root, 
+                 path_to_urdf, 
+                 urdf_package_name, 
+                 urdf_package_relative_path, 
+                 model_type, 
+                 history_length, 
+                 normalize=True, 
+                 swap_legs=None,
+                 symmetry_operator=None,  # Can be 'gs' or 'gt' or 'gr' or None
+                 symmetry_mode=None, # Can be 'Euclidean' or 'MorphSym' or None
+                 group_operator_path=None):
+        
+        # Check for swap legs and symmetry operator compatibility
+        if swap_legs is not None and symmetry_operator is not None:
+            raise ValueError("swap_legs is not None and symmetry_operator is not None is not supported.")
+        
+        # Check for symmetry_mode is specified correctly
+        if symmetry_operator is not None and (symmetry_mode != 'MorphSym' and symmetry_mode != 'Euclidean' or group_operator_path is None):
+            raise ValueError("symmetry_mode must be 'MorphSym' or 'Euclidean' when symmetry_operator is not None.")
+        
+        self.swap_legs = swap_legs
+        # Set the swap legs parameter
+        if swap_legs is not None:
+            # sort each tuple in swap_legs
+            if isinstance(swap_legs[0], tuple):
+                sorted_swap_legs = tuple(tuple(sorted(swap_pair)) for swap_pair in swap_legs)
+            else:
+                sorted_swap_legs = tuple([tuple(sorted(swap_legs))])
+            self.swap_legs = sorted_swap_legs
+        
+        # Set the symmetry parameters
+        self.symmetry_operator = symmetry_operator
+        self.symmetry_mode = symmetry_mode
+        self.group_operator_path = group_operator_path        
+        
+        if self.symmetry_operator is not None:
+            # Load the group operator from yaml file
+            try:
+                with open(self.group_operator_path, 'r') as file:
+                    group_data = yaml.safe_load(file)
+                    
+                # Extract permutation and reflection data
+                self.permutation_Q_js = group_data.get('permutation_Q_js', []) # np array, shape [2, 12]
+                self.reflection_Q_js = group_data.get('reflection_Q_js', []) # np array, shape [2, 12]
+
+                # Create symmetry coefficients dictionary based on the yaml data
+                if self.symmetry_mode == 'MorphSym':
+                    self.joint_coefficients = {
+                        'gs': np.array(self.reflection_Q_js[0], dtype=np.float64),  # Sagittal symmetry
+                        'gt': np.array(self.reflection_Q_js[1], dtype=np.float64),  # Transversal symmetry
+                        'gr': np.array([x * y for x, y in zip(self.reflection_Q_js[0], self.reflection_Q_js[1])], dtype=np.float64)  # Rotational symmetry
+                    }
+                elif self.symmetry_mode == 'Euclidean':
+                    self.joint_coefficients = {
+                        'gs': np.ones_like(self.reflection_Q_js[0], dtype=np.float64),  # Sagittal symmetry
+                        'gt': np.ones_like(self.reflection_Q_js[0], dtype=np.float64),  # Transversal symmetry
+                        'gr': np.ones_like(self.reflection_Q_js[0], dtype=np.float64)  # Rotational symmetry
+                    }
+                    
+            except FileNotFoundError:
+                raise ValueError(f"Group operator file not found at {self.group_operator_path}")
+            except yaml.YAMLError as e:
+                raise ValueError(f"Error parsing YAML file: {e}")
+
         super().__init__(root, path_to_urdf, urdf_package_name, urdf_package_relative_path,
-                        model_type, history_length, normalize=normalize, swap_legs=swap_legs, leg_swap_mode=leg_swap_mode)
-        
-        if self.swap_legs and self.leg_swap_mode == 'MorphSym':
-            # Joint coefficients for morphological symmetry transformations: E, g_S, g_T, g_R
-            # Shape: [4 legs, 3 joints per leg]
-            # Order: FL, FR, BL, BR legs
-            # Values represent how joint angles transform under symmetry operations
-            self.joint_coefficients = {
-                'e': np.array([ 1,  1,  1], dtype=np.float64),  # FL leg (identity)
-                'gs': np.array([-1,  1,  1], dtype=np.float64), # FR leg (sagittal)
-                'gt': np.array([ 1, -1, -1], dtype=np.float64), # RL leg (transverse) 
-                'gr': np.array([-1, -1, -1], dtype=np.float64)  # R leg (rotational)
-            }
-        elif (self.swap_legs and self.leg_swap_mode == 'Euclidean') or self.swap_legs is None:
-            self.joint_coefficients = {
-                'e': np.array([ 1,  1,  1], dtype=np.float64),  # FL leg (identity)
-                'gs': np.array([ 1,  1,  1], dtype=np.float64), # FR leg (sagittal)
-                'gt': np.array([ 1,  1,  1], dtype=np.float64), # RL leg (transverse) 
-                'gr': np.array([ 1,  1,  1], dtype=np.float64)  # R leg (rotational)
-            }
-        else:
-            raise ValueError(f"Invalid leg swap mode: {self.leg_swap_mode}")
-        
-        if self.swap_legs:
-            # MorphSym情况下需要判断腿的关系并应用reflection
-            self.leg_pairs = {
-                (0, 1): 'gs',  # FR-FL: transverse plane symmetry
-                (2, 3): 'gs',  # RR-RL: -
-                (0, 2): 'gt',  # FR-RR: sagittal plane symmetry
-                (1, 3): 'gt',  # FL-RL: -
-                (0, 3): 'gr',  # FR-RL: rotational symmetry
-                (1, 2): 'gr'   # FL-RR: -
-            }
+                        model_type, history_length, normalize=normalize)
         
         self.model_type = model_type
         if self.model_type == 'heterogeneous_gnn_k4':
@@ -53,6 +97,128 @@ class LinTzuYaunDataset_NewGraph(LinTzuYaunDataset):
             self.hgnn_number_nodes = (4, self.hgnn_number_nodes[1], self.hgnn_number_nodes[2])
             # initialize new edges
             self._init_new_edges()
+        
+        # if self.swap_legs and self.leg_swap_mode == 'MorphSym':
+        #     # Joint coefficients for morphological symmetry transformations: E, g_S, g_T, g_R
+        #     # Shape: [4 legs, 3 joints per leg]
+        #     # Order: FL, FR, BL, BR legs
+        #     # Values represent how joint angles transform under symmetry operations
+        #     self.joint_coefficients = {
+        #         'e': np.array([ 1,  1,  1], dtype=np.float64),  # FL leg (identity)
+        #         'gs': np.array([-1,  1,  1], dtype=np.float64), # FR leg (sagittal)
+        #         'gt': np.array([ 1, -1, -1], dtype=np.float64), # RL leg (transverse) 
+        #         'gr': np.array([-1, -1, -1], dtype=np.float64)  # R leg (rotational)
+        #     }
+        # elif (self.swap_legs and self.leg_swap_mode == 'Euclidean') or self.swap_legs is None:
+        #     self.joint_coefficients = {
+        #         'e': np.array([ 1,  1,  1], dtype=np.float64),  # FL leg (identity)
+        #         'gs': np.array([ 1,  1,  1], dtype=np.float64), # FR leg (sagittal)
+        #         'gt': np.array([ 1,  1,  1], dtype=np.float64), # RL leg (transverse) 
+        #         'gr': np.array([ 1,  1,  1], dtype=np.float64)  # R leg (rotational)
+        #     }
+        # else:
+        #     raise ValueError(f"Invalid leg swap mode: {self.leg_swap_mode}")
+        
+        # if self.swap_legs:
+        #     # MorphSym情况下需要判断腿的关系并应用reflection
+        #     self.leg_pairs = {
+        #         (0, 1): 'gs',  # FR-FL: transverse plane symmetry
+        #         (2, 3): 'gs',  # RR-RL: -
+        #         (0, 2): 'gt',  # FR-RR: sagittal plane symmetry
+        #         (1, 3): 'gt',  # FL-RL: -
+        #         (0, 3): 'gr',  # FR-RL: rotational symmetry
+        #         (1, 2): 'gr'   # FL-RR: -
+        #     }
+
+    def load_data_sorted(self, seq_num: int):
+        """
+        Loads data from the dataset at the provided sequence number.
+        However, the joint and feet are sorted so that they match 
+        the order in the URDF file. Additionally, the foot labels 
+        are sorted so it matches the order in the URDF file.
+
+        Next, labels are checked to make sure they aren't None. 
+        Finally, normalize the data if self.normalize was set as True.
+        We calculate the standard deviation for this normalization 
+        using Bessel's correction (n-1 used instead of n).
+
+        Parameters:
+            seq_num (int): The sequence number of the txt file
+                whose data should be loaded.
+
+        Returns:
+            Same values as load_data_at_dataset_seq(), but order of
+            values inside arrays have been sorted (and potentially
+            normalized).
+        """
+        if self.swap_legs is not None:
+            lin_acc, ang_vel, j_p, j_v, j_T, f_p, f_v, labels, r_p, r_o, timestamps = self.load_data_at_dataset_seq_with_swap(seq_num, self.swap_legs)
+        else:
+            lin_acc, ang_vel, j_p, j_v, j_T, f_p, f_v, labels, r_p, r_o, timestamps = self.load_data_at_dataset_seq(seq_num)
+
+        # Sort the joint information
+        unsorted_list = [j_p, j_v, j_T]
+        sorted_list = []
+        for unsorted_array in unsorted_list:
+            if unsorted_array is not None:
+                sorted_list.append(unsorted_array[:,self.joint_node_indices_sorted])
+            else:
+                sorted_list.append(None)
+
+        if self.symmetry_operator is not None:
+            sorted_list = self.apply_symmetry(sorted_list)
+
+        # Sort the foot information
+        unsorted_foot_list = [f_p, f_v]
+        sorted_foot_list = []
+        for unsorted_array in unsorted_foot_list:
+            if unsorted_array is not None:
+                sorted_indices = []
+                for index in self.foot_node_indices_sorted:
+                    for i in range(0, 3):
+                        sorted_indices.append(int(index*3+i))
+                sorted_foot_list.append(unsorted_array[:,sorted_indices])
+            else:
+                sorted_foot_list.append(None)
+
+        # Sort the ground truth labels
+        labels_sorted = None
+        if labels is None:
+            raise ValueError("Dataset must provide labels.")
+        else:
+            labels_sorted = labels[self.foot_node_indices_sorted]
+
+        # Normalize the data if desired
+        norm_arrs = [None, None, None, None, None, None, None, None, None]
+        if self.normalize:
+            # Normalize all data except the labels
+            to_normalize_array = [lin_acc, ang_vel, sorted_list[0], sorted_list[1], sorted_list[2], sorted_foot_list[0], sorted_foot_list[1], r_p, r_o]
+            for i, array in enumerate(to_normalize_array):
+                if (array is not None) and (array.shape[0] > 1):
+                    array_tensor = torch.from_numpy(array)
+                    norm_arrs[i] = np.nan_to_num((array_tensor-torch.mean(array_tensor,axis=0))/torch.std(array_tensor, axis=0, correction=1).numpy(), copy=False, nan=0.0)
+
+            return norm_arrs[0], norm_arrs[1], norm_arrs[2], norm_arrs[3], norm_arrs[4], norm_arrs[5], norm_arrs[6], labels_sorted, norm_arrs[7], norm_arrs[8], timestamps
+        else:
+            return lin_acc, ang_vel, sorted_list[0], sorted_list[1], sorted_list[2], sorted_foot_list[0], sorted_foot_list[1], labels_sorted, r_p, r_o, timestamps
+
+    def apply_symmetry(self, data_list):
+        """Apply the symmetry operator to the data"""
+        new_data_list = []
+        # data_list: [j_p, j_v, j_T], each shape: [history_length, 12]
+        for data in data_list:
+            if data is None:
+                new_data_list.append(None)
+                continue
+            if self.symmetry_operator == 'gs':
+                data = data[:, self.permutation_Q_js[0]].copy() * self.joint_coefficients['gs']
+            elif self.symmetry_operator == 'gt':
+                data = data[:, self.permutation_Q_js[1]].copy() * self.joint_coefficients['gt']
+            elif self.symmetry_operator == 'gr':
+                data = data[:, self.permutation_Q_js[0]].copy()
+                data = data[:, self.permutation_Q_js[1]].copy() * self.joint_coefficients['gr']
+            new_data_list.append(data)
+        return new_data_list
     
     def _init_new_edges(self):
         """Initialize the new edge structure"""
