@@ -636,7 +636,9 @@ class Full_Dynamics_Model_Lightning(Base_Lightning):
 
 
 def evaluate_model(path_to_checkpoint: Path, predict_dataset: Subset,
-                   enable_testing_mode: bool = False):
+                   enable_testing_mode: bool = False,
+                   symmetry_mode: str = None,
+                   group_operator_path: str = None):
     """
     Runs the provided model on the corresponding dataset,
     and returns the predicted values and the ground truth values.
@@ -678,8 +680,8 @@ def evaluate_model(path_to_checkpoint: Path, predict_dataset: Subset,
     elif model_type == 'heterogeneous_gnn_k4':
         model = HGNN_K4_Lightning.load_from_checkpoint(
             str(path_to_checkpoint),
-            symmetry_mode='MorphSym',
-            group_operator_path='/home/swei303/Documents/proj/MorphSym-HGNN/cfg/mini_cheetah-k4.yaml',
+            symmetry_mode=symmetry_mode,
+            group_operator_path=group_operator_path,
             strict=False
         )
     elif model_type == 'dynamics':

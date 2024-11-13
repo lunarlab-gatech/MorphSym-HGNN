@@ -72,18 +72,23 @@ class LinTzuYaunDataset_NewGraph(LinTzuYaunDataset):
                 self.permutation_Q_fs = group_data.get('permutation_Q_fs', []) # np array, shape [2, 12]
                 self.reflection_Q_fs = group_data.get('reflection_Q_fs', []) # np array, shape [2, 12]
 
-                self.permutation_Q_bs = group_data.get('permutation_Q_bs', []) # np array, shape [2, 12]
-                self.reflection_Q_bs = group_data.get('reflection_Q_bs', []) # np array, shape [2, 12]
+                self.permutation_Q_bs = group_data.get('permutation_Q_bs', []) # np array, shape [2, 4]
+                self.reflection_Q_bs = group_data.get('reflection_Q_bs', []) # np array, shape [2, 4]
+
+                self.permutation_Q_ls = group_data.get('permutation_Q_ls', []) # np array, shape [2, 4]
+                self.reflection_Q_ls = group_data.get('reflection_Q_ls', []) # np array, shape [2, 4]
 
                 # Create symmetry coefficients dictionary based on the yaml data
                 if self.symmetry_mode == 'MorphSym':
                     self.joint_coefficients = self.create_morphsym_coefficients(self.reflection_Q_js)
                     self.foot_coefficients = self.create_morphsym_coefficients(self.reflection_Q_fs)
                     self.base_coefficients = self.create_morphsym_coefficients(self.reflection_Q_bs)
+                    self.label_coefficients = self.create_morphsym_coefficients(self.reflection_Q_ls)
                 elif self.symmetry_mode == 'Euclidean':
                     self.joint_coefficients = self.create_coefficient_dict(self.reflection_Q_js)
                     self.foot_coefficients = self.create_coefficient_dict(self.reflection_Q_fs)
                     self.base_coefficients = self.create_coefficient_dict(self.reflection_Q_bs)
+                    self.label_coefficients = self.create_coefficient_dict(self.reflection_Q_ls)
             except FileNotFoundError:
                 raise ValueError(f"Group operator file not found at {self.group_operator_path}")
             except yaml.YAMLError as e:
@@ -98,37 +103,6 @@ class LinTzuYaunDataset_NewGraph(LinTzuYaunDataset):
             self.hgnn_number_nodes = (4, self.hgnn_number_nodes[1], self.hgnn_number_nodes[2])
             # initialize new edges
             self._init_new_edges()
-        
-        # if self.swap_legs and self.leg_swap_mode == 'MorphSym':
-        #     # Joint coefficients for morphological symmetry transformations: E, g_S, g_T, g_R
-        #     # Shape: [4 legs, 3 joints per leg]
-        #     # Order: FL, FR, BL, BR legs
-        #     # Values represent how joint angles transform under symmetry operations
-        #     self.joint_coefficients = {
-        #         'e': np.array([ 1,  1,  1], dtype=np.float64),  # FL leg (identity)
-        #         'gs': np.array([-1,  1,  1], dtype=np.float64), # FR leg (sagittal)
-        #         'gt': np.array([ 1, -1, -1], dtype=np.float64), # RL leg (transverse) 
-        #         'gr': np.array([-1, -1, -1], dtype=np.float64)  # R leg (rotational)
-        #     }
-        # elif (self.swap_legs and self.leg_swap_mode == 'Euclidean') or self.swap_legs is None:
-        #     self.joint_coefficients = {
-        #         'e': np.array([ 1,  1,  1], dtype=np.float64),  # FL leg (identity)
-        #         'gs': np.array([ 1,  1,  1], dtype=np.float64), # FR leg (sagittal)
-        #         'gt': np.array([ 1,  1,  1], dtype=np.float64), # RL leg (transverse) 
-        #         'gr': np.array([ 1,  1,  1], dtype=np.float64)  # R leg (rotational)
-        #     }
-        # else:
-        #     raise ValueError(f"Invalid leg swap mode: {self.leg_swap_mode}")
-        
-        # if self.swap_legs:
-        #     self.leg_pairs = {
-        #         (0, 1): 'gs',  # FR-FL: transverse plane symmetry
-        #         (2, 3): 'gs',  # RR-RL: -
-        #         (0, 2): 'gt',  # FR-RR: sagittal plane symmetry
-        #         (1, 3): 'gt',  # FL-RL: -
-        #         (0, 3): 'gr',  # FR-RL: rotational symmetry
-        #         (1, 2): 'gr'   # FL-RR: -
-        #     }
 
     def create_coefficient_dict(self, reflection_array):
         return {
@@ -203,6 +177,9 @@ class LinTzuYaunDataset_NewGraph(LinTzuYaunDataset):
                 sorted_foot_list.append(unsorted_array[:,sorted_indices])
             else:
                 sorted_foot_list.append(None)
+        
+        if self.symmetry_operator is not None:
+            sorted_foot_list = self.apply_symmetry(sorted_foot_list, part='foot')
 
         # Sort the ground truth labels
         labels_sorted = None
@@ -242,12 +219,8 @@ class LinTzuYaunDataset_NewGraph(LinTzuYaunDataset):
         elif part == 'label': 
             # for labels, data shape: (4,), for classification task, 
             # we need to apply Euclidean symmetry to labels
-            permutation_Q = self.permutation_Q_fs
-            coefficients = {
-                'gs': np.ones_like(permutation_Q[0], dtype=np.float64),
-                'gt': np.ones_like(permutation_Q[0], dtype=np.float64),
-                'gr': np.ones_like(permutation_Q[0], dtype=np.float64)
-            }
+            permutation_Q = self.permutation_Q_ls
+            coefficients = self.label_coefficients
         else:
             raise ValueError(f"Invalid part: {part}")
 
