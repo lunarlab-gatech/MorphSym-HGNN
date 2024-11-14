@@ -12,18 +12,18 @@ def main():
     if K4_version:
         import mi_hgnn.datasets_py.LinTzuYaunDataset_K4 as linData
         model_type = 'heterogeneous_gnn_k4'
-        path_to_checkpoint = "/home/swei303/Documents/proj/MorphSym-HGNN/models/splendid-armadillo-4/epoch=10-val_CE_loss=0.33491.ckpt" # Path to specific checkpoint file
+        path_to_checkpoint = "PATH_TO_CHECKPOINT"
     else:
         import mi_hgnn.datasets_py.LinTzuYaunDataset as linData
         model_type = 'heterogeneous_gnn' # 'heterogeneous_gnn_k4'
-        path_to_checkpoint = "ckpts/Classification Experiment/Main Experiment/leafy-totem-5/epoch=10-val_CE_loss=0.30258.ckpt" # Path to specific checkpoint file
+        path_to_checkpoint = "PATH_TO_CHECKPOINT" # Path to specific checkpoint file
 
     # Swap legs to evaluate the model on the opposite leg
     # swap_legs_list = [(1, 3), (1, 0), (1, 2), None, ((1, 0), (3, 2)), ((1, 3), (2, 0))] # Swap tuple: FR: 0, FL: 1, RR: 2, RL: 3, None: no swap
     # swap_legs_list = [((1, 0), (3, 2)), ((1, 3), (2, 0))] # Debugging
-    symmetry_operator_list = ['gs', 'gt', 'gr']  # Can be 'gs' or 'gt' or 'gr' or None
+    symmetry_operator_list = [None, 'gs', 'gt', 'gr']  # Can be 'gs' or 'gt' or 'gr' or None
     symmetry_mode = 'MorphSym' # Can be 'Euclidean' or 'MorphSym' or None
-    group_operator_path = '/home/swei303/Documents/proj/MorphSym-HGNN/cfg/mini_cheetah-k4.yaml'
+    group_operator_path = 'PATH_TO_GROUP_OPERATOR_YAML'
     # ==================================================================================
     legs_dict = {0: 'FR', 1: 'FL', 2: 'RR', 3: 'RL'}
     # Set parameters
@@ -85,7 +85,7 @@ def main():
         test_dataset = torch.utils.data.Subset(test_dataset, np.arange(0, test_dataset.__len__()))
 
         # Evaluate with model
-        pred, labels, acc, f1_leg_0, f1_leg_1, f1_leg_2, f1_leg_3, f1_avg_legs = evaluate_model(path_to_checkpoint, test_dataset)
+        pred, labels, acc, f1_leg_0, f1_leg_1, f1_leg_2, f1_leg_3, f1_avg_legs = evaluate_model(path_to_checkpoint, test_dataset, symmetry_mode=symmetry_mode, group_operator_path=group_operator_path)
         # Save to DataFrame
         df = pandas.concat([df, pandas.DataFrame([[symmetry_operator, acc.item(), f1_leg_0.item(), f1_leg_1.item(), f1_leg_2.item(), f1_leg_3.item(), f1_avg_legs.item()]], columns=columns)], ignore_index=True)
 
