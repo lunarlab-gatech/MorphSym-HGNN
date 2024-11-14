@@ -178,52 +178,50 @@ class GRF_HGNN_K4(torch.nn.Module):
         foot_x = x_dict['foot']  # shape: [batch_size * num_legs, num_timesteps * num_variables]
         batch_size = x_dict['foot'].shape[0] // self.num_legs
         # f_p, f_v: shape [batch_size, num_timesteps, num_legs*num_dimensions]
-        f_p, f_v = self.unpack_foot_data(foot_x, batch_size, self.num_timesteps, self.num_legs, self.num_dimensions_per_foot)
+        f_p, f_v = self.unpack_foot_data(foot_x, batch_size)
         # Apply the coefficients to each variable separately, ensuring same device
         weights_f = self.feet_linear_weights.to(f_p.device).view(1, 1, -1)
         f_p = f_p * weights_f
         f_v = f_v * weights_f
         # Pack f_p and f_v back into foot_x
-        foot_x = self.pack_foot_data(f_p, f_v, batch_size, self.num_timesteps, self.num_legs, self.num_dimensions_per_foot)
+        foot_x = self.pack_foot_data(f_p, f_v, batch_size)
         x_dict['foot'] = foot_x
 
         return x_dict
 
-    def unpack_foot_data(self, foot_x, batch_size, num_timesteps, num_legs, num_dimensions):
+    def unpack_foot_data(self, foot_x, batch_size):
         """
         Unpack input data of shape [batch_size*4, 900] into f_p and f_v
         
         Args:
             foot_x: Input data with shape [batch_size*num_legs, num_timesteps*num_dimensions*2]
             batch_size: Size of batch
-            num_timesteps: Number of timesteps
-            num_legs: Number of legs
-            num_dimensions: Number of dimensions per foot (xyz=3)
         
         Returns:
             f_p: Position data with shape [batch_size, num_timesteps, num_legs*num_dimensions]
             f_v: Velocity data with shape [batch_size, num_timesteps, num_legs*num_dimensions]
         """
-        # 1. First reshape data to [batch_size, num_legs, num_timesteps*num_dimensions*2]
-        x = foot_x.view(batch_size, num_legs, -1)
-        
-        # 2. Separate position and velocity data
-        features_per_var = num_timesteps * num_dimensions
-        position_data = x[:, :, :features_per_var]  # [batch_size, num_legs, 450]
-        velocity_data = x[:, :, features_per_var:]  # [batch_size, num_legs, 450]
-        
-        # 3. Reshape position data
-        # [batch_size, num_legs, 450] -> [batch_size, num_legs, num_timesteps, num_dimensions]
-        position_data = position_data.view(batch_size, num_legs, num_timesteps, num_dimensions)
-        f_p = position_data.permute(0, 2, 1, 3).reshape(batch_size, num_timesteps, -1)
-        
-        # 4. Reshape velocity data
-        velocity_data = velocity_data.view(batch_size, num_legs, num_timesteps, num_dimensions)
-        f_v = velocity_data.permute(0, 2, 1, 3).reshape(batch_size, num_timesteps, -1)
-        
+        x = foot_x.view(batch_size, self.num_legs, -1)
+
+        # Separate position and velocity data
+        features_per_var = self.num_timesteps * self.num_dimensions_per_foot
+        position_data = x[:, :, :features_per_var]  # [batch_size, num_legs, timesteps*dim]
+        velocity_data = x[:, :, features_per_var:]  
+
+        # Separate x, y, z and reshape to [batch_size, self.num_legs, self.num_timesteps, 1]
+        f_p_xyz = torch.ones((0), dtype=torch.float64)
+        f_v_xyz = torch.ones((0), dtype=torch.float64)
+        for i in range(self.num_dimensions_per_foot):
+            f_p_xyz = torch.cat((f_p_xyz, position_data[:, :, i*self.num_timesteps:(i+1)*self.num_timesteps].view(batch_size, self.num_legs, self.num_timesteps, 1)), dim=3)
+            f_v_xyz = torch.cat((f_v_xyz, velocity_data[:, :, i*self.num_timesteps:(i+1)*self.num_timesteps].view(batch_size, self.num_legs, self.num_timesteps, 1)), dim=3)
+
+        # Permute to [batch_size, self.num_timesteps, self.num_legs*3]
+        f_p = f_p_xyz.permute(0, 2, 1, 3).reshape(batch_size, self.num_timesteps, -1)
+        f_v = f_v_xyz.permute(0, 2, 1, 3).reshape(batch_size, self.num_timesteps, -1)
+
         return f_p, f_v
 
-    def pack_foot_data(self, f_p, f_v, batch_size, num_timesteps, num_legs, num_dimensions):
+    def pack_foot_data(self, f_p, f_v, batch_size):
         """
         Pack f_p and f_v back into foot_x
         
@@ -231,33 +229,15 @@ class GRF_HGNN_K4(torch.nn.Module):
             f_p: Position data with shape [batch_size, num_timesteps, num_legs*num_dimensions]
             f_v: Velocity data with shape [batch_size, num_timesteps, num_legs*num_dimensions]
             batch_size: Size of batch
-            num_timesteps: Number of timesteps
-            num_legs: Number of legs
-            num_dimensions: Number of dimensions per foot (xyz=3)
         
         Returns:
             foot_x: Packed data with shape [batch_size*num_legs, num_timesteps*num_dimensions*2]
         """
-        # 1. Reshape position data
-        # [batch_size, num_timesteps, num_legs*num_dimensions] -> [batch_size, num_timesteps, num_legs, num_dimensions]
-        position_data = f_p.view(batch_size, num_timesteps, num_legs, num_dimensions)
-        # [batch_size, num_timesteps, num_legs, num_dimensions] -> [batch_size, num_legs, num_timesteps, num_dimensions]
-        position_data = position_data.permute(0, 2, 1, 3)
-        
-        # 2. Reshape velocity data
-        velocity_data = f_v.view(batch_size, num_timesteps, num_legs, num_dimensions)
-        velocity_data = velocity_data.permute(0, 2, 1, 3)
-        
-        # 3. Flatten the timesteps and dimensions
-        features_per_var = num_timesteps * num_dimensions
-        position_flat = position_data.reshape(batch_size, num_legs, features_per_var)
-        velocity_flat = velocity_data.reshape(batch_size, num_legs, features_per_var)
-        
-        # 4. Concatenate position and velocity data
-        x = torch.cat([position_flat, velocity_flat], dim=2)  # [batch_size, num_legs, 900]
-        
-        # 5. Reshape to final form
-        foot_x = x.reshape(batch_size * num_legs, -1)  # [batch_size*num_legs, 900]
+        position_data = f_p.view(batch_size, self.num_timesteps, self.num_legs, self.num_dimensions_per_foot)
+        velocity_data = f_v.view(batch_size, self.num_timesteps, self.num_legs, self.num_dimensions_per_foot)
+        position_data = position_data.permute(0, 2, 3, 1).reshape(batch_size, self.num_legs, -1)
+        velocity_data = velocity_data.permute(0, 2, 3, 1).reshape(batch_size, self.num_legs, -1)
+        foot_x = torch.cat([position_data, velocity_data], dim=2).reshape(batch_size * self.num_legs, -1)
         
         return foot_x
 
