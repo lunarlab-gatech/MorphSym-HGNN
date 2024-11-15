@@ -239,8 +239,8 @@ class GRF_HGNN_K4(torch.nn.Module):
         velocity_data = x[:, :, features_per_var:]  
 
         # Separate x, y, z and reshape to [batch_size, self.num_legs, self.num_timesteps, 1]
-        f_p_xyz = torch.ones((0), dtype=torch.float64)
-        f_v_xyz = torch.ones((0), dtype=torch.float64)
+        f_p_xyz = torch.ones((0), dtype=torch.float64).to(position_data.device)
+        f_v_xyz = torch.ones((0), dtype=torch.float64).to(velocity_data.device)
         for i in range(self.num_dimensions_per_foot):
             f_p_xyz = torch.cat((f_p_xyz, position_data[:, :, i*self.num_timesteps:(i+1)*self.num_timesteps].view(batch_size, self.num_legs, self.num_timesteps, 1)), dim=3)
             f_v_xyz = torch.cat((f_v_xyz, velocity_data[:, :, i*self.num_timesteps:(i+1)*self.num_timesteps].view(batch_size, self.num_legs, self.num_timesteps, 1)), dim=3)
