@@ -31,6 +31,7 @@ class GRF_HGNN_K4(torch.nn.Module):
         self.num_legs = 4
         self.num_joints = self.num_legs * num_joints_per_leg
         self.num_dimensions_per_foot = 3
+        self.num_dimensions_per_base = 3
         # Initialize the joint coefficients based on the symmetry mode and group operator path
         if symmetry_mode and group_operator_path:
             with open(group_operator_path, 'r') as file:
@@ -47,6 +48,18 @@ class GRF_HGNN_K4(torch.nn.Module):
             f_gt_coeffs = torch.tensor(reflection_Q_fs[1][:self.num_dimensions_per_foot], dtype=torch.float64) # transversal symmetry, shape [num_legs]
             f_e_coeffs = torch.ones_like(f_gs_coeffs, dtype=torch.float64) # rotational symmetry, shape [num_legs]
             f_gr_coeffs = f_gs_coeffs * f_gt_coeffs
+
+            reflection_Q_bs_lin = group_data.get('reflection_Q_bs_lin', [])
+            b_gs_coeffs_lin = torch.tensor(reflection_Q_bs_lin[0][:self.num_dimensions_per_base], dtype=torch.float64) # sagittal symmetry, shape [3]
+            b_gt_coeffs_lin = torch.tensor(reflection_Q_bs_lin[1][:self.num_dimensions_per_base], dtype=torch.float64) # transversal symmetry, shape [3]
+            b_e_coeffs_lin = torch.ones_like(b_gs_coeffs_lin, dtype=torch.float64) # rotational symmetry, shape [3]
+            b_gr_coeffs_lin = b_gs_coeffs_lin * b_gt_coeffs_lin
+
+            reflection_Q_bs_ang = group_data.get('reflection_Q_bs_ang', [])
+            b_gs_coeffs_ang = torch.tensor(reflection_Q_bs_ang[0][:self.num_dimensions_per_base], dtype=torch.float64) # sagittal symmetry, shape [3]
+            b_gt_coeffs_ang = torch.tensor(reflection_Q_bs_ang[1][:self.num_dimensions_per_base], dtype=torch.float64) # transversal symmetry, shape [3]
+            b_e_coeffs_ang = torch.ones_like(b_gs_coeffs_ang, dtype=torch.float64) # rotational symmetry, shape [3]
+            b_gr_coeffs_ang = b_gs_coeffs_ang * b_gt_coeffs_ang
         else:
             j_gs_coeffs = torch.ones(num_joints_per_leg, dtype=torch.float64)
             j_gt_coeffs = torch.ones(num_joints_per_leg, dtype=torch.float64)
@@ -63,6 +76,13 @@ class GRF_HGNN_K4(torch.nn.Module):
         foot_weights_array = torch.cat((f_e_coeffs, f_gt_coeffs, f_gs_coeffs, f_gr_coeffs), dim=0)
         self.feet_linear_weights = foot_weights_array
         print(f'===> self.feet_linear_weights: {self.feet_linear_weights}')
+
+        base_weights_lin_array = torch.cat((b_e_coeffs_lin, b_gt_coeffs_lin, b_gs_coeffs_lin, b_gr_coeffs_lin), dim=0)
+        self.base_coefficients_lin = base_weights_lin_array
+        base_weights_ang_array = torch.cat((b_e_coeffs_ang, b_gt_coeffs_ang, b_gs_coeffs_ang, b_gr_coeffs_ang), dim=0)
+        self.base_coefficients_ang = base_weights_ang_array
+        print(f'===> self.base_coefficients_lin: {self.base_coefficients_lin}')
+        print(f'===> self.base_coefficients_ang: {self.base_coefficients_ang}')
 
         # Create the first layer encoder to convert features into embeddings
         self.encoder = HeteroDictLinear(-1, hidden_channels, data_metadata[0])
@@ -174,34 +194,44 @@ class GRF_HGNN_K4(torch.nn.Module):
         # Reshape back to the original shape [batch_size, num_joints, num_timesteps, num_variables] -> [batch_size, num_timesteps * num_variables]
         x_dict['joint'] = joint_x.reshape(-1, self.num_timesteps * 2)
 
+        batch_size = x_dict['foot'].shape[0] // self.num_legs
         # Apply morphological symmetry to the foot features
         foot_x = x_dict['foot']  # shape: [batch_size * num_legs, num_timesteps * num_variables]
-        batch_size = x_dict['foot'].shape[0] // self.num_legs
         # f_p, f_v: shape [batch_size, num_timesteps, num_legs*num_dimensions]
-        f_p, f_v = self.unpack_foot_data(foot_x, batch_size)
+        f_p, f_v = self.unpack_data(foot_x, batch_size)
         # Apply the coefficients to each variable separately, ensuring same device
         weights_f = self.feet_linear_weights.to(f_p.device).view(1, 1, -1)
         f_p = f_p * weights_f
         f_v = f_v * weights_f
         # Pack f_p and f_v back into foot_x
-        foot_x = self.pack_foot_data(f_p, f_v, batch_size)
+        foot_x = self.pack_data(f_p, f_v, batch_size)
         x_dict['foot'] = foot_x
+
+        # Apply morphological symmetry to the base features
+        base_x = x_dict['base']  # shape: [batch_size * num_legs, num_timesteps * num_variables]
+        lin, ang = self.unpack_data(base_x, batch_size)
+        weights_b_lin = self.base_coefficients_lin.to(lin.device).view(1, 1, -1)
+        weights_b_ang = self.base_coefficients_ang.to(ang.device).view(1, 1, -1)
+        lin = lin * weights_b_lin
+        ang = ang * weights_b_ang
+        base_x = self.pack_data(lin, ang, batch_size)
+        x_dict['base'] = base_x
 
         return x_dict
 
-    def unpack_foot_data(self, foot_x, batch_size):
+    def unpack_data(self, data, batch_size):
         """
         Unpack input data of shape [batch_size*4, 900] into f_p and f_v
         
         Args:
-            foot_x: Input data with shape [batch_size*num_legs, num_timesteps*num_dimensions*2]
+            data: Input data with shape [batch_size*num_legs, num_timesteps*num_dimensions*2]
             batch_size: Size of batch
         
         Returns:
             f_p: Position data with shape [batch_size, num_timesteps, num_legs*num_dimensions]
             f_v: Velocity data with shape [batch_size, num_timesteps, num_legs*num_dimensions]
         """
-        x = foot_x.view(batch_size, self.num_legs, -1)
+        x = data.view(batch_size, self.num_legs, -1)
 
         # Separate position and velocity data
         features_per_var = self.num_timesteps * self.num_dimensions_per_foot
@@ -221,9 +251,9 @@ class GRF_HGNN_K4(torch.nn.Module):
 
         return f_p, f_v
 
-    def pack_foot_data(self, f_p, f_v, batch_size):
+    def pack_data(self, f_p, f_v, batch_size):
         """
-        Pack f_p and f_v back into foot_x
+        Pack f_p and f_v back into data
         
         Args:
             f_p: Position data with shape [batch_size, num_timesteps, num_legs*num_dimensions]
@@ -231,15 +261,15 @@ class GRF_HGNN_K4(torch.nn.Module):
             batch_size: Size of batch
         
         Returns:
-            foot_x: Packed data with shape [batch_size*num_legs, num_timesteps*num_dimensions*2]
+            data: Packed data with shape [batch_size*num_legs, num_timesteps*num_dimensions*2]
         """
         position_data = f_p.view(batch_size, self.num_timesteps, self.num_legs, self.num_dimensions_per_foot)
         velocity_data = f_v.view(batch_size, self.num_timesteps, self.num_legs, self.num_dimensions_per_foot)
         position_data = position_data.permute(0, 2, 3, 1).reshape(batch_size, self.num_legs, -1)
         velocity_data = velocity_data.permute(0, 2, 3, 1).reshape(batch_size, self.num_legs, -1)
-        foot_x = torch.cat([position_data, velocity_data], dim=2).reshape(batch_size * self.num_legs, -1)
+        data = torch.cat([position_data, velocity_data], dim=2).reshape(batch_size * self.num_legs, -1)
         
-        return foot_x
+        return data
 
     def reset_parameters(self):
         """Reset all learnable parameters"""

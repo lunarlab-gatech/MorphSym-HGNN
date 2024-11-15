@@ -69,11 +69,12 @@ class LinTzuYaunDataset_NewGraph(LinTzuYaunDataset):
                 self.permutation_Q_js = group_data.get('permutation_Q_js', []) # np array, shape [2, 12]
                 self.reflection_Q_js = group_data.get('reflection_Q_js', []) # np array, shape [2, 12]
 
-                self.permutation_Q_fs = group_data.get('permutation_Q_fs', []) # np array, shape [2, 12]
-                self.reflection_Q_fs = group_data.get('reflection_Q_fs', []) # np array, shape [2, 12]
+                self.permutation_Q_fs = group_data.get('permutation_Q_fs', []) # np array, shape [2, 4*3]
+                self.reflection_Q_fs = group_data.get('reflection_Q_fs', []) # np array, shape [2, 4*3]
 
-                self.permutation_Q_bs = group_data.get('permutation_Q_bs', []) # np array, shape [2, 4]
-                self.reflection_Q_bs = group_data.get('reflection_Q_bs', []) # np array, shape [2, 4]
+                self.permutation_Q_bs = group_data.get('permutation_Q_bs', []) # np array, shape [2, 4*3]
+                self.reflection_Q_bs_lin = group_data.get('reflection_Q_bs_lin', []) # np array, shape [2, 4*3]
+                self.reflection_Q_bs_ang = group_data.get('reflection_Q_bs_ang', []) # np array, shape [2, 4*3]
 
                 self.permutation_Q_ls = group_data.get('permutation_Q_ls', []) # np array, shape [2, 4]
                 self.reflection_Q_ls = group_data.get('reflection_Q_ls', []) # np array, shape [2, 4]
@@ -82,12 +83,14 @@ class LinTzuYaunDataset_NewGraph(LinTzuYaunDataset):
                 if self.symmetry_mode == 'MorphSym':
                     self.joint_coefficients = self.create_morphsym_coefficients(self.reflection_Q_js)
                     self.foot_coefficients = self.create_morphsym_coefficients(self.reflection_Q_fs)
-                    self.base_coefficients = self.create_morphsym_coefficients(self.reflection_Q_bs)
+                    self.base_coefficients_lin = self.create_morphsym_coefficients(self.reflection_Q_bs_lin)
+                    self.base_coefficients_ang = self.create_morphsym_coefficients(self.reflection_Q_bs_ang)
                     self.label_coefficients = self.create_morphsym_coefficients(self.reflection_Q_ls)
                 elif self.symmetry_mode == 'Euclidean':
                     self.joint_coefficients = self.create_coefficient_dict(self.reflection_Q_js)
                     self.foot_coefficients = self.create_coefficient_dict(self.reflection_Q_fs)
-                    self.base_coefficients = self.create_coefficient_dict(self.reflection_Q_bs)
+                    self.base_coefficients_lin = self.create_coefficient_dict(self.reflection_Q_bs_lin)
+                    self.base_coefficients_ang = self.create_coefficient_dict(self.reflection_Q_bs_ang)
                     self.label_coefficients = self.create_coefficient_dict(self.reflection_Q_ls)
             except FileNotFoundError:
                 raise ValueError(f"Group operator file not found at {self.group_operator_path}")
@@ -147,23 +150,43 @@ class LinTzuYaunDataset_NewGraph(LinTzuYaunDataset):
             Same values as load_data_at_dataset_seq(), but order of
             values inside arrays have been sorted (and potentially
             normalized).
+            lin_acc: shape: [history_length, 4*3] 4 bases linear acceleration
+            ang_vel: shape: [history_length, 4*3] 4 bases angular velocity
+            j_p: shape: [history_length, 12] 12 joints position
+            j_v: shape: [history_length, 12] 12 joints velocity
+            j_T: None
+            f_p: shape: [history_length, 4*3] 4 feet position
+            f_v: shape: [history_length, 4*3] 4 feet velocity
+            labels: shape: [4] 4 labels
+            r_p: None
+            r_o: None
+            timestamps: shape: [history_length]
         """
         if self.swap_legs is not None:
             lin_acc, ang_vel, j_p, j_v, j_T, f_p, f_v, labels, r_p, r_o, timestamps = self.load_data_at_dataset_seq_with_swap(seq_num, self.swap_legs)
         else:
             lin_acc, ang_vel, j_p, j_v, j_T, f_p, f_v, labels, r_p, r_o, timestamps = self.load_data_at_dataset_seq(seq_num)
 
-        # Sort the joint information
-        unsorted_list = [j_p, j_v, j_T]
-        sorted_list = []
-        for unsorted_array in unsorted_list:
-            if unsorted_array is not None:
-                sorted_list.append(unsorted_array[:,self.joint_node_indices_sorted])
-            else:
-                sorted_list.append(None)
+        # duplicate the base information for each base node, no need to sort
+        # lin_acc, ang_vel shape: [history_length, 3] ==> [history_length, 4*3]
+        lin_acc = np.tile(lin_acc, (1, 4))
+        ang_vel = np.tile(ang_vel, (1, 4))
+        sorted_base_list = [lin_acc, ang_vel]
 
         if self.symmetry_operator is not None:
-            sorted_list = self.apply_symmetry(sorted_list, part='joint')
+            sorted_base_list = self.apply_symmetry(sorted_base_list, part='base')
+        
+        # Sort the joint information
+        unsorted_joint_list = [j_p, j_v, j_T]
+        sorted_joint_list = []
+        for unsorted_array in unsorted_joint_list:
+            if unsorted_array is not None:
+                sorted_joint_list.append(unsorted_array[:,self.joint_node_indices_sorted])
+            else:
+                sorted_joint_list.append(None)
+
+        if self.symmetry_operator is not None:
+            sorted_joint_list = self.apply_symmetry(sorted_joint_list, part='joint')
 
         # Sort the foot information
         unsorted_foot_list = [f_p, f_v]
@@ -195,7 +218,7 @@ class LinTzuYaunDataset_NewGraph(LinTzuYaunDataset):
         norm_arrs = [None, None, None, None, None, None, None, None, None]
         if self.normalize:
             # Normalize all data except the labels
-            to_normalize_array = [lin_acc, ang_vel, sorted_list[0], sorted_list[1], sorted_list[2], sorted_foot_list[0], sorted_foot_list[1], r_p, r_o]
+            to_normalize_array = [sorted_base_list[0], sorted_base_list[1], sorted_joint_list[0], sorted_joint_list[1], sorted_joint_list[2], sorted_foot_list[0], sorted_foot_list[1], r_p, r_o]
             for i, array in enumerate(to_normalize_array):
                 if (array is not None) and (array.shape[0] > 1):
                     array_tensor = torch.from_numpy(array)
@@ -203,43 +226,20 @@ class LinTzuYaunDataset_NewGraph(LinTzuYaunDataset):
 
             return norm_arrs[0], norm_arrs[1], norm_arrs[2], norm_arrs[3], norm_arrs[4], norm_arrs[5], norm_arrs[6], labels_sorted, norm_arrs[7], norm_arrs[8], timestamps
         else:
-            return lin_acc, ang_vel, sorted_list[0], sorted_list[1], sorted_list[2], sorted_foot_list[0], sorted_foot_list[1], labels_sorted, r_p, r_o, timestamps
+            return sorted_base_list[0], sorted_base_list[1], sorted_joint_list[0], sorted_joint_list[1], sorted_joint_list[2], sorted_foot_list[0], sorted_foot_list[1], labels_sorted, r_p, r_o, timestamps
 
     def apply_symmetry(self, data_list, part='joint'):
         """Apply the symmetry operator to the data"""
-        if part == 'joint':
-            permutation_Q = self.permutation_Q_js
-            coefficients = self.joint_coefficients
-        elif part == 'foot':
-            permutation_Q = self.permutation_Q_fs
-            coefficients = self.foot_coefficients
-        elif part == 'base':
+        if part == 'base':
             permutation_Q = self.permutation_Q_bs
-            coefficients = self.base_coefficients
-        elif part == 'label': 
-            # for labels, data shape: (4,), for classification task, 
-            # we need to apply Euclidean symmetry to labels
-            permutation_Q = self.permutation_Q_ls
-            coefficients = self.label_coefficients
-        else:
-            raise ValueError(f"Invalid part: {part}")
-
-        new_data_list = []
-        # data_list: [j_p, j_v, j_T], each shape: [history_length, 12]
-        for data in data_list:
-            if data is None:
-                new_data_list.append(None)
-                continue
-            # for labels, data shape: (4,)
-            if data.ndim == 1: 
-                if self.symmetry_operator == 'gs':
-                    data = data[permutation_Q[0]].copy() * coefficients['gs']
-                elif self.symmetry_operator == 'gt':
-                    data = data[permutation_Q[1]].copy() * coefficients['gt']
-                elif self.symmetry_operator == 'gr':
-                    data = data[permutation_Q[0]].copy()
-                    data = data[permutation_Q[1]].copy() * coefficients['gr']
-            else: # for j_p, j_v, j_T, each shape: [history_length, 12] ... 
+            coefficients_lin = self.base_coefficients_lin
+            coefficients_ang = self.base_coefficients_ang
+            new_data_list = []
+            for i, data in enumerate(data_list):
+                if i==0: # linear acceleration
+                    coefficients = coefficients_lin
+                elif i==1: # angular velocity
+                    coefficients = coefficients_ang
                 if self.symmetry_operator == 'gs':
                     data = data[:, permutation_Q[0]].copy() * coefficients['gs']
                 elif self.symmetry_operator == 'gt':
@@ -247,7 +247,60 @@ class LinTzuYaunDataset_NewGraph(LinTzuYaunDataset):
                 elif self.symmetry_operator == 'gr':
                     data = data[:, permutation_Q[0]].copy()
                     data = data[:, permutation_Q[1]].copy() * coefficients['gr']
-            new_data_list.append(data)
+                new_data_list.append(data)
+        else:
+            if part == 'joint':
+                permutation_Q = self.permutation_Q_js
+                coefficients = self.joint_coefficients
+                # NOTE: debug use, only apply Euclidean symmetry to foot
+                # old_gs = self.joint_coefficients['gs']
+                # coefficients = {
+                #     'gs': np.ones_like(old_gs, dtype=np.float64),
+                #     'gt': np.ones_like(old_gs, dtype=np.float64),
+                #     'gr': np.ones_like(old_gs, dtype=np.float64)
+                # }
+            elif part == 'foot':
+                permutation_Q = self.permutation_Q_fs
+                coefficients = self.foot_coefficients
+                # NOTE: debug use, only apply Euclidean symmetry to foot
+                # old_gs = self.foot_coefficients['gs']
+                # coefficients = {
+                #     'gs': np.ones_like(old_gs, dtype=np.float64),
+                #     'gt': np.ones_like(old_gs, dtype=np.float64),
+                #     'gr': np.ones_like(old_gs, dtype=np.float64)
+                # }
+            elif part == 'label': 
+                # for labels, data shape: (4,), for classification task, 
+                # we need to apply Euclidean symmetry to labels
+                permutation_Q = self.permutation_Q_ls
+                coefficients = self.label_coefficients
+            else:
+                raise ValueError(f"Invalid part: {part}")
+
+            new_data_list = []
+            # data_list: [j_p, j_v, j_T], each shape: [history_length, 12]
+            for data in data_list:
+                if data is None:
+                    new_data_list.append(None)
+                    continue
+                # for labels, data shape: (4,)
+                if data.ndim == 1: 
+                    if self.symmetry_operator == 'gs':
+                        data = data[permutation_Q[0]].copy() * coefficients['gs']
+                    elif self.symmetry_operator == 'gt':
+                        data = data[permutation_Q[1]].copy() * coefficients['gt']
+                    elif self.symmetry_operator == 'gr':
+                        data = data[permutation_Q[0]].copy()
+                        data = data[permutation_Q[1]].copy() * coefficients['gr']
+                else: # for j_p, j_v, j_T, each shape: [history_length, 12] ... 
+                    if self.symmetry_operator == 'gs':
+                        data = data[:, permutation_Q[0]].copy() * coefficients['gs']
+                    elif self.symmetry_operator == 'gt':
+                        data = data[:, permutation_Q[1]].copy() * coefficients['gt']
+                    elif self.symmetry_operator == 'gr':
+                        data = data[:, permutation_Q[0]].copy()
+                        data = data[:, permutation_Q[1]].copy() * coefficients['gr']
+                new_data_list.append(data)
         return new_data_list
     
     def _init_new_edges(self):
@@ -382,12 +435,13 @@ class LinTzuYaunDataset_NewGraph(LinTzuYaunDataset):
         # get original data
         lin_acc, ang_vel, j_p, j_v, j_T, f_p, f_v, labels, r_p, r_o, timestamps = self.load_data_sorted(idx)
 
-        # copy base features to four base nodes
-        base_data = [lin_acc, ang_vel]
+        # For each base specified
+        base_data = [lin_acc, ang_vel] # lin_acc, ang_vel shape: [history_length, 3*4]
         for i in range(self.hgnn_number_nodes[0]):
+            # For each variable to use
             final_input = torch.ones((0), dtype=torch.float64)
             for k in self.variables_to_use_base:
-                final_input = torch.cat((final_input, torch.tensor(base_data[k][:,0:3].flatten('F'), dtype=torch.float64)), axis=0)
+                final_input = torch.cat((final_input, torch.tensor(base_data[k][:,i*3:(i+1)*3].flatten('F'), dtype=torch.float64)), axis=0)
             base_x[i] = final_input
 
         # process joint and foot features (same as original implementation)
@@ -403,7 +457,7 @@ class LinTzuYaunDataset_NewGraph(LinTzuYaunDataset):
             joint_x[i] = final_input
 
         # For each foot specified
-        foot_data = [f_p, f_v]
+        foot_data = [f_p, f_v] # f_p, f_v shape: [history_length, 3*4]
         for i, urdf_node_name in enumerate(self.urdf_name_to_graph_index_foot.keys()):
             # For each variable to use
             final_input = torch.ones((0), dtype=torch.float64)
