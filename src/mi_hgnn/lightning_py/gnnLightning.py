@@ -12,7 +12,6 @@ from torch.utils.data import Subset
 import numpy as np
 import torchmetrics
 import torchmetrics.classification
-# import pinocchio as pin
 from .customMetrics import CrossEntropyLossMetric, BinaryF1Score
 from .hgnn import GRF_HGNN
 from .hgnn_k4 import GRF_HGNN_K4
@@ -588,6 +587,7 @@ class Full_Dynamics_Model_Lightning(Base_Lightning):
         self.foot_mapping = pin_to_urdf_foot_mapping
         self.save_hyperparameters()
 
+        import pinocchio as pin
         # Build the pinnochio model
         self.model, self.collision_model, self.visual_model = pin.buildModelsFromUrdf(
             str(urdf_model_path), str(urdf_dir), pin.JointModelFreeFlyer(), verbose=True
