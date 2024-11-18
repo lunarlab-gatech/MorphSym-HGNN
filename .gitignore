@@ -178,3 +178,8 @@ media/
 
 # Ignore checkpoint files
 ckpts/
+
+# Ignore sync files
+sync.sh
+include-file.txt
+exclude-file.txt

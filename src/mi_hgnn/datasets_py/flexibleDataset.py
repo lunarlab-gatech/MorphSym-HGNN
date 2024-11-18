@@ -63,9 +63,9 @@ class FlexibleDataset(Dataset):
         """
         # Check for valid data format
         self.data_format = data_format
-        if self.data_format != 'dynamics' and self.data_format != 'mlp' and self.data_format != 'heterogeneous_gnn' and self.data_format != 'heterogeneous_gnn_k4':
+        if self.data_format != 'dynamics' and self.data_format != 'mlp' and self.data_format != 'heterogeneous_gnn' and self.data_format != 'heterogeneous_gnn_k4' and self.data_format != 'heterogeneous_gnn_c2':
             raise ValueError(
-                "Parameter 'data_format' must be 'dynamics', 'mlp', 'heterogeneous_gnn', or 'heterogeneous_gnn_k4'."
+                "Parameter 'data_format' must be 'dynamics', 'mlp', 'heterogeneous_gnn', or 'heterogeneous_gnn_k4' or 'heterogeneous_gnn_c2'."
             )
 
         # Setup the directories for raw and processed data, download it, 
@@ -144,7 +144,8 @@ class FlexibleDataset(Dataset):
         for urdf_node_name in self.urdf_name_to_graph_index_base.keys():
             graph_node_index = self.urdf_name_to_graph_index_base[urdf_node_name]
             self.base_node_indices_sorted[graph_node_index] = self.get_urdf_name_to_dataset_array_index()[urdf_node_name]
-        self.base_node_indices_sorted = np.array(self.joint_node_indices_sorted, dtype=np.uint) #TODO: base_node_indices_sorted ?
+        # self.base_node_indices_sorted = np.array(self.joint_node_indices_sorted, dtype=np.uint) #TODO: base_node_indices_sorted ?
+        self.base_node_indices_sorted = np.array(self.base_node_indices_sorted, dtype=np.uint) 
 
         # Set normalize parameter for use later
         self.normalize = normalize
@@ -161,7 +162,7 @@ class FlexibleDataset(Dataset):
             raise ValueError("Dataset must provide at least one input.")
 
         # Premake the tensors for edge attributes and connections for HGNN
-        if self.data_format == 'heterogeneous_gnn' or self.data_format == 'heterogeneous_gnn_k4':
+        if self.data_format == 'heterogeneous_gnn' or self.data_format == 'heterogeneous_gnn_k4' or self.data_format == 'heterogeneous_gnn_c2':
             bj, jb, jj, fj, jf = self.robotGraph.get_edge_index_matrices()
             self.bj = torch.tensor(bj, dtype=torch.long)
             self.jb = torch.tensor(jb, dtype=torch.long)
@@ -178,7 +179,7 @@ class FlexibleDataset(Dataset):
 
         # Precompute feature matrix sizes for HGNN
         # Calculate the size of the feature matrices
-        if self.data_format == 'heterogeneous_gnn' or self.data_format == 'heterogeneous_gnn_k4':
+        if self.data_format == 'heterogeneous_gnn' or self.data_format == 'heterogeneous_gnn_k4' or self.data_format == 'heterogeneous_gnn_c2':
             self.hgnn_number_nodes = self.robotGraph.get_num_of_each_node_type()
             self.base_width = len(self.variables_to_use_base) * 3 * self.history_length
             self.joint_width = len(self.variables_to_use_joint) * self.history_length
@@ -308,9 +309,9 @@ class FlexibleDataset(Dataset):
         Returns the data metadata. Only for use with
         heterogeneous graph data.
         """
-        if self.data_format != 'heterogeneous_gnn' and self.data_format != 'heterogeneous_gnn_k4':
+        if self.data_format != 'heterogeneous_gnn' and self.data_format != 'heterogeneous_gnn_k4' and self.data_format != 'heterogeneous_gnn_c2':
             raise TypeError(
-                "This function is only for a data_format of 'heterogeneous_gnn' or 'heterogeneous_gnn_k4'."
+                "This function is only for a data_format of 'heterogeneous_gnn' or 'heterogeneous_gnn_k4' or 'heterogeneous_gnn_c2'."
             )
         node_types = ['base', 'joint', 'foot']
         edge_types = [('base', 'connect', 'joint'),
@@ -447,10 +448,14 @@ class FlexibleDataset(Dataset):
         # Return data in the proper format
         if self.data_format == 'dynamics':
             return self.get_helper_dynamics(idx)
-        if self.data_format == 'mlp':
+        elif self.data_format == 'mlp':
             return self.get_helper_mlp(idx)
         elif self.data_format == 'heterogeneous_gnn' or self.data_format == 'heterogeneous_gnn_k4':
             return self.get_helper_heterogeneous_gnn(idx)
+        elif self.data_format == 'heterogeneous_gnn_c2':
+            return self.get_helper_heterogeneous_gnn_c2(idx)
+        else:
+            raise ValueError("Invalid data format.")
         
     def get_helper_dynamics(self, idx: int):
         """

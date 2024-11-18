@@ -646,11 +646,11 @@ def main():
     """
 
     # ================================= CHANGE THESE ===================================
-    model_type = 'heterogeneous_gnn_k4' # or `mlp`, `heterogeneous_gnn`
+    model_type = 'heterogeneous_gnn_c2' # or `mlp`, `heterogeneous_gnn`, `heterogeneous_gnn_k4`, `heterogeneous_gnn_c2`
     print(f"model_type: {model_type}")
     num_layers = 8
     hidden_size = 128
-    seed = 0
+    seed = 3407
     symmetry_mode = 'MorphSym' # Can be 'Euclidean' or 'MorphSym' or None
     group_operator_path = '/home/swei303/Documents/proj/MorphSym-HGNN/cfg/mini_cheetah-k4.yaml'
     # ==================================================================================
@@ -659,8 +659,8 @@ def main():
     history_length = 150
     normalize = True
 
-    if model_type == 'heterogeneous_gnn_k4':
-        import mi_hgnn.datasets_py.LinTzuYaunDataset_K4 as linData
+    if model_type == 'heterogeneous_gnn_k4' or model_type == 'heterogeneous_gnn_c2':
+        import mi_hgnn.datasets_py.LinTzuYaunDataset_Morph as linData
     else:
         import mi_hgnn.datasets_py.LinTzuYaunDataset as linData
 

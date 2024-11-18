@@ -10,7 +10,7 @@ def main():
     K4_version = True
 
     if K4_version:
-        import mi_hgnn.datasets_py.LinTzuYaunDataset_K4 as linData
+        import mi_hgnn.datasets_py.LinTzuYaunDataset_Morph as linData
         model_type = 'heterogeneous_gnn_k4'
         path_to_checkpoint = "/home/swei303/Documents/proj/MorphSym-HGNN/models/splendid-armadillo-4/epoch=10-val_CE_loss=0.33491.ckpt" # Path to specific checkpoint file
     else:

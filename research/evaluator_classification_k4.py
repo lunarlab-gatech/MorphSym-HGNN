@@ -7,15 +7,18 @@ import numpy as np
 import pandas
 from datetime import datetime
 
-def main(K4_version=True, 
+def main(MorphSym_version: str, 
          path_to_checkpoint=None,
          symmetry_operator_list=None,
          symmetry_mode=None,
          group_operator_path=None):
     # ================================= CHANGE THIS ====================================
-    if K4_version:
-        import mi_hgnn.datasets_py.LinTzuYaunDataset_K4 as linData
+    if MorphSym_version == 'K4':
+        import mi_hgnn.datasets_py.LinTzuYaunDataset_Morph as linData
         model_type = 'heterogeneous_gnn_k4'
+    elif MorphSym_version == 'C2':
+        import mi_hgnn.datasets_py.LinTzuYaunDataset_Morph as linData
+        model_type = 'heterogeneous_gnn_c2'
     else:
         import mi_hgnn.datasets_py.LinTzuYaunDataset as linData
         model_type = 'heterogeneous_gnn' # 'heterogeneous_gnn_k4'
@@ -134,15 +137,22 @@ def print_results(acc, f1_leg_0, f1_leg_1, f1_leg_2, f1_leg_3, f1_avg_legs):
     print("F1-Score Legs Avg: ", f1_avg_legs.item())
 
 if __name__ == "__main__":
-    K4_version = True
-    path_to_checkpoint = "/home/swei303/Documents/proj/MorphSym-HGNN/models/ethereal-microwave-12/epoch=6-val_Accuracy=0.89402.ckpt"
-    symmetry_operator_list = [None]  # Can be 'gs' or 'gt' or 'gr' or None
+    # C2
+    MorphSym_version = 'C2'
+    path_to_checkpoint = "models/curious-violet-15/epoch=5-val_Accuracy=0.89388-val_F1_Score_Leg_Avg=0.94727.ckpt"
+    group_operator_path = 'cfg/mini_cheetah-c2.yaml'
+
+    # K4
+    # MorphSym_version = 'K4'
+    # path_to_checkpoint = "models/flowing-brook-14/epoch=13-val_Accuracy=0.84279-val_F1_Score_Leg_Avg=0.92456.ckpt"
+    # group_operator_path = 'cfg/mini_cheetah-k4.yaml'
+
+    symmetry_operator_list = [None, 'gs', 'gt', 'gr']  # Can be 'gs' or 'gt' or 'gr' or None
     symmetry_mode = 'MorphSym' # Can be 'Euclidean' or 'MorphSym' or None
-    group_operator_path = '/home/swei303/Documents/proj/MorphSym-HGNN/cfg/mini_cheetah-k4.yaml'
 
     if os.path.isdir(path_to_checkpoint):
         checkpoint_files = glob.glob(os.path.join(path_to_checkpoint, "*.ckpt"))
         for file in checkpoint_files:
-            main(K4_version=K4_version, path_to_checkpoint=file, symmetry_operator_list=symmetry_operator_list, symmetry_mode=symmetry_mode, group_operator_path=group_operator_path)
+            main(MorphSym_version=MorphSym_version, path_to_checkpoint=file, symmetry_operator_list=symmetry_operator_list, symmetry_mode=symmetry_mode, group_operator_path=group_operator_path)
     else:
-        main(K4_version=K4_version, path_to_checkpoint=path_to_checkpoint, symmetry_operator_list=symmetry_operator_list, symmetry_mode=symmetry_mode, group_operator_path=group_operator_path)
+        main(MorphSym_version=MorphSym_version, path_to_checkpoint=path_to_checkpoint, symmetry_operator_list=symmetry_operator_list, symmetry_mode=symmetry_mode, group_operator_path=group_operator_path)
