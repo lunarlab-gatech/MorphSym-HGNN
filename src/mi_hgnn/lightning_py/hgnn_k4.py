@@ -29,7 +29,7 @@ class GRF_HGNN_K4(torch.nn.Module):
         self.num_timesteps = 150
         num_joints_per_leg = 3
         self.num_legs = 4
-        self.num_bases = 2
+        self.num_bases = 4
         self.num_joints = self.num_legs * num_joints_per_leg
         self.num_dimensions_per_foot = 3
         self.num_dimensions_per_base = 3
@@ -151,7 +151,14 @@ class GRF_HGNN_K4(torch.nn.Module):
         x_dict = self.encoder(x_dict)
         x_dict = {key: self.activation(x) for key, x in x_dict.items()}
 
-        # Message passing layers
+        # The original message passing layers, without the base transformation and residual connections
+        for conv in self.convs:
+            x_dict = conv(x_dict, edge_index_dict)
+            x_dict = {key: self.activation(x) for key, x in x_dict.items()}
+        
+        return self.decoder(x_dict['foot'])
+
+        # Message passing layers, with the base transformation and residual connections
         for conv in self.convs:
             # Apply convolution
             x_dict_new = conv(x_dict, edge_index_dict)
