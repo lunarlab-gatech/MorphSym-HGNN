@@ -132,7 +132,7 @@ class RobotGraph():
             edge_parent = None
             for edge in self.edges:
                 if joint.parent in edge.name and joint.name == edge.child:
-                    edge_parent = edge.name
+                    edge_parent = edge.name # TODO: use continue to early exit ?
 
             # Make sure the edge child hasn't been pruned, and find
             # the updated name
@@ -626,3 +626,99 @@ class HeterogeneousRobotGraph(RobotGraph):
 
         return base_to_joint_matrix, joint_to_base_matrix, joint_to_joint_matrix, \
                foot_to_joint_matrix, joint_to_foot_matrix
+
+from .graphParser_com import RobotGraph, InvalidURDFException
+import numpy as np
+
+class Solo12Graph(RobotGraph):
+    """
+    Solo12的特定图结构
+    - 手动添加base节点
+    - 修改节点类型判断逻辑
+    """
+    
+    class Node(RobotGraph.Node):
+        def get_node_type(self):
+            """
+            重写节点类型判断逻辑：
+            - 如果节点名为'base_link'，则为base节点
+            - 其他节点都是joint节点
+            """
+            if self.name == 'base_link':
+                return self.get_list_of_node_types()[0]  # 'base'
+            else:
+                return self.get_list_of_node_types()[1]  # 'joint'
+    
+    def __init__(self, urdf_path, ros_builtin_path, urdf_to_desc_path):
+        """初始化Solo12图结构"""
+        # 调用父类初始化
+        super().__init__(urdf_path, ros_builtin_path, urdf_to_desc_path)
+        
+        # 手动添加base节点
+        self.add_base_node()
+        
+        # 更新边的连接关系
+        self.update_edges_for_base()
+    
+    def add_base_node(self):
+        """添加base节点"""
+        # 创建一个虚拟的base joint
+        base_joint = type('', (), {})()  # 创建空对象
+        base_joint.name = 'base_link'
+        base_joint.parent = None
+        base_joint.child = None
+        
+        # 创建base节点
+        base_node = self.Node(
+            name='base_link',
+            edge_parent=None,
+            edge_children=[node.name for node in self.nodes if 'FL_HAA' in node.name or 'FR_HAA' in node.name],  # 连接到前腿
+            joint=base_joint
+        )
+        
+        # 添加到节点列表
+        self.nodes.insert(0, base_node)  # 插入到列表开头
+    
+    def update_edges_for_base(self):
+        """更新边的连接关系，添加base到joint的连接"""
+        # 为前腿的HAA关节添加与base的连接
+        for node in self.nodes:
+            if 'FL_HAA' in node.name or 'FR_HAA' in node.name:
+                # 创建一个虚拟的link
+                base_link = type('', (), {})()
+                base_link.name = f'base_to_{node.name}'
+                base_link.inertial = type('', (), {})()
+                base_link.inertial.mass = 1.0
+                base_link.inertial.inertia = np.eye(3)
+                
+                # 创建新的边
+                new_edge = self.Edge(
+                    name=base_link.name,
+                    parent='base_link',
+                    child=node.name,
+                    link=base_link
+                )
+                
+                # 添加到边列表
+                self.edges.append(new_edge)
+    
+    def get_node_name_to_index_dict(self):
+        """
+        重写节点索引映射方法
+        确保base_link是第一个节点
+        """
+        node_dict = {}
+        # base节点索引为0
+        for node in self.nodes:
+            if node.name == 'base_link':
+                node_dict[node.name] = 0
+                break
+        
+        # 其他节点按顺序编号
+        idx = 1
+        for node in self.nodes:
+            if node.name != 'base_link':
+                node_dict[node.name] = idx
+                idx += 1
+        
+        return node_dict
