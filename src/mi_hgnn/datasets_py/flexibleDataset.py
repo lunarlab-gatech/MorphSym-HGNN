@@ -63,9 +63,9 @@ class FlexibleDataset(Dataset):
         """
         # Check for valid data format
         self.data_format = data_format
-        if self.data_format != 'dynamics' and self.data_format != 'mlp' and self.data_format != 'heterogeneous_gnn' and self.data_format != 'heterogeneous_gnn_k4' and self.data_format != 'heterogeneous_gnn_c2':
+        if self.data_format != 'dynamics' and self.data_format != 'mlp' and self.data_format != 'heterogeneous_gnn' and self.data_format != 'heterogeneous_gnn_k4' and self.data_format != 'heterogeneous_gnn_c2' and self.data_format != 'heterogeneous_gnn_k4_com':
             raise ValueError(
-                "Parameter 'data_format' must be 'dynamics', 'mlp', 'heterogeneous_gnn', or 'heterogeneous_gnn_k4' or 'heterogeneous_gnn_c2'."
+                "Parameter 'data_format' must be 'dynamics', 'mlp', 'heterogeneous_gnn', or 'heterogeneous_gnn_k4' or 'heterogeneous_gnn_c2' or 'heterogeneous_gnn_k4_com'."
             )
 
         # Setup the directories for raw and processed data, download it, 
@@ -113,13 +113,13 @@ class FlexibleDataset(Dataset):
         # what we are expecting
         passed_urdf_name = self.robotGraph.robot_urdf.name
         expected_name = self.get_expected_urdf_name()
-        if passed_urdf_name != expected_name:
-            raise ValueError(
-                "Invalid URDF: \"" + passed_urdf_name +
-                "\". This dataset was collected on the \"" + expected_name +
-                "\" robot. Please pass in the URDF file for the \"" +
-                expected_name + "\" robot, not for the \"" + passed_urdf_name +
-                "\" robot.")
+        # if passed_urdf_name != expected_name:
+        #     raise ValueError(
+        #         "Invalid URDF: \"" + passed_urdf_name +
+        #         "\". This dataset was collected on the \"" + expected_name +
+        #         "\" robot. Please pass in the URDF file for the \"" +
+        #         expected_name + "\" robot, not for the \"" + passed_urdf_name +
+        #         "\" robot.")
 
 
         # Define the order that the sorted joint and foot data should be in
@@ -162,7 +162,7 @@ class FlexibleDataset(Dataset):
             raise ValueError("Dataset must provide at least one input.")
 
         # Premake the tensors for edge attributes and connections for HGNN
-        if self.data_format == 'heterogeneous_gnn' or self.data_format == 'heterogeneous_gnn_k4' or self.data_format == 'heterogeneous_gnn_c2':
+        if self.data_format == 'heterogeneous_gnn' or self.data_format == 'heterogeneous_gnn_k4' or self.data_format == 'heterogeneous_gnn_c2' or self.data_format == 'heterogeneous_gnn_k4_com':
             bj, jb, jj, fj, jf = self.robotGraph.get_edge_index_matrices()
             self.bj = torch.tensor(bj, dtype=torch.long)
             self.jb = torch.tensor(jb, dtype=torch.long)
@@ -179,7 +179,7 @@ class FlexibleDataset(Dataset):
 
         # Precompute feature matrix sizes for HGNN
         # Calculate the size of the feature matrices
-        if self.data_format == 'heterogeneous_gnn' or self.data_format == 'heterogeneous_gnn_k4' or self.data_format == 'heterogeneous_gnn_c2':
+        if self.data_format == 'heterogeneous_gnn' or self.data_format == 'heterogeneous_gnn_k4' or self.data_format == 'heterogeneous_gnn_c2' or self.data_format == 'heterogeneous_gnn_k4_com':
             self.hgnn_number_nodes = self.robotGraph.get_num_of_each_node_type()
             self.base_width = len(self.variables_to_use_base) * 3 * self.history_length
             self.joint_width = len(self.variables_to_use_joint) * self.history_length
@@ -309,9 +309,9 @@ class FlexibleDataset(Dataset):
         Returns the data metadata. Only for use with
         heterogeneous graph data.
         """
-        if self.data_format != 'heterogeneous_gnn' and self.data_format != 'heterogeneous_gnn_k4' and self.data_format != 'heterogeneous_gnn_c2':
+        if self.data_format != 'heterogeneous_gnn' and self.data_format != 'heterogeneous_gnn_k4' and self.data_format != 'heterogeneous_gnn_c2' and self.data_format != 'heterogeneous_gnn_k4_com':
             raise TypeError(
-                "This function is only for a data_format of 'heterogeneous_gnn' or 'heterogeneous_gnn_k4' or 'heterogeneous_gnn_c2'."
+                "This function is only for a data_format of 'heterogeneous_gnn' or 'heterogeneous_gnn_k4' or 'heterogeneous_gnn_c2' or 'heterogeneous_gnn_k4_com'."
             )
         node_types = ['base', 'joint', 'foot']
         edge_types = [('base', 'connect', 'joint'),
@@ -454,6 +454,8 @@ class FlexibleDataset(Dataset):
             return self.get_helper_heterogeneous_gnn(idx)
         elif self.data_format == 'heterogeneous_gnn_c2':
             return self.get_helper_heterogeneous_gnn_c2(idx)
+        elif self.data_format == 'heterogeneous_gnn_k4_com':
+            return self.get_helper_heterogeneous_gnn(idx)
         else:
             raise ValueError("Invalid data format.")
         

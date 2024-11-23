@@ -3,7 +3,7 @@ from torch import nn
 from torch_geometric.nn import Linear, HeteroConv, HeteroDictLinear, GraphConv
 import yaml
 
-class GRF_HGNN_K4(torch.nn.Module):
+class COM_HGNN_K4(torch.nn.Module):
     """
     Modified GRF_HGNN for the K4 graph structure with 4 base nodes and new edge types
     """
@@ -32,7 +32,7 @@ class GRF_HGNN_K4(torch.nn.Module):
         self.num_bases = 4
         self.num_joints = self.num_legs * num_joints_per_leg
         self.num_dimensions_per_foot = 3
-        self.num_dimensions_per_base = 3
+        self.num_dimensions_per_base = 6
         # Initialize the joint coefficients based on the symmetry mode and group operator path
         if symmetry_mode and group_operator_path:
             with open(group_operator_path, 'r') as file:
@@ -104,14 +104,7 @@ class GRF_HGNN_K4(torch.nn.Module):
             for edge_type in data_metadata[1]:
                 source_node, edge_name, target_node = edge_type
                 
-                if edge_name == 'gt':
-                    # create independent convolution layers for each leg pair
-                    conv_dict[edge_type] = GraphConv(
-                        hidden_channels,
-                        hidden_channels,
-                        aggr='mean' # 'mean' or 'add'
-                    )
-                elif edge_name == 'gs':
+                if edge_name in ['gt', 'gs']:
                     # create independent convolution layers for each leg pair
                     conv_dict[edge_type] = GraphConv(
                         hidden_channels,
@@ -137,23 +130,13 @@ class GRF_HGNN_K4(torch.nn.Module):
         )
 
         # Output layer remains the same
-        if self.regression:
-            self.out_channels_per_foot = 1
-        else:
-            self.out_channels_per_foot = 2
-        self.decoder = Linear(hidden_channels, self.out_channels_per_foot)
+        self.decoder = Linear(hidden_channels * self.num_bases, self.num_dimensions_per_base * self.num_bases)
         
     def forward(self, x_dict, edge_index_dict):
         """
         Forward pass with special handling for the K4 structure
         """
-        # debug use, visualize the message passing process:
-        # self.visualize_message_passing(x_dict, edge_index_dict)
-
-        # debug use, check the parameters:
-        # self.check_parameter_sharing()
-
-        x_dict = self.apply_symmetry(x_dict)
+        # x_dict = self.apply_symmetry(x_dict)
 
         # Initial feature encoding
         x_dict = self.encoder(x_dict)
@@ -192,8 +175,14 @@ class GRF_HGNN_K4(torch.nn.Module):
         # debug use, check the parameters:
         # self.check_parameter_sharing()
 
-        # Final prediction for foot nodes
-        return self.decoder(x_dict['foot'])
+        # Final prediction for base nodes
+        # Reshape base features from (batch_size*4, hidden_channels) to (batch_size, 4*hidden_channels)
+        batch_size = x_dict['base'].shape[0] // self.num_bases
+        base_features = x_dict['base'].view(batch_size, self.num_bases, -1).flatten(start_dim=1)
+        
+        # Decode to get velocities (batch_size, 4*6) where each base has 3D linear + 3D angular velocity
+        out = self.decoder(base_features)
+        return out
     
     def apply_symmetry(self, x_dict):
         """

@@ -6,7 +6,7 @@ from mi_hgnn.visualization import visualize_model_outputs_regression
 
 def main():
     # ================================= CHANGE THESE ===================================
-    model_type = 'heterogeneous_gnn' # `mlp`
+    model_type = 'heterogeneous_gnn_k4_com' # `mlp`
     seed = 0
     # ==================================================================================
 
@@ -22,7 +22,7 @@ def main():
 
     # Initalize the Train datasets
     solo12data = Solo12Dataset(Path(Path('.').parent, 'datasets', 'Solo-12').absolute(), path_to_urdf, 
-                       'package://robot_properties_solo/', '', model_type, history_length, normalize)
+                       'package://yobotics_description/', 'mini-cheetah-gazebo-urdf/yobo_model/yobotics_description', model_type, history_length, normalize)
     
     # Define train and val sets
     train_val_datasets = [solo12data]
@@ -33,7 +33,7 @@ def main():
     val_subsets = []
     for dataset in train_val_datasets:
         data_len_minus_1 = dataset.__len__() - 1
-        split_index = int(np.round(data_len_minus_1 * 0.85)) # When value has .5, round to nearest-even
+        split_index = int(np.round(data_len_minus_1 * 0.70)) # When value has .5, round to nearest-even
         train_subsets.append(torch.utils.data.Subset(dataset, np.arange(0, split_index)))
         val_subsets.append(torch.utils.data.Subset(dataset, np.arange(split_index, data_len_minus_1)))
     train_dataset = torch.utils.data.ConcatDataset(train_subsets)
