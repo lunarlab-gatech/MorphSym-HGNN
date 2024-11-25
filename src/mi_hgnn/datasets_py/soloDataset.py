@@ -7,6 +7,86 @@ import yaml
 from scipy.spatial.transform import Rotation
 from torch_geometric.data import HeteroData
 
+# class Standarizer_Seperate:
+#     """
+#     Class to standardize the data.
+#     """
+#     def __init__(self, q_mean, q_std, qd_mean, qd_std, lin_mean, lin_std, ang_mean, ang_std, device):
+#         self.q_mean, self.q_std = torch.tensor(q_mean).to(device), torch.tensor(q_std).to(device)
+#         self.qd_mean, self.qd_std = torch.tensor(qd_mean).to(device), torch.tensor(qd_std).to(device)
+#         self.lin_mean, self.lin_std = torch.tensor(lin_mean).to(device), torch.tensor(lin_std).to(device)
+#         self.ang_mean, self.ang_std = torch.tensor(ang_mean).to(device), torch.tensor(ang_std).to(device)
+
+#     def transform(self, q=None, qd=None, lin=None, ang=None):
+#         if isinstance(q, np.ndarray):
+#             q_mean, q_std = self.q_mean.cpu().numpy(), self.q_std.cpu().numpy()
+#             qd_mean, qd_std = self.qd_mean.cpu().numpy(), self.qd_std.cpu().numpy()
+#             lin_mean, lin_std = self.lin_mean.cpu().numpy(), self.lin_std.cpu().numpy()
+#             ang_mean, ang_std = self.ang_mean.cpu().numpy(), self.ang_std.cpu().numpy()
+#         else:
+#             q_mean, q_std = self.q_mean, self.q_std
+#             qd_mean, qd_std = self.qd_mean, self.qd_std
+#             lin_mean, lin_std = self.lin_mean, self.lin_std
+#             ang_mean, ang_std = self.ang_mean, self.ang_std
+
+#         return (q - q_mean) / q_std, (qd - qd_mean) / qd_std, (lin - lin_mean) / lin_std, (ang - ang_mean) / ang_std
+
+#     def unstandarize(self, qn=None, qdn=None, linn=None, angn=None):
+#         if isinstance(qn, np.ndarray):
+#             q_mean, q_std = self.q_mean.cpu().numpy(), self.q_std.cpu().numpy()
+#             qd_mean, qd_std = self.qd_mean.cpu().numpy(), self.qd_std.cpu().numpy()
+#             lin_mean, lin_std = self.lin_mean.cpu().numpy(), self.lin_std.cpu().numpy()
+#             ang_mean, ang_std = self.ang_mean.cpu().numpy(), self.ang_std.cpu().numpy()
+#         else:
+#             q_mean, q_std = self.q_mean, self.q_std
+#             qd_mean, qd_std = self.qd_mean, self.qd_std
+#             lin_mean, lin_std = self.lin_mean, self.lin_std
+#             ang_mean, ang_std = self.ang_mean, self.ang_std
+
+#         return qn * q_std + q_mean, qdn * qd_std + qd_mean, linn * lin_std + lin_mean, angn * ang_std + ang_mean
+
+class Standarizer:
+
+    def __init__(self, X_mean, X_std, Y_mean, Y_std, device):
+        self.X_mean, self.X_std = torch.tensor(X_mean).to(device), torch.tensor(X_std).to(device)
+        self.Y_mean, self.Y_std = torch.tensor(Y_mean).to(device), torch.tensor(Y_std).to(device)
+
+    def transform(self, x=None, y=None):
+        if isinstance(x, np.ndarray):
+            X_mean, X_std = self.X_mean.cpu().numpy(), self.X_std.cpu().numpy()
+            Y_mean, Y_std = self.Y_mean.cpu().numpy(), self.Y_std.cpu().numpy()
+        else:
+            X_mean, X_std = self.X_mean, self.X_std
+            Y_mean, Y_std = self.Y_mean, self.Y_std
+
+        if x is not None and y is not None:
+            return (x - X_mean) / X_std, (y - Y_mean) / Y_std
+        elif x is not None:
+            return (x - X_mean) / X_std
+        elif y is not None:
+            return (y - Y_mean) / Y_std
+
+    def unstandarize(self, xn=None, yn=None):
+        if isinstance(xn, np.ndarray):
+            X_mean, X_std = self.X_mean.cpu().numpy(), self.X_std.cpu().numpy()
+            Y_mean, Y_std = self.Y_mean.cpu().numpy(), self.Y_std.cpu().numpy()
+        else:
+            X_mean, X_std = self.X_mean, self.X_std
+            Y_mean, Y_std = self.Y_mean, self.Y_std
+
+        if xn is not None and yn is not None:
+            return xn * X_std + X_mean, yn * Y_std + Y_mean
+        elif xn is not None:
+            return xn * X_std + X_mean
+        elif yn is not None:
+            return yn * Y_std + Y_mean
+        
+    def to(self, device):
+        self.X_mean = self.X_mean.to(device)
+        self.X_std = self.X_std.to(device)
+        self.Y_mean = self.Y_mean.to(device)
+        self.Y_std = self.Y_std.to(device)
+
 class Solo12Dataset(FlexibleDataset):
     """
     Dataset class for the Solo12 robot data.
@@ -76,12 +156,24 @@ class Solo12Dataset(FlexibleDataset):
         
         if model_type == 'heterogeneous_gnn_k4_com':
             self.load_data_sorted = self.load_data_sorted_k4
+        elif model_type == 'heterogeneous_gnn_s4_com':
+            self.load_data_sorted = self.load_data_sorted
         else:
             raise ValueError(f"Model type {model_type} is not implemented for Solo12 dataset.")
         
+        self.normalize = normalize
+
+        if self.normalize:
+            path_to_npz = os.path.join(root, 'raw', 'data.npz')
+            raw_data = np.load(path_to_npz)
+            X = raw_data['X']
+            Y = raw_data['Y']
+            self.X_mean, self.X_std, self.Y_mean, self.Y_std = self.compute_normalization(X, Y)
+            self.standarizer = Standarizer(self.X_mean, self.X_std, self.Y_mean, self.Y_std, 'cpu')
+        
         super().__init__(root, path_to_urdf, urdf_package_name, 
                          urdf_package_relative_path, data_format=model_type, 
-                         history_length=history_length, normalize=normalize)
+                         history_length=history_length, normalize=self.normalize)
         
         self.model_type = model_type
         if self.model_type == 'heterogeneous_gnn_k4_com':
@@ -89,9 +181,264 @@ class Solo12Dataset(FlexibleDataset):
             self.hgnn_number_nodes = (4, self.hgnn_number_nodes[1], self.hgnn_number_nodes[2])
             # initialize new edges
             self._init_new_edges_k4()
+        elif self.model_type == 'heterogeneous_gnn_s4_com':
+            # initialize new edges
+            print(f"Model type: {self.model_type} is initialized.")
         else:
             raise ValueError(f"Model type: {model_type} is not implemented yet for Solo12 dataset.")
+        
+        if self.normalize:
+            unsorted_joint_stat_list = [self.X_mean[:12], self.X_mean[12:], self.X_std[:12], self.X_std[12:]]
+            sorted_joint_stat_list = []
+            for unsorted_array in unsorted_joint_stat_list:
+                sorted_joint_stat_list.append(unsorted_array[self.joint_node_indices_sorted])
+            self.X_mean = np.concatenate([sorted_joint_stat_list[0], sorted_joint_stat_list[1]])
+            self.X_std = np.concatenate([sorted_joint_stat_list[2], sorted_joint_stat_list[3]])
+            
+            # Save statistics to processed/stats.npz
+            processed_dir = os.path.join(self.root, 'processed')
+            np.savez(os.path.join(processed_dir, 'stats.npz'),
+                    x_mean=self.X_mean,
+                    x_std=self.X_std, 
+                    y_mean=self.Y_mean,
+                    y_std=self.Y_std)
 
+    # def compute_normalization(self, q, qd, lin, ang):
+    #     """
+    #     Compute the mean and standard deviation for the joint and base data.
+    #     Adapted from MorphSymm's repo: datasets/com_momentum/com_momentum.py
+    #     """
+    #     q_mean, qd_mean, lin_mean, ang_mean = 0., 0., 0., 0.
+    #     q_std, qd_std, lin_std, ang_std = 1., 1., 1., 1.
+        
+    #     q_mean = np.mean(q, axis=0)
+    #     qd_mean = np.mean(qd, axis=0)
+    #     lin_mean = np.mean(lin, axis=0)
+    #     ang_mean = np.mean(ang, axis=0)
+    #     q_std = np.std(q, axis=0)
+    #     qd_std = np.std(qd, axis=0)
+    #     lin_std = np.std(lin, axis=0)
+    #     ang_std = np.std(ang, axis=0)
+
+    #     return q_mean, q_std, qd_mean, qd_std, lin_mean, lin_std, ang_mean, ang_std
+
+    def compute_normalization(self, X, Y):
+        """
+        Compute the mean and standard deviation for the joint and base data.
+        Adapted from MorphSymm's repo: datasets/com_momentum/com_momentum.py
+        """
+        X_mean, Y_mean, X_std, Y_std = 0., 0., 1., 1.
+        
+        # TODO: Obtain analytic formula for mean and std along orbit of discrete and continuous groups.
+        X_mean = np.mean(X, axis=0)
+        Y_mean = np.mean(Y, axis=0)
+        X_std = np.std(X, axis=0)
+        Y_std = np.std(Y, axis=0)
+
+        return X_mean, X_std, Y_mean, Y_std
+
+    def get_data_metadata(self):
+        """Return metadata for the new graph structure"""
+        # define node types
+        node_types = ['base', 'joint']
+        
+        # define edge types (including new connections)
+        if self.model_type == 'heterogeneous_gnn_k4_com':
+            edge_types = [
+                ('base', 'connect', 'joint'),
+                ('joint', 'connect', 'base'),
+                ('joint', 'connect', 'joint'),
+                ('base', 'gt', 'base'),    # new transverse connections
+                ('base', 'gs', 'base')     # new sagittal connections
+            ]
+        elif self.model_type == 'heterogeneous_gnn_s4_com':
+            edge_types = [
+                ('base', 'connect', 'joint'),
+                ('joint', 'connect', 'base'),
+                ('joint', 'connect', 'joint')
+            ]
+        else:
+            raise ValueError(f"Model type: {self.model_type} is not implemented for Solo12 dataset.")
+        
+        return node_types, edge_types
+    
+    def get_helper_heterogeneous_gnn(self, idx):
+        """Extended data retrieval method, including new graph structure"""
+
+        # Create the Heterogeneous Data objects
+        data = HeteroData()
+
+        # set edge connections
+        data['base', 'connect', 'joint'].edge_index = self.bj
+        data['joint', 'connect', 'base'].edge_index = self.jb
+        data['joint', 'connect', 'joint'].edge_index = self.jj
+        if self.model_type == 'heterogeneous_gnn_k4_com':
+            data['base', 'gt', 'base'].edge_index = self.gt
+            data['base', 'gs', 'base'].edge_index = self.gs
+
+        # create node feature matrices
+        base_x = torch.ones((self.hgnn_number_nodes[0], self.base_width), dtype=torch.float64)
+        joint_x = torch.ones((self.hgnn_number_nodes[1], self.joint_width), dtype=torch.float64)
+
+        # get original data
+        if self.model_type == 'heterogeneous_gnn_k4_com':
+            lin_acc, ang_vel, j_p, j_v, j_T, f_p, f_v, labels, r_p, r_o, timestamps = self.load_data_sorted_k4(idx)
+        elif self.model_type == 'heterogeneous_gnn_s4_com':
+            lin_acc, ang_vel, j_p, j_v, j_T, f_p, f_v, labels, r_p, r_o, timestamps = self.load_data_sorted(idx)
+
+        # For each base specified
+        base_data = [lin_acc, ang_vel] # lin_acc, ang_vel shape: [history_length, 3*4]
+        for i in range(self.hgnn_number_nodes[0]):
+            # For each variable to use
+            final_input = torch.ones((0), dtype=torch.float64)
+            for k in self.variables_to_use_base:
+                final_input = torch.cat((final_input, torch.tensor(base_data[k][:,i*3:(i+1)*3].flatten('F'), dtype=torch.float64)), axis=0)
+            base_x[i] = final_input
+
+        # process joint and foot features (same as original implementation)
+        # refer to the joint and foot feature processing part in the FlexibleDataset.get_helper_heterogeneous_gnn method L570-L596
+        # For each joint specified
+        joint_data = [j_p, j_v, j_T]
+        for i, urdf_node_name in enumerate(self.urdf_name_to_graph_index_joint.keys()):
+            # For each variable to use
+            final_input = torch.ones((0), dtype=torch.float64)
+            for k in self.variables_to_use_joint:
+                final_input = torch.cat((final_input, torch.tensor(joint_data[k][:,i].flatten('F'), dtype=torch.float64)), axis=0)
+
+            joint_x[i] = final_input
+
+        # set labels and node features
+        data.y = torch.tensor(np.array(labels).reshape(-1), dtype=torch.float64)
+        data['base'].x = base_x
+        data['joint'].x = joint_x
+        data.num_nodes = sum(self.hgnn_number_nodes)
+
+        return data
+
+    # ======================== DATA LOADING ==========================
+    def load_data_sorted(self, seq_num: int):
+        """
+        Loads data from the dataset at the provided sequence number.
+        However, the joint and feet are sorted so that they match 
+        the order in the URDF file. Additionally, the foot labels 
+        are sorted so it matches the order in the URDF file.
+
+        Next, labels are checked to make sure they aren't None. 
+        Finally, normalize the data if self.normalize was set as True.
+        We calculate the standard deviation for this normalization 
+        using Bessel's correction (n-1 used instead of n).
+
+        Parameters:
+            seq_num (int): The sequence number of the txt file
+                whose data should be loaded.
+
+        Returns:
+            Same values as load_data_at_dataset_seq(), but order of
+            values inside arrays have been sorted (and potentially
+            normalized).
+            lin_vel: shape: Zeros(history_length, 4*3) 4 bases linear acceleration
+            ang_vel: shape: Zeros(history_length, 4*3) 4 bases angular velocity
+            j_p: shape: [history_length, 12] 12 joints position
+            j_v: shape: [history_length, 12] 12 joints velocity
+            j_T: None
+            f_p: None
+            f_v: None
+            labels: shape: [6] 6 labels (base linear and angular velocity)
+            r_p: None
+            r_o: None
+            timestamps: shape: [history_length]
+        """
+        lin_vel, ang_vel, j_p, j_v, j_T, f_p, f_v, labels, r_p, r_o, timestamps = self.load_data_at_dataset_seq(seq_num)
+
+        sorted_base_list = [lin_vel, ang_vel]
+        
+        # Sort the joint information
+        unsorted_joint_list = [j_p, j_v, j_T]
+        sorted_joint_list = []
+        for unsorted_array in unsorted_joint_list:
+            if unsorted_array is not None:
+                sorted_joint_list.append(unsorted_array[:,self.joint_node_indices_sorted])
+            else:
+                sorted_joint_list.append(None)
+
+        # Sort the ground truth labels
+        labels_sorted = labels # [batch_size=64, 6]
+
+        return sorted_base_list[0], sorted_base_list[1], sorted_joint_list[0], sorted_joint_list[1], sorted_joint_list[2], None, None, labels_sorted, None, None, timestamps
+                    
+    def load_data_at_dataset_seq(self, seq_num: int):
+        """Load data for a specified sequence"""
+        # Load joint data
+        j_p = np.array(self.mat_data['q'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)
+        j_v = np.array(self.mat_data['qd'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)
+        
+        # Load base velocity data (as labels)
+        base_lin_vel = np.array(self.mat_data['base_lin_vel'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 3)
+        base_ang_vel = np.array(self.mat_data['base_ang_vel'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 3)
+        
+        # Concatenate base velocities into a 6D vector as labels
+        labels = np.concatenate([base_lin_vel[-1], base_ang_vel[-1]])  # Only use the last frame of the sequence as prediction target
+
+        # Initilize lin_vel, ang_vel to zero
+        lin_vel = np.zeros((self.history_length, 3))
+        ang_vel = np.zeros((self.history_length, 3))
+        
+        # Fields returned as None are used in original QuadSDKDataset but not needed here
+        return lin_vel, ang_vel, j_p, j_v, None, None, None, labels, None, None, None
+
+    # ======================== DATA PROCESSING =======================
+    def process(self):
+        """
+        Process raw Solo-12 data and save it in .mat format
+        Data format:
+        - X: (N, 24) contains positions and velocities of 12 joints
+        - Y: (N, 6) contains base linear and angular velocities
+        """
+        # Read the npz file
+        path_to_npz = os.path.join(self.root, 'raw', 'data.npz')
+        raw_data = np.load(path_to_npz)
+        
+        # Get the data length
+        dataset_entries = len(raw_data['X'])
+
+        X = raw_data['X']
+        Y = raw_data['Y']
+
+        if self.normalize:
+            self.X_mean, self.X_std, self.Y_mean, self.Y_std = self.compute_normalization(X, Y)
+            self.standarizer = Standarizer(self.X_mean, self.X_std, self.Y_mean, self.Y_std, 'cpu')
+            X_n, Y_n = self.standarizer.transform(X, Y)
+        else:
+            X_n, Y_n = X, Y
+        
+        # Separate the joint positions and velocities
+        joint_positions = X_n[:, :12]    # The first 12 columns are joint positions
+        joint_velocities = X_n[:, 12:]   # The last 12 columns are joint velocities
+        
+        # Separate the base linear and angular velocities
+        base_lin_vel = Y_n[:, :3]        # The first 3 columns are linear velocities
+        base_ang_vel = Y_n[:, 3:]        # The last 3 columns are angular velocities
+        
+        # Create the data dictionary
+        data_dict = {
+            'q': joint_positions,           # Joint positions (N, 12)
+            'qd': joint_velocities,         # Joint velocities (N, 12)
+            'base_lin_vel': base_lin_vel,   # Base linear velocities (N, 3)
+            'base_ang_vel': base_ang_vel,   # Base angular velocities (N, 3)
+            'timestamps': np.arange(dataset_entries),  # Use the index as timestamps
+        }
+        
+        # Save as a mat file
+        sio.savemat(os.path.join(self.processed_dir, "data.mat"), 
+                    data_dict, 
+                    do_compression=True)
+        
+        # Save the dataset information
+        with open(os.path.join(self.processed_dir, "info.txt"), "w") as f:
+            file_id, loc = self.get_file_id_and_loc()
+            f.write(str(dataset_entries) + " " + file_id)
+
+    # ======================== MorphoSymm DATA LOADING ========================
     def _init_new_edges_k4(self):
         """Initialize the new edge structure for K4"""
         # original edges
@@ -150,162 +497,6 @@ class Solo12Dataset(FlexibleDataset):
             'gr': gs * gt  # Rotational symmetry (element-wise multiplication)
         }
 
-    def get_data_metadata(self):
-        """Return metadata for the new graph structure"""
-        # define node types
-        node_types = ['base', 'joint', 'foot']
-        
-        # define edge types (including new connections)
-        if self.model_type == 'heterogeneous_gnn_k4_com':
-            edge_types = [
-                ('base', 'connect', 'joint'),
-                ('joint', 'connect', 'base'),
-                ('joint', 'connect', 'joint'),
-                ('foot', 'connect', 'joint'),
-                ('joint', 'connect', 'foot'),
-                ('base', 'gt', 'base'),    # new transverse connections
-                ('base', 'gs', 'base'),    # new sagittal connections
-            ]
-        elif self.model_type == 'heterogeneous_gnn_c2':
-            edge_types = [
-                ('base', 'front_bj', 'joint'),
-                ('joint', 'front_bj', 'base'),
-                ('base', 'back_bj', 'joint'),
-                ('joint', 'back_bj', 'base'),
-                ('joint', 'connect', 'joint'),
-                ('foot', 'connect', 'joint'),
-                ('joint', 'connect', 'foot'),
-                ('base', 'center_bb', 'base')
-            ]
-        
-        return node_types, edge_types
-    
-    def get_helper_heterogeneous_gnn(self, idx):
-        """Extended data retrieval method, including new graph structure"""
-
-        # Create the Heterogeneous Data objects
-        data = HeteroData()
-
-        # set edge connections
-        data['base', 'connect', 'joint'].edge_index = self.bj
-        data['joint', 'connect', 'base'].edge_index = self.jb
-        data['joint', 'connect', 'joint'].edge_index = self.jj
-        data['foot', 'connect', 'joint'].edge_index = self.fj
-        data['joint', 'connect', 'foot'].edge_index = self.jf
-        data['base', 'gt', 'base'].edge_index = self.gt
-        data['base', 'gs', 'base'].edge_index = self.gs
-
-        # create node feature matrices
-        base_x = torch.ones((self.hgnn_number_nodes[0], self.base_width), dtype=torch.float64)
-        joint_x = torch.ones((self.hgnn_number_nodes[1], self.joint_width), dtype=torch.float64)
-        foot_x = torch.ones((self.hgnn_number_nodes[2], self.foot_width), dtype=torch.float64)
-
-        # get original data
-        lin_acc, ang_vel, j_p, j_v, j_T, f_p, f_v, labels, r_p, r_o, timestamps = self.load_data_sorted_k4(idx)
-
-        # For each base specified
-        base_data = [lin_acc, ang_vel] # lin_acc, ang_vel shape: [history_length, 3*4]
-        for i in range(self.hgnn_number_nodes[0]):
-            # For each variable to use
-            final_input = torch.ones((0), dtype=torch.float64)
-            for k in self.variables_to_use_base:
-                final_input = torch.cat((final_input, torch.tensor(base_data[k][:,i*3:(i+1)*3].flatten('F'), dtype=torch.float64)), axis=0)
-            base_x[i] = final_input
-
-        # process joint and foot features (same as original implementation)
-        # refer to the joint and foot feature processing part in the FlexibleDataset.get_helper_heterogeneous_gnn method L570-L596
-        # For each joint specified
-        joint_data = [j_p, j_v, j_T]
-        for i, urdf_node_name in enumerate(self.urdf_name_to_graph_index_joint.keys()):
-            # For each variable to use
-            final_input = torch.ones((0), dtype=torch.float64)
-            for k in self.variables_to_use_joint:
-                final_input = torch.cat((final_input, torch.tensor(joint_data[k][:,i].flatten('F'), dtype=torch.float64)), axis=0)
-
-            joint_x[i] = final_input
-
-        # For each foot specified
-        foot_data = [f_p, f_v] # f_p, f_v shape: [history_length, 3*4]
-        for i, urdf_node_name in enumerate(self.urdf_name_to_graph_index_foot.keys()):
-            # For each variable to use
-            final_input = torch.ones((0), dtype=torch.float64)
-            for k in self.variables_to_use_foot:
-                final_input = torch.cat((final_input, torch.tensor(foot_data[k][:,(3*i):(3*i)+3].flatten('F'), dtype=torch.float64)), axis=0)
-            if final_input.shape[0] != 0:
-                foot_x[i] = final_input
-
-        # set labels and node features
-        data.y = torch.tensor(np.array(labels).reshape(-1), dtype=torch.float64)
-        data['base'].x = base_x
-        data['joint'].x = joint_x
-        data['foot'].x = foot_x
-        data.num_nodes = sum(self.hgnn_number_nodes)
-
-        return data
-
-    # ========================= DOWNLOADING ==========================
-    def get_downloaded_dataset_file_name(self):
-        """Specify the name of the raw data file"""
-        return "data.npz"
-    
-    def get_file_id_and_loc(self):
-        """Specify the source location of the data file"""
-        # If loading data from local, return local path
-        return "local_file", "local"
-        # If data needs to be downloaded, return download link
-        # return "https://path/to/your/data_100000.npz", "url"
-    
-    def get_expected_urdf_name(self):
-        return "solo"
-    
-    # ======================== DATA LOADING ==========================
-    def get_urdf_name_to_dataset_array_index(self):
-        """Joint mapping for Solo12"""
-        '''
-            # The data structure in npz file should be:
-            X = [
-                # Joint positions (first 12 columns)
-                'FL_HAA', 'FL_HFE', 'FL_KFE',  # Front Left leg (0-2)
-                'FR_HAA', 'FR_HFE', 'FR_KFE',  # Front Right leg (3-5)
-                'HL_HAA', 'HL_HFE', 'HL_KFE',  # Hind Left leg (6-8)
-                'HR_HAA', 'HR_HFE', 'HR_KFE',  # Hind Right leg (9-11)
-                
-                # Joint velocities (last 12 columns)
-                'FL_HAA_vel', 'FL_HFE_vel', 'FL_KFE_vel',
-                'FR_HAA_vel', 'FR_HFE_vel', 'FR_KFE_vel',
-                'HL_HAA_vel', 'HL_HFE_vel', 'HL_KFE_vel',
-                'HR_HAA_vel', 'HR_HFE_vel', 'HR_KFE_vel'
-            ]
-
-            Y = [
-                'base_lin_vel_x', 'base_lin_vel_y', 'base_lin_vel_z',  # Base linear velocity (0-2)
-                'base_ang_vel_x', 'base_ang_vel_y', 'base_ang_vel_z'   # Base angular velocity (3-5)
-            ]
-        '''
-        return {
-            'floating_base': 0,
-
-            'FL_hip_joint': 0,   # Front Left Hip Abduction/Adduction
-            'FL_thigh_joint': 1,   # Front Left Hip Flexion/Extension
-            'FL_calf_joint': 2,   # Front Left Knee Flexion/Extension
-            'FR_hip_joint': 3,   # Front Right Hip
-            'FR_thigh_joint': 4,   # Front Right Hip
-            'FR_calf_joint': 5,   # Front Right Knee
-            'RL_hip_joint': 6,   # Hind Left Hip
-            'RL_thigh_joint': 7,   # Hind Left Hip
-            'RL_calf_joint': 8,   # Hind Left Knee
-            'RR_hip_joint': 9,   # Hind Right Hip
-            'RR_thigh_joint': 10,  # Hind Right Hip
-            'RR_calf_joint': 11,   # Hind Right Knee
-
-            'FL_foot_fixed': 0,
-            'FR_foot_fixed': 1,
-            'RL_foot_fixed': 2,
-            'RR_foot_fixed': 3
-        }
-
-    # ======================== DATA LOADING ==========================
-            
     def load_data_sorted_k4(self, seq_num: int):
         """
         Loads data from the dataset at the provided sequence number.
@@ -333,7 +524,7 @@ class Solo12Dataset(FlexibleDataset):
             j_T: None
             f_p: shape: [history_length, 4*3] 4 feet position
             f_v: shape: [history_length, 4*3] 4 feet velocity
-            labels: shape: [6] 6 labels (base linear and angular velocity)
+            labels: shape: [4 * 6] 4 base nodes * 6 labels (base linear and angular velocity)
             r_p: None
             r_o: None
             timestamps: shape: [history_length]
@@ -385,19 +576,7 @@ class Solo12Dataset(FlexibleDataset):
         if self.symmetry_operator is not None:
             labels_sorted = self.apply_symmetry([labels_sorted], part='label')[0]
 
-        # Normalize the data if desired
-        norm_arrs = [None, None, None, None, None, None, None, None, None]
-        if self.normalize:
-            # Normalize all data except the labels
-            to_normalize_array = [sorted_base_list[0], sorted_base_list[1], sorted_joint_list[0], sorted_joint_list[1], sorted_joint_list[2], sorted_foot_list[0], sorted_foot_list[1], r_p, r_o]
-            for i, array in enumerate(to_normalize_array):
-                if (array is not None) and (array.shape[0] > 1):
-                    array_tensor = torch.from_numpy(array)
-                    norm_arrs[i] = np.nan_to_num((array_tensor-torch.mean(array_tensor,axis=0))/torch.std(array_tensor, axis=0, correction=1).numpy(), copy=False, nan=0.0)
-
-            return norm_arrs[0], norm_arrs[1], norm_arrs[2], norm_arrs[3], norm_arrs[4], norm_arrs[5], norm_arrs[6], labels_sorted, norm_arrs[7], norm_arrs[8], timestamps
-        else:
-            return sorted_base_list[0], sorted_base_list[1], sorted_joint_list[0], sorted_joint_list[1], sorted_joint_list[2], sorted_foot_list[0], sorted_foot_list[1], labels_sorted, r_p, r_o, timestamps
+        return sorted_base_list[0], sorted_base_list[1], sorted_joint_list[0], sorted_joint_list[1], sorted_joint_list[2], sorted_foot_list[0], sorted_foot_list[1], labels_sorted, r_p, r_o, timestamps
 
     def apply_symmetry(self, data_list, part='joint'):
         """Apply the symmetry operator to the data"""
@@ -460,72 +639,6 @@ class Solo12Dataset(FlexibleDataset):
                 new_data_list.append(data)
         return new_data_list
     
-    def load_data_at_dataset_seq(self, seq_num: int):
-        """Load data for a specified sequence"""
-        # Load joint data
-        j_p = np.array(self.mat_data['q'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)
-        j_v = np.array(self.mat_data['qd'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)
-        
-        # Load base velocity data (as labels)
-        base_lin_vel = np.array(self.mat_data['base_lin_vel'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 3)
-        base_ang_vel = np.array(self.mat_data['base_ang_vel'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 3)
-        
-        # Concatenate base velocities into a 6D vector as labels
-        labels = np.concatenate([base_lin_vel[-1], base_ang_vel[-1]])  # Only use the last frame of the sequence as prediction target
-
-        # Initilize lin_vel, ang_vel to zeros
-        lin_vel = np.zeros((self.history_length, 3))
-        ang_vel = np.zeros((self.history_length, 3))
-
-        # Initilize foot positions, velocities to zeros
-        f_p = np.zeros((self.history_length, 12))
-        f_v = np.zeros((self.history_length, 12))
-        
-        # Fields returned as None are used in original QuadSDKDataset but not needed here
-        return lin_vel, ang_vel, j_p, j_v, None, f_p, f_v, labels, None, None, None
-
-    # ======================== DATA PROCESSING =======================
-    def process(self):
-        """
-        Process raw Solo-12 data and save it in .mat format
-        Data format:
-        - X: (N, 24) contains positions and velocities of 12 joints
-        - Y: (N, 6) contains base linear and angular velocities
-        """
-        # Read the npz file
-        path_to_npz = os.path.join(self.root, 'raw', 'data.npz')
-        raw_data = np.load(path_to_npz)
-        
-        # Get the data length
-        dataset_entries = len(raw_data['X'])
-        
-        # Separate the joint positions and velocities
-        joint_positions = raw_data['X'][:, :12]    # The first 12 columns are joint positions
-        joint_velocities = raw_data['X'][:, 12:]   # The last 12 columns are joint velocities
-        
-        # Separate the base linear and angular velocities
-        base_lin_vel = raw_data['Y'][:, :3]        # The first 3 columns are linear velocities
-        base_ang_vel = raw_data['Y'][:, 3:]        # The last 3 columns are angular velocities
-        
-        # Create the data dictionary
-        data_dict = {
-            'q': joint_positions,           # Joint positions (N, 12)
-            'qd': joint_velocities,         # Joint velocities (N, 12)
-            'base_lin_vel': base_lin_vel,   # Base linear velocities (N, 3)
-            'base_ang_vel': base_ang_vel,   # Base angular velocities (N, 3)
-            'timestamps': np.arange(dataset_entries),  # Use the index as timestamps
-        }
-        
-        # Save as a mat file
-        sio.savemat(os.path.join(self.processed_dir, "data.mat"), 
-                    data_dict, 
-                    do_compression=True)
-        
-        # Save the dataset information
-        with open(os.path.join(self.processed_dir, "info.txt"), "w") as f:
-            file_id, loc = self.get_file_id_and_loc()
-            f.write(str(dataset_entries) + " " + file_id)
-
     def swap_legs_data(self, data_dict, leg1_idx, leg2_idx):
         """
         Swap the data of two legs
@@ -554,3 +667,64 @@ class Solo12Dataset(FlexibleDataset):
                 data_dict['j_T'][:, leg2_start:leg2_end].copy(), data_dict['j_T'][:, leg1_start:leg1_end].copy()
         
         return data_dict
+    
+    # ========================= DOWNLOADING ==========================
+    def get_downloaded_dataset_file_name(self):
+        """Specify the name of the raw data file"""
+        return "data.npz"
+    
+    def get_file_id_and_loc(self):
+        """Specify the source location of the data file"""
+        # If loading data from local, return local path
+        return "local_file", "local"
+        # If data needs to be downloaded, return download link
+        # return "https://path/to/your/data_100000.npz", "url"
+    
+    def get_expected_urdf_name(self):
+        return "solo"
+    
+    # ======================== DATA LOADING ==========================
+    def get_urdf_name_to_dataset_array_index(self):
+        """Joint mapping for Solo12"""
+        '''
+            # The data structure in npz file should be:
+            X = [
+                # Joint positions (first 12 columns)
+                'FL_HAA', 'FL_HFE', 'FL_KFE',  # Front Left leg (0-2)
+                'FR_HAA', 'FR_HFE', 'FR_KFE',  # Front Right leg (3-5)
+                'HL_HAA', 'HL_HFE', 'HL_KFE',  # Hind Left leg (6-8)
+                'HR_HAA', 'HR_HFE', 'HR_KFE',  # Hind Right leg (9-11)
+                
+                # Joint velocities (last 12 columns)
+                'FL_HAA_vel', 'FL_HFE_vel', 'FL_KFE_vel',
+                'FR_HAA_vel', 'FR_HFE_vel', 'FR_KFE_vel',
+                'HL_HAA_vel', 'HL_HFE_vel', 'HL_KFE_vel',
+                'HR_HAA_vel', 'HR_HFE_vel', 'HR_KFE_vel'
+            ]
+
+            Y = [
+                'base_lin_vel_x', 'base_lin_vel_y', 'base_lin_vel_z',  # Base linear velocity (0-2)
+                'base_ang_vel_x', 'base_ang_vel_y', 'base_ang_vel_z'   # Base angular velocity (3-5)
+            ]
+        '''
+        return {
+            'floating_base': 0,
+
+            'FL_hip_joint': 0,   # Front Left Hip Abduction/Adduction
+            'FL_thigh_joint': 1,   # Front Left Hip Flexion/Extension
+            'FL_calf_joint': 2,   # Front Left Knee Flexion/Extension
+            'FR_hip_joint': 3,   # Front Right Hip
+            'FR_thigh_joint': 4,   # Front Right Hip
+            'FR_calf_joint': 5,   # Front Right Knee
+            'RL_hip_joint': 6,   # Hind Left Hip
+            'RL_thigh_joint': 7,   # Hind Left Hip
+            'RL_calf_joint': 8,   # Hind Left Knee
+            'RR_hip_joint': 9,   # Hind Right Hip
+            'RR_thigh_joint': 10,  # Hind Right Hip
+            'RR_calf_joint': 11,   # Hind Right Knee
+
+            'FL_foot_fixed': 0,
+            'FR_foot_fixed': 1,
+            'RL_foot_fixed': 2,
+            'RR_foot_fixed': 3
+        }

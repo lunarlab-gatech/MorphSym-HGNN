@@ -6,22 +6,23 @@ from mi_hgnn.visualization import visualize_model_outputs_regression
 
 def main():
     # ================================= CHANGE THESE ===================================
-    model_type = 'heterogeneous_gnn_k4_com' # `mlp`
+    model_type = 'heterogeneous_gnn_s4_com' # `heterogeneous_gnn`, `heterogeneous_gnn_k4_com`
     seed = 0
     # ==================================================================================
 
     # Define model information
-    history_length = 150
-    normalize = False
-    num_layers = 8
+    history_length = 1
+    normalize = True
+    num_layers = 4
     hidden_size = 128
 
     # Set up the urdf paths
     path_to_urdf = Path('urdf_files', 'Solo', 'solo12.urdf').absolute()
     path_to_urdf_dynamics = Path('urdf_files', 'Solo-12', 'solo12.urdf').absolute()
 
+    root = Path(Path('.').parent, 'datasets', 'Solo-12').absolute()
     # Initalize the Train datasets
-    solo12data = Solo12Dataset(Path(Path('.').parent, 'datasets', 'Solo-12').absolute(), path_to_urdf, 
+    solo12data = Solo12Dataset(root, path_to_urdf, 
                        'package://yobotics_description/', 'mini-cheetah-gazebo-urdf/yobo_model/yobotics_description', model_type, history_length, normalize)
     
     # Define train and val sets
@@ -33,9 +34,10 @@ def main():
     val_subsets = []
     for dataset in train_val_datasets:
         data_len_minus_1 = dataset.__len__() - 1
-        split_index = int(np.round(data_len_minus_1 * 0.70)) # When value has .5, round to nearest-even
-        train_subsets.append(torch.utils.data.Subset(dataset, np.arange(0, split_index)))
-        val_subsets.append(torch.utils.data.Subset(dataset, np.arange(split_index, data_len_minus_1)))
+        split_index_train_val = int(np.round(data_len_minus_1 * 0.70)) # When value has .5, round to nearest-even
+        split_index_test = int(np.round(data_len_minus_1 * 0.85)) # When value has .5, round to nearest-even
+        train_subsets.append(torch.utils.data.Subset(dataset, np.arange(0, split_index_train_val)))
+        val_subsets.append(torch.utils.data.Subset(dataset, np.arange(split_index_train_val, split_index_test)))
     train_dataset = torch.utils.data.ConcatDataset(train_subsets)
     val_dataset = torch.utils.data.ConcatDataset(val_subsets)
     
@@ -46,8 +48,9 @@ def main():
     # Train the model (evaluate later, so no test set)
     train_model(train_dataset, val_dataset, None, normalize, 
                 num_layers=num_layers, hidden_size=hidden_size, logger_project_name="regression", 
-                batch_size=30, regression=True, lr=0.0001, epochs=30, seed=seed, devices=1, early_stopping=True,
-                disable_test=True)
+                batch_size=64, regression=True, lr=0.0024, epochs=30, seed=seed, devices=1, early_stopping=True,
+                disable_test=True, 
+                data_path = root)
 
 if __name__ == '__main__':
      main()

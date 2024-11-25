@@ -60,14 +60,14 @@ class CosineSimilarityMetric(Metric):
     def __init__(self):
         super().__init__()
         # Add state variables
-        self.add_state("summed_loss", 
+        self.add_state("total_similarity", 
                       default=torch.tensor(0.0, dtype=torch.float64), 
                       dist_reduce_fx="sum")
         self.add_state("total_num", 
                       default=torch.tensor(0, dtype=torch.float64), 
                       dist_reduce_fx="sum")
         # Cosine similarity loss function
-        self.loss_fn = torch.nn.CosineEmbeddingLoss(reduction='sum')
+        self.cos_sim = torch.nn.CosineSimilarity(dim=1)
 
     def update(self, preds: torch.Tensor, target: torch.Tensor) -> None:
         """
@@ -79,14 +79,13 @@ class CosineSimilarityMetric(Metric):
         if preds.size() != target.size():
             raise ValueError("Prediction and target tensors must have the same shape")
             
-        # Calculate cosine similarity loss
-        ones = torch.ones(preds.size(0)).to(preds.device)
-        loss = self.loss_fn(preds, target, ones)
+        # Calculate cosine similarity
+        similarity = self.cos_sim(preds, target)
         
         # Update states
-        self.summed_loss += loss
+        self.total_similarity += similarity.sum()
         self.total_num += preds.shape[0]
 
     def compute(self) -> torch.Tensor:
-        """Calculate average loss"""
-        return self.summed_loss.float() / self.total_num
+        """Calculate average similarity"""
+        return self.total_similarity / self.total_num
