@@ -57,7 +57,11 @@ class LinTzuYaunDataset_NewGraph(LinTzuYaunDataset):
         # Set the symmetry parameters
         self.symmetry_operator = symmetry_operator
         self.symmetry_mode = symmetry_mode
-        self.group_operator_path = group_operator_path        
+        self.group_operator_path = group_operator_path 
+        # print("===== Initializing LinTzuYaunDataset_NewGraph =====")
+        # print(f"symmetry_operator: {self.symmetry_operator}")
+        # print(f"symmetry_mode: {self.symmetry_mode}")
+        # print(f"group_operator_path: {self.group_operator_path}")      
         
         # TODO: should be checked, how to support c2 symmetry
         if self.symmetry_operator is not None:
@@ -97,6 +101,13 @@ class LinTzuYaunDataset_NewGraph(LinTzuYaunDataset):
                 raise ValueError(f"Group operator file not found at {self.group_operator_path}")
             except yaml.YAMLError as e:
                 raise ValueError(f"Error parsing YAML file: {e}")
+
+            # print symmetry operator and coefficients
+            # print(f"joint_coefficients: {self.joint_coefficients}")
+            # print(f"foot_coefficients: {self.foot_coefficients}")
+            # print(f"base_coefficients_lin: {self.base_coefficients_lin}")
+            # print(f"base_coefficients_ang: {self.base_coefficients_ang}")
+            # print(f"label_coefficients: {self.label_coefficients}")
 
         if model_type == 'heterogeneous_gnn_c2':
             self.load_data_sorted = self.load_data_sorted_c2

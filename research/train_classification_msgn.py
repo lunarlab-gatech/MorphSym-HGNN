@@ -638,22 +638,25 @@ def ensure_dataset_splits_match_morphoSymm(train_dataset, val_dataset, test_data
     reorder_and_assert_match(test_dataset.__getitem__(304667)['joint'].x, des_values_forest_side)
     np.testing.assert_equal(test_dataset.__len__(), 376662)
 
-def main():
+def main(
+        seed=42,
+        batch_size=64,
+        num_layers=8,
+        hidden_size=128,
+        lr=0.0001,
+        epochs=49,
+        logger_project_name='main_cls_k4',
+        model_type='heterogeneous_gnn_k4',
+        symmetry_mode='MorphSym',
+        group_operator_path='cfg/mini_cheetah-k4.yaml'
+    ):
     """
     Duplicate the experiment found in Section VI-B of "On discrete symmetries 
     of robotics systems: A group-theoretic and data-driven analysis", but training
     on our HGNN instead.
     """
-
-    # ================================= CHANGE THESE ===================================
-    model_type = 'heterogeneous_gnn_c2' # or `mlp`, `heterogeneous_gnn`, `heterogeneous_gnn_k4`, `heterogeneous_gnn_c2`
     print(f"model_type: {model_type}")
-    num_layers = 8
-    hidden_size = 128
-    seed = 3407
-    symmetry_mode = 'MorphSym' # Can be 'Euclidean' or 'MorphSym' or None
-    group_operator_path = '/home/swei303/Documents/proj/MorphSym-HGNN/cfg/mini_cheetah-k4.yaml'
-    # ==================================================================================
+    wandb_api_key = "eed5fa86674230b63649180cc343f14e1f1ace78"
 
     # Set model parameters (so they all match)
     history_length = 150
@@ -720,8 +723,27 @@ def main():
 
     # Train the model
     train_model(train_dataset, val_dataset, test_dataset, normalize, num_layers=num_layers, hidden_size=hidden_size, 
-                logger_project_name="class", batch_size=30, regression=False, lr=0.0001, epochs=49, 
-                seed=seed, devices=1, early_stopping=True, symmetry_mode=symmetry_mode, group_operator_path=group_operator_path)
+                logger_project_name=logger_project_name, batch_size=batch_size, regression=False, lr=lr, epochs=epochs, 
+                seed=seed, devices=1, early_stopping=True, symmetry_mode=symmetry_mode, group_operator_path=group_operator_path, subfoler_name=logger_project_name, wandb_api_key=wandb_api_key)
     
 if __name__ == "__main__":
-    main()
+    import argparse
+    parser = argparse.ArgumentParser()
+    # Model parameters
+    parser.add_argument('--seed', type=int, default=0, help='Random seed for reproducibility')
+    parser.add_argument('--batch_size', type=int, default=64, help='Batch size')
+    parser.add_argument('--num_layers', type=int, default=8, help='Number of layers')
+    parser.add_argument('--hidden_size', type=int, default=128, help='Hidden size')
+    parser.add_argument('--lr', type=float, default=0.0001, help='Learning rate')
+    parser.add_argument('--epochs', type=int, default=49, help='Number of epochs')
+    # Logging parameters
+    parser.add_argument('--logger_project_name', type=str, default='main_cls_c2', help='Logger project name')
+	# Symmetry parameters
+    parser.add_argument('--model_type', type=str, default='heterogeneous_gnn_c2', help='Model type, options: heterogeneous_gnn_k4, mlp, heterogeneous_gnn, heterogeneous_gnn_k4, heterogeneous_gnn_c2')
+    parser.add_argument('--symmetry_mode', type=str, default='MorphSym', help='Symmetry mode, options: Euclidean, MorphSym, None')
+    parser.add_argument('--group_operator_path', type=str, default='cfg/mini_cheetah-k4.yaml', help='Group operator path')
+    args = parser.parse_args()
+    
+    print(f"args: {args}")
+    
+    main(seed=args.seed, batch_size=args.batch_size, num_layers=args.num_layers, hidden_size=args.hidden_size, lr=args.lr, epochs=args.epochs, logger_project_name=args.logger_project_name, model_type=args.model_type, symmetry_mode=args.symmetry_mode, group_operator_path=args.group_operator_path)

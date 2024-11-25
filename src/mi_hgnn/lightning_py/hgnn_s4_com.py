@@ -26,12 +26,12 @@ class COM_HGNN_S4(torch.nn.Module):
         self.activation = activation_fn
 
         # NOTE: hardcoded for mini_cheetah
-        self.num_timesteps = 150
-        num_joints_per_leg = 3
-        self.num_legs = 4
+        # self.num_timesteps = 150
+        # num_joints_per_leg = 3
+        # self.num_legs = 4
         self.num_bases = 1
-        self.num_joints = self.num_legs * num_joints_per_leg
-        self.num_dimensions_per_foot = 3
+        # self.num_joints = self.num_legs * num_joints_per_leg
+        # self.num_dimensions_per_foot = 3
         self.num_dimensions_per_base = 6
 
         # Create the first layer encoder to convert features into embeddings
@@ -60,8 +60,6 @@ class COM_HGNN_S4(torch.nn.Module):
         """
         Forward pass with special handling for the K4 structure
         """
-        # x_dict = self.apply_symmetry(x_dict)
-
         # Initial feature encoding
         x_dict = self.encoder(x_dict)
         x_dict = {key: self.activation(x) for key, x in x_dict.items()}

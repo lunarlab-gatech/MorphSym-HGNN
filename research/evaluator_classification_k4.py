@@ -21,7 +21,7 @@ def main(MorphSym_version: str,
         model_type = 'heterogeneous_gnn_c2'
     else:
         import mi_hgnn.datasets_py.LinTzuYaunDataset as linData
-        model_type = 'heterogeneous_gnn' # 'heterogeneous_gnn_k4'
+        model_type = 'heterogeneous_gnn'
 
     # Swap legs to evaluate the model on the opposite leg
     # swap_legs_list = [(1, 3), (1, 0), (1, 2), None, ((1, 0), (3, 2)), ((1, 3), (2, 0))] # Swap tuple: FR: 0, FL: 1, RR: 2, RL: 3, None: no swap
@@ -137,21 +137,29 @@ def print_results(acc, f1_leg_0, f1_leg_1, f1_leg_2, f1_leg_3, f1_avg_legs):
     print("F1-Score Legs Avg: ", f1_avg_legs.item())
 
 if __name__ == "__main__":
+    # S4
+    # MorphSym_version = 'S4'
+    # path_to_checkpoint = "ckpts/Classification Experiment/Main Experiment/leafy-totem-5/epoch=10-val_CE_loss=0.30258.ckpt"
+    # group_operator_path = 'cfg/mini_cheetah-.yaml'
+    # symmetry_operator_list = [None]  # Can be 'gs' or 'gt' or 'gr' or None
+    # symmetry_mode = 'Euclidean' # Can be 'Euclidean' or 'MorphSym' or None
+
     # C2
-    MorphSym_version = 'C2'
-    path_to_checkpoint = "models/curious-violet-15/epoch=5-val_Accuracy=0.89388-val_F1_Score_Leg_Avg=0.94727.ckpt"
-    group_operator_path = 'cfg/mini_cheetah-c2.yaml'
+    # MorphSym_version = 'C2'
+    # path_to_checkpoint = "models/autumn-brook-16"
+    # group_operator_path = 'cfg/mini_cheetah-c2.yaml'
 
     # K4
-    # MorphSym_version = 'K4'
-    # path_to_checkpoint = "models/flowing-brook-14/epoch=13-val_Accuracy=0.84279-val_F1_Score_Leg_Avg=0.92456.ckpt"
-    # group_operator_path = 'cfg/mini_cheetah-k4.yaml'
-
-    symmetry_operator_list = [None, 'gs', 'gt', 'gr']  # Can be 'gs' or 'gt' or 'gr' or None
+    MorphSym_version = 'K4'
+    path_to_checkpoint = "models/comfy-shape-20"
+    group_operator_path = 'cfg/mini_cheetah-k4.yaml'
+    symmetry_operator_list = [None]  # Can be 'gs' or 'gt' or 'gr' or None
     symmetry_mode = 'MorphSym' # Can be 'Euclidean' or 'MorphSym' or None
 
     if os.path.isdir(path_to_checkpoint):
         checkpoint_files = glob.glob(os.path.join(path_to_checkpoint, "*.ckpt"))
+        # Sort checkpoint files by epoch number
+        checkpoint_files.sort(key=lambda x: int(x.split('epoch=')[1].split('-')[0]))
         for file in checkpoint_files:
             main(MorphSym_version=MorphSym_version, path_to_checkpoint=file, symmetry_operator_list=symmetry_operator_list, symmetry_mode=symmetry_mode, group_operator_path=group_operator_path)
     else:

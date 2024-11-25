@@ -592,6 +592,9 @@ class COM_HGNN_Lightning(Base_Lightning):
 
         self.metric_mse: torchmetrics.MeanSquaredError = torchmetrics.regression.MeanSquaredError(squared=True)
         self.metric_rmse: torchmetrics.MeanSquaredError = torchmetrics.regression.MeanSquaredError(squared=False)
+
+        self.metric_mse_lin: torchmetrics.MeanSquaredError = torchmetrics.regression.MeanSquaredError(squared=True)
+        self.metric_mse_ang: torchmetrics.MeanSquaredError = torchmetrics.regression.MeanSquaredError(squared=True)
         
         # Setup variables to hold the losses    
         self.cos_sim_lin = None
@@ -599,6 +602,9 @@ class COM_HGNN_Lightning(Base_Lightning):
         self.avg_cos_sim = None
         self.mse_loss = None
         self.rmse_loss = None
+        self.mse_loss_lin = None
+        self.mse_loss_ang = None
+        self.loss = None
         self.ang_weight = 1.0
 
         if model_type == 'heterogeneous_gnn_k4_com':
@@ -630,6 +636,9 @@ class COM_HGNN_Lightning(Base_Lightning):
         self.log(step_name + "_avg_cos_sim", self.avg_cos_sim, on_step=on_step, on_epoch=on_epoch)
         self.log(step_name + "_MSE_loss", self.mse_loss, on_step=on_step, on_epoch=on_epoch)
         self.log(step_name + "_RMSE_loss", self.rmse_loss, on_step=on_step, on_epoch=on_epoch)
+        self.log(step_name + "_MSE_loss_lin", self.mse_loss_lin, on_step=on_step, on_epoch=on_epoch)
+        self.log(step_name + "_MSE_loss_ang", self.mse_loss_ang, on_step=on_step, on_epoch=on_epoch)
+        self.log(step_name + "_loss", self.loss, on_step=on_step, on_epoch=on_epoch)
 
     # Rewrite the step helper function to match the base class
     # Same with Heterogeneous_GNN_Lightning()
@@ -657,6 +666,9 @@ class COM_HGNN_Lightning(Base_Lightning):
         self.mse_loss = self.metric_mse(y_pred.flatten(), y.flatten())
         self.rmse_loss = self.metric_rmse(y_pred.flatten(), y.flatten())
 
+        self.mse_loss_lin = self.metric_mse_lin(y_pred[:, :3].flatten(), y[:, :3].flatten())
+        self.mse_loss_ang = self.metric_mse_ang(y_pred[:, 3:].flatten(), y[:, 3:].flatten())
+
         self.standarizer.to(y.device)
         y = self.standarizer.unstandarize(yn=y)
         y_pred = self.standarizer.unstandarize(yn=y_pred)
@@ -671,6 +683,8 @@ class COM_HGNN_Lightning(Base_Lightning):
         self.cos_sim_lin = self.metric_cos_sim_lin(y_pred_lin_vel, y_lin_vel)
         self.cos_sim_ang = self.metric_cos_sim_ang(y_pred_ang_vel, y_ang_vel)
         self.avg_cos_sim = (self.cos_sim_lin + self.ang_weight * self.cos_sim_ang) / (1 + self.ang_weight)
+
+        self.loss = self.mse_loss_ang
 
     # def calculate_losses_step_test(self, y: torch.Tensor, y_pred: torch.Tensor):
     #     '''
@@ -703,18 +717,25 @@ class COM_HGNN_Lightning(Base_Lightning):
         self.mse_loss = self.metric_mse.compute()
         self.rmse_loss = self.metric_rmse.compute()
 
+        self.mse_loss_lin = self.metric_mse_lin.compute()
+        self.mse_loss_ang = self.metric_mse_ang.compute()
+
+        self.loss = self.mse_loss_ang
+
     def reset_all_metrics(self) -> None:
         self.metric_cos_sim_lin.reset()
         self.metric_cos_sim_ang.reset()
         self.metric_mse.reset()
         self.metric_rmse.reset()
+        self.metric_mse_lin.reset()
+        self.metric_mse_ang.reset()
 
     # Training step:
     def training_step(self, batch, batch_idx):
         y, y_pred = self.step_helper_function(batch)
         self.calculate_losses_step(y, y_pred)
         self.log_losses("train", on_step=True)
-        return self.mse_loss
+        return self.loss
     
     # Validation step:
     def on_validation_epoch_start(self):
@@ -723,7 +744,7 @@ class COM_HGNN_Lightning(Base_Lightning):
     def validation_step(self, batch, batch_idx):
         y, y_pred = self.step_helper_function(batch)
         self.calculate_losses_step(y, y_pred)
-        return self.mse_loss
+        return self.loss
     
     def on_validation_epoch_end(self):
         self.calculate_losses_epoch()
@@ -736,7 +757,7 @@ class COM_HGNN_Lightning(Base_Lightning):
     def test_step(self, batch, batch_idx):
         y, y_pred = self.step_helper_function(batch)
         self.calculate_losses_step_test(y, y_pred)
-        return self.mse_loss
+        return self.loss
 
     def on_test_epoch_end(self):
         self.calculate_losses_epoch()
@@ -1048,8 +1069,9 @@ def train_model(
         train_percentage_to_log = None,
         symmetry_mode: str = None,
         group_operator_path: str = None,
-        wandb_logger_group_name: str = 'default',
-        data_path: Path = None):
+        subfoler_name: str = 'default',
+        data_path: Path = None,
+        wandb_api_key: str = None):
     """
     Train a learning model with the input datasets. If 
     'testing_mode' is enabled, limit the batches and epoch size
@@ -1217,7 +1239,10 @@ def train_model(
         if logger_project_name is None:
             raise ValueError(
                 "Need to define \"logger_project_name\" if logger is enabled.")
-        wandb_logger = WandbLogger(project=logger_project_name, group=wandb_logger_group_name)
+        if wandb_api_key is not None:
+            import wandb
+            wandb.login(key=wandb_api_key)
+        wandb_logger = WandbLogger(project=logger_project_name)
         wandb_logger.watch(lightning_model, log="all")
         wandb_logger.experiment.config["batch_size"] = batch_size
         wandb_logger.experiment.config["normalize"] = normalize
@@ -1225,7 +1250,7 @@ def train_model(
         wandb_logger.experiment.config["seed"] = seed
         if train_percentage_to_log is not None:
             wandb_logger.experiment.config["train_percentage"] = train_percentage_to_log
-        path_to_save = str(Path("models", wandb_logger.experiment.name))
+        path_to_save = str(Path("models", subfoler_name, wandb_logger.experiment.name))
     else:
         path_to_save = str(
             Path("models", model_type + "_" + names.get_full_name()))
@@ -1236,15 +1261,9 @@ def train_model(
         monitor = "val_MSE_loss"
         monitor_mode = 'min'
         monitor_second = "val_avg_cos_sim"
-    elif model_type != 'heterogeneous_gnn_k4_com':
-        monitor = "val_MSE_loss"
-        monitor_mode = 'min'
-        monitor_second = "val_avg_cos_sim"
     else:
         monitor = "val_CE_loss"
         monitor_mode = 'min'
-        # monitor = "val_Accuracy"
-        # monitor_mode = 'max'
         monitor_second = "val_F1_Score_Leg_Avg"
     checkpoint_callback = ModelCheckpoint(dirpath=path_to_save,
                                           filename='{epoch}-{' + monitor +
