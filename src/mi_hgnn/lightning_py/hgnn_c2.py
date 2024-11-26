@@ -180,18 +180,19 @@ class GRF_HGNN_C2(torch.nn.Module):
         # Reshape back to the original shape [batch_size, num_joints, num_timesteps, num_variables] -> [batch_size, num_timesteps * num_variables]
         x_dict['joint'] = joint_x.reshape(-1, self.num_timesteps * 2)
 
-        batch_size = x_dict['foot'].shape[0] // self.num_legs
-        # Apply morphological symmetry to the foot features
-        foot_x = x_dict['foot']  # shape: [batch_size * num_legs, num_timesteps * num_variables]
-        # f_p, f_v: shape [batch_size, num_timesteps, num_legs*num_dimensions]
-        f_p, f_v = self.unpack_data(foot_x, batch_size, self.num_legs)
-        # Apply the coefficients to each variable separately, ensuring same device
-        weights_f = self.feet_linear_weights.to(f_p.device).view(1, 1, -1)
-        f_p = f_p * weights_f
-        f_v = f_v * weights_f
-        # Pack f_p and f_v back into foot_x
-        foot_x = self.pack_data(f_p, f_v, batch_size, self.num_legs)
-        x_dict['foot'] = foot_x
+        if not self.regression:
+            batch_size = x_dict['foot'].shape[0] // self.num_legs
+            # Apply morphological symmetry to the foot features
+            foot_x = x_dict['foot']  # shape: [batch_size * num_legs, num_timesteps * num_variables]
+            # f_p, f_v: shape [batch_size, num_timesteps, num_legs*num_dimensions]
+            f_p, f_v = self.unpack_data(foot_x, batch_size, self.num_legs)
+            # Apply the coefficients to each variable separately, ensuring same device
+            weights_f = self.feet_linear_weights.to(f_p.device).view(1, 1, -1)
+            f_p = f_p * weights_f
+            f_v = f_v * weights_f
+            # Pack f_p and f_v back into foot_x
+            foot_x = self.pack_data(f_p, f_v, batch_size, self.num_legs)
+            x_dict['foot'] = foot_x
 
         # Apply morphological symmetry to the base features
         batch_size = x_dict['base'].shape[0] // self.num_bases

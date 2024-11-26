@@ -4,6 +4,7 @@ from .datasets_py.flexibleDataset import FlexibleDataset
 from .datasets_py.LinTzuYaunDataset import LinTzuYaunDataset
 from .datasets_py.LinTzuYaunDataset_Morph import LinTzuYaunDataset_NewGraph
 from .datasets_py.quadSDKDataset import QuadSDKDataset, QuadSDKDataset_A1Speed0_5_DEPRECATED, QuadSDKDataset_A1Speed1_0_DEPRECATED, QuadSDKDataset_A1Speed1_5FlippedOver_DEPRECATED
+from .datasets_py.quadSDKDataset_Morph import QuadSDKDataset_NewGraph
 from .datasets_py.soloDataset import Solo12Dataset
 from .visualization import visualize_dataset_graph, visualize_model_outputs_regression
 from .lightning_py.gnnLightning import Base_Lightning, evaluate_model, train_model
