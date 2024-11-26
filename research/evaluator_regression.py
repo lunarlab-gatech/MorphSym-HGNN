@@ -8,9 +8,9 @@ import os
 
 def main():
     # ================================= CHANGE THESE ===================================
-    path_to_save_csv = None # csv save location and file name
-    path_to_models = None # Folder with all models of same type (like the hgnns folder on Dropbox)
-    model_type = None # 'heterogeneous_gnn' or 'mlp'
+    path_to_save_csv = '/home/swei303/Documents/proj/MorphSym-HGNN/paper/regression_results_hgnns_swei.csv' # csv save location and file name
+    path_to_models = '/home/swei303/Documents/proj/MorphSym-HGNN/ckpts/Regression Experiment/hgnns/' # Folder with all models of same type (like the hgnns folder on Dropbox)
+    model_type = 'heterogeneous_gnn' # 'heterogeneous_gnn' or 'mlp'
     # ==================================================================================
 
     # Check that the user filled in the necessary parameters

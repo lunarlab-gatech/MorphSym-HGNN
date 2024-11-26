@@ -4,6 +4,18 @@ This directory provides information on replicating experiments in the [MI-HGNN: 
 
 Whenever a specific trained model is referenced in this README (for example, `ancient-salad-5`), it will be highlighted as shown, and there will be a folder on Georgia Tech's [Dropbox](https://www.dropbox.com/scl/fo/8p165xcfbdfwlcr3jx7tb/ABoxs5BOEXsQnJgFXF_Mjcc?rlkey=znrs7oyu29qsswpd3a5r55zk8&st=53v30ys3&dl=0) with its name. Unless otherwise specified, the model weights used for the paper were those trained the longest (have highest `epoch=` number in their .ckpt file).
 
+```bash
+mkdir ckpts && cd ckpts
+wget -O 'Classification Experiment.zip' [dropbox_link]
+wget -O 'Regression Experiment.zip' [dropbox_link]
+mkdir 'Classification Experiment' && mkdir 'Regression Experiment'
+unzip 'Classification Experiment.zip' -d 'Classification Experiment'
+unzip 'Regression Experiment.zip' -d 'Regression Experiment'
+rm 'Classification Experiment.zip' && rm 'Regression Experiment.zip'
+rm wget-log*
+cd ..
+```
+
 ## Contact Detection (Classification) Experiment
 
 For training and evaluating models on this classification task, use the `train_classification.py` and `evaluator_classification.py` files found in the `research` directory of this repository.

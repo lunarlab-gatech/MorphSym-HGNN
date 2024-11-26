@@ -52,3 +52,40 @@ class BinaryF1Score(Metric):
         precision = self.tp_total / (self.tp_total + self.fp_total) 
         recall = self.tp_total / (self.tp_total + self.fn_total)
         return torch.nan_to_num(2 * (precision * recall) / (precision + recall))
+
+class CosineSimilarityMetric(Metric):
+    """
+    Metric for calculating and accumulating cosine similarity loss
+    """
+    def __init__(self):
+        super().__init__()
+        # Add state variables
+        self.add_state("total_similarity", 
+                      default=torch.tensor(0.0, dtype=torch.float64), 
+                      dist_reduce_fx="sum")
+        self.add_state("total_num", 
+                      default=torch.tensor(0, dtype=torch.float64), 
+                      dist_reduce_fx="sum")
+        # Cosine similarity loss function
+        self.cos_sim = torch.nn.CosineSimilarity(dim=1)
+
+    def update(self, preds: torch.Tensor, target: torch.Tensor) -> None:
+        """
+        Update metric states
+        Args:
+            preds: Predicted values [batch_size, 24]
+            target: Ground truth values [batch_size, 24]
+        """
+        if preds.size() != target.size():
+            raise ValueError("Prediction and target tensors must have the same shape")
+            
+        # Calculate cosine similarity
+        similarity = self.cos_sim(preds, target)
+        
+        # Update states
+        self.total_similarity += similarity.sum()
+        self.total_num += preds.shape[0]
+
+    def compute(self) -> torch.Tensor:
+        """Calculate average similarity"""
+        return self.total_similarity / self.total_num

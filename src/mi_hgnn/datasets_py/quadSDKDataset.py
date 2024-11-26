@@ -128,6 +128,93 @@ class QuadSDKDataset(FlexibleDataset):
             file_id, loc = self.get_file_id_and_loc()
             f.write(str(dataset_entries) + " " + file_id)
     
+    # ========================= SWAPPING ===========================
+    def swap_legs_data(self, data_dict, leg1_idx, leg2_idx):
+        """
+        Swap data between two legs
+        leg_idx mapping: FR=0, FL=1, RR=2, RL=3
+        (Based on mapping in get_urdf_name_to_dataset_array_index)
+        
+        Args:
+            data_dict: Dictionary containing various data arrays
+            leg1_idx, leg2_idx: Indices of the two legs to swap
+        """
+        # Calculate index ranges in joint arrays (3 joints per leg)
+        leg1_start = leg1_idx * 3
+        leg1_end = leg1_start + 3
+        leg2_start = leg2_idx * 3
+        leg2_end = leg2_start + 3
+        
+        # Swap joint position data
+        if 'j_p' in data_dict and data_dict['j_p'] is not None:
+            data_dict['j_p'][:, leg1_start:leg1_end], data_dict['j_p'][:, leg2_start:leg2_end] = \
+                data_dict['j_p'][:, leg2_start:leg2_end].copy(), data_dict['j_p'][:, leg1_start:leg1_end].copy()
+        
+        # Swap joint velocity data
+        if 'j_v' in data_dict and data_dict['j_v'] is not None:
+            data_dict['j_v'][:, leg1_start:leg1_end], data_dict['j_v'][:, leg2_start:leg2_end] = \
+                data_dict['j_v'][:, leg2_start:leg2_end].copy(), data_dict['j_v'][:, leg1_start:leg1_end].copy()
+        
+        # Swap joint torque data
+        if 'j_T' in data_dict and data_dict['j_T'] is not None:
+            data_dict['j_T'][:, leg1_start:leg1_end], data_dict['j_T'][:, leg2_start:leg2_end] = \
+                data_dict['j_T'][:, leg2_start:leg2_end].copy(), data_dict['j_T'][:, leg1_start:leg1_end].copy()
+
+        # Swap foot position data
+        if 'f_p' in data_dict and data_dict['f_p'] is not None:
+            data_dict['f_p'][:, leg1_start:leg1_end], data_dict['f_p'][:, leg2_start:leg2_end] = \
+                data_dict['f_p'][:, leg2_start:leg2_end].copy(), data_dict['f_p'][:, leg1_start:leg1_end].copy()
+        
+        # Swap foot velocity data
+        if 'f_v' in data_dict and data_dict['f_v'] is not None:
+            data_dict['f_v'][:, leg1_start:leg1_end], data_dict['f_v'][:, leg2_start:leg2_end] = \
+                data_dict['f_v'][:, leg2_start:leg2_end].copy(), data_dict['f_v'][:, leg1_start:leg1_end].copy()
+        
+        # Swap GRF data (only z component)
+        if 'z_grfs' in data_dict and data_dict['z_grfs'] is not None:
+            data_dict['z_grfs'][leg1_idx], data_dict['z_grfs'][leg2_idx] = \
+                data_dict['z_grfs'][leg2_idx].copy(), data_dict['z_grfs'][leg1_idx].copy()
+        
+        return data_dict
+
+    def load_data_at_dataset_seq_with_swap(self, seq_num: int, swap_legs=None):
+        """
+        Extended data loading function that supports leg data swapping
+        
+        Args:
+            seq_num: Data sequence number
+            swap_legs: tuple of (leg1_idx, leg2_idx) specifying which two legs to swap
+                      e.g. (0,1) means swap FR and FL legs
+        """
+        # Get original data
+        lin_acc, ang_vel, j_p, j_v, j_T, f_p, f_v, z_grfs, r_p, r_quat, timestamps = \
+            self.load_data_at_dataset_seq(seq_num)
+        
+        if swap_legs is not None:
+            # Create data dictionary
+            data_dict = {
+                'j_p': j_p,
+                'j_v': j_v,
+                'j_T': j_T,
+                'f_p': f_p,
+                'f_v': f_v,
+                'z_grfs': z_grfs
+            }
+            
+            # Execute data swapping
+            data_dict = self.swap_legs_data(data_dict, swap_legs[0], swap_legs[1])
+            
+            # Update data
+            j_p = data_dict['j_p']
+            j_v = data_dict['j_v']
+            j_T = data_dict['j_T']
+            f_p = data_dict['f_p']
+            f_v = data_dict['f_v']
+            z_grfs = data_dict['z_grfs']
+        
+        return lin_acc, ang_vel, j_p, j_v, j_T, f_p, f_v, z_grfs, r_p, r_quat, timestamps
+
+
 # ================================================================
 # ======================== SUBCLASSES ============================
 # ================================================================

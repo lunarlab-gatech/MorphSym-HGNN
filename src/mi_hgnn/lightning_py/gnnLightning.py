@@ -1,5 +1,7 @@
+import os
 import torch
 from torch import optim, nn
+import torch.nn.functional as F
 import lightning as L
 from lightning.pytorch import seed_everything
 from lightning.pytorch.loggers import WandbLogger
@@ -12,11 +14,15 @@ from torch.utils.data import Subset
 import numpy as np
 import torchmetrics
 import torchmetrics.classification
-import pinocchio as pin
-from .customMetrics import CrossEntropyLossMetric, BinaryF1Score
+from .customMetrics import CrossEntropyLossMetric, BinaryF1Score, CosineSimilarityMetric
 from .hgnn import GRF_HGNN
+from .hgnn_k4 import GRF_HGNN_K4
+from .hgnn_c2 import GRF_HGNN_C2
+from .hgnn_s4_com import COM_HGNN_S4
+from .hgnn_k4_com import COM_HGNN_K4
 from torch_geometric.profile import count_parameters
 from ..datasets_py.flexibleDataset import FlexibleDataset
+from ..datasets_py.soloDataset import Standarizer
 
 class Base_Lightning(L.LightningModule):
     """
@@ -385,7 +391,7 @@ class MLP_Lightning(Base_Lightning):
         modules = []
         if num_layers < 2:
             raise ValueError("num_layers must be 2 or greater")
-        elif num_layers is 2:
+        elif num_layers == 2:
             modules.append(nn.Linear(in_channels, hidden_channels))
             modules.append(activation_fn)
             modules.append(nn.Linear(hidden_channels, out_channels))
@@ -451,6 +457,312 @@ class Heterogeneous_GNN_Lightning(Base_Lightning):
         # Get the labels
         y = torch.reshape(batch.y, (batch_size, 4))
         return y, y_pred
+
+class HGNN_K4_Lightning(Base_Lightning):
+    def __init__(self, hidden_channels: int, num_layers: int, data_metadata,
+                 dummy_batch, optimizer: str = "adam", lr: float = 0.003,
+                 regression: bool = True, activation_fn = nn.ReLU(),
+                 symmetry_mode: str = None, group_operator_path: str = None):
+        """
+        Constructor for Heterogeneous GNN with K4 structure.
+
+        Parameters:
+            dummy_batch: Used to initialize the lazy modules.
+            optimizer (str): String name of the optimizer that should
+                be used.
+            lr (float): The learning rate used by the model.
+
+            See hgnn_k4.py for information on remaining parameters.
+        """
+        super().__init__(optimizer, lr, regression)
+        self.model = GRF_HGNN_K4(hidden_channels=hidden_channels,
+                              num_layers=num_layers,
+                              data_metadata=data_metadata,
+                              regression=regression,
+                              activation_fn=activation_fn,
+                              symmetry_mode=symmetry_mode,
+                              group_operator_path=group_operator_path)
+        self.regression = regression
+
+        # Initialize lazy modules
+        with torch.no_grad():
+            self.model(x_dict=dummy_batch.x_dict,
+                       edge_index_dict=dummy_batch.edge_index_dict)
+        self.save_hyperparameters()
+    
+    # Rewrite the step helper function to match the base class
+    # Same with Heterogeneous_GNN_Lightning()
+    def step_helper_function(self, batch):
+        # Get the raw foot output
+        out_raw = self.model(x_dict=batch.x_dict,
+                             edge_index_dict=batch.edge_index_dict)
+
+        # Get the outputs from the foot nodes
+        batch_size = None
+        if hasattr(batch, "batch_size"):
+            batch_size = batch.batch_size
+        else:
+            batch_size = 1
+        y_pred = torch.reshape(out_raw.squeeze(), (batch_size, self.model.out_channels_per_foot * 4))
+
+        # Get the labels
+        y = torch.reshape(batch.y, (batch_size, 4))
+        return y, y_pred
+
+class HGNN_C2_Lightning(Base_Lightning):
+    def __init__(self, hidden_channels: int, num_layers: int, data_metadata,
+                 dummy_batch, optimizer: str = "adam", lr: float = 0.003,
+                 regression: bool = True, activation_fn = nn.ReLU(),
+                 symmetry_mode: str = None, group_operator_path: str = None):
+        """
+        Constructor for Heterogeneous GNN with K4 structure.
+
+        Parameters:
+            dummy_batch: Used to initialize the lazy modules.
+            optimizer (str): String name of the optimizer that should
+                be used.
+            lr (float): The learning rate used by the model.
+
+            See hgnn_k4.py for information on remaining parameters.
+        """
+        super().__init__(optimizer, lr, regression)
+        self.model = GRF_HGNN_C2(hidden_channels=hidden_channels,
+                              num_layers=num_layers,
+                              data_metadata=data_metadata,
+                              regression=regression,
+                              activation_fn=activation_fn,
+                              symmetry_mode=symmetry_mode,
+                              group_operator_path=group_operator_path)
+        self.regression = regression
+
+        # Initialize lazy modules
+        with torch.no_grad():
+            self.model(x_dict=dummy_batch.x_dict,
+                       edge_index_dict=dummy_batch.edge_index_dict)
+        self.save_hyperparameters()
+
+    # Rewrite the step helper function to match the base class
+    # Same with Heterogeneous_GNN_Lightning()
+    def step_helper_function(self, batch):
+        # Get the raw foot output
+        out_raw = self.model(x_dict=batch.x_dict,
+                             edge_index_dict=batch.edge_index_dict)
+
+        # Get the outputs from the foot nodes
+        batch_size = None
+        if hasattr(batch, "batch_size"):
+            batch_size = batch.batch_size
+        else:
+            batch_size = 1
+        y_pred = torch.reshape(out_raw.squeeze(), (batch_size, self.model.out_channels_per_foot * 4))
+
+        # Get the labels
+        y = torch.reshape(batch.y, (batch_size, 4))
+        return y, y_pred
+
+class COM_HGNN_Lightning(Base_Lightning):
+    def __init__(self, hidden_channels: int, num_layers: int, data_metadata,
+                 dummy_batch, optimizer: str = "adam", lr: float = 0.003,
+                 regression: bool = True, activation_fn = nn.ReLU(),
+                 symmetry_mode: str = None, group_operator_path: str = None, model_type: str = 'heterogeneous_gnn_k4_com',
+                 data_path: Path = None):
+        """
+        Constructor for Heterogeneous GNN with K4 structure.
+
+        Parameters:
+            dummy_batch: Used to initialize the lazy modules.
+            optimizer (str): String name of the optimizer that should
+                be used.
+            lr (float): The learning rate used by the model.
+
+            See hgnn_k4.py for information on remaining parameters.
+        """
+        super().__init__(optimizer, lr, regression)
+
+        stats = np.load(os.path.join(data_path, 'processed', 'rss_stats.npz'))
+        x_means = stats['x_mean']
+        x_stds = stats['x_std']
+        y_means = stats['y_mean']
+        y_stds = stats['y_std']
+        self.standarizer = Standarizer(x_means, x_stds, y_means, y_stds, device='cuda:0')
+
+        # Setup the metrics
+        self.metric_cos_sim_lin = CosineSimilarityMetric()
+        self.metric_cos_sim_ang = CosineSimilarityMetric()
+
+        self.metric_mse: torchmetrics.MeanSquaredError = torchmetrics.regression.MeanSquaredError(squared=True)
+        self.metric_rmse: torchmetrics.MeanSquaredError = torchmetrics.regression.MeanSquaredError(squared=False)
+
+        self.metric_mse_lin: torchmetrics.MeanSquaredError = torchmetrics.regression.MeanSquaredError(squared=True)
+        self.metric_mse_ang: torchmetrics.MeanSquaredError = torchmetrics.regression.MeanSquaredError(squared=True)
+        
+        # Setup variables to hold the losses    
+        self.cos_sim_lin = None
+        self.cos_sim_ang = None
+        self.avg_cos_sim = None
+        self.mse_loss = None
+        self.rmse_loss = None
+        self.mse_loss_lin = None
+        self.mse_loss_ang = None
+        self.loss = None
+        self.ang_weight = 1.0
+
+        if model_type == 'heterogeneous_gnn_k4_com':
+            self.model = COM_HGNN_K4(hidden_channels=hidden_channels,
+                              num_layers=num_layers,
+                              data_metadata=data_metadata,
+                              regression=regression,
+                              activation_fn=activation_fn,
+                              symmetry_mode=symmetry_mode,
+                              group_operator_path=group_operator_path)
+        elif model_type == 'heterogeneous_gnn_s4_com':
+            self.model = COM_HGNN_S4(hidden_channels=hidden_channels,
+                              num_layers=num_layers,
+                              data_metadata=data_metadata,
+                              regression=regression,
+                              activation_fn=activation_fn)
+        self.regression = regression
+
+        # Initialize lazy modules
+        with torch.no_grad():
+            self.model(x_dict=dummy_batch.x_dict,
+                       edge_index_dict=dummy_batch.edge_index_dict)
+        self.save_hyperparameters()
+    
+    def log_losses(self, step_name: str, on_step: bool):
+        on_epoch = not on_step
+        self.log(step_name + "_cos_sim_lin", self.cos_sim_lin, on_step=on_step, on_epoch=on_epoch)
+        self.log(step_name + "_cos_sim_ang", self.cos_sim_ang, on_step=on_step, on_epoch=on_epoch)
+        self.log(step_name + "_avg_cos_sim", self.avg_cos_sim, on_step=on_step, on_epoch=on_epoch)
+        self.log(step_name + "_MSE_loss", self.mse_loss, on_step=on_step, on_epoch=on_epoch)
+        self.log(step_name + "_RMSE_loss", self.rmse_loss, on_step=on_step, on_epoch=on_epoch)
+        self.log(step_name + "_MSE_loss_lin", self.mse_loss_lin, on_step=on_step, on_epoch=on_epoch)
+        self.log(step_name + "_MSE_loss_ang", self.mse_loss_ang, on_step=on_step, on_epoch=on_epoch)
+        self.log(step_name + "_loss", self.loss, on_step=on_step, on_epoch=on_epoch)
+
+    # Rewrite the step helper function to match the base class
+    # Same with Heterogeneous_GNN_Lightning()
+    def step_helper_function(self, batch):
+        # Get the raw foot output
+        out_raw = self.model(x_dict=batch.x_dict,
+                             edge_index_dict=batch.edge_index_dict)
+
+        # Get the outputs from the foot nodes
+        batch_size = None
+        if hasattr(batch, "batch_size"):
+            batch_size = batch.batch_size
+        else:
+            batch_size = 1
+        y_pred = torch.reshape(out_raw.squeeze(), (batch_size, self.model.num_bases * self.model.num_dimensions_per_base))
+
+        # Get the labels
+        y = torch.reshape(batch.y, (batch_size, self.model.num_bases * self.model.num_dimensions_per_base))
+
+        return y, y_pred
+
+    def calculate_losses_step(self, y: torch.Tensor, y_pred: torch.Tensor):
+        # y, y_pred contains 4 bases, each with linear velocities and angular velocities, seperate first and then calculate loss
+        # y, y_pred [v1x, v1y, v1z, w1x, w1y, w1z, ..., v4x, v4y, v4z, w4x, w4y, w4z]
+        self.mse_loss = self.metric_mse(y_pred.flatten(), y.flatten())
+        self.rmse_loss = self.metric_rmse(y_pred.flatten(), y.flatten())
+
+        self.mse_loss_lin = self.metric_mse_lin(y_pred[:, :3].flatten(), y[:, :3].flatten())
+        self.mse_loss_ang = self.metric_mse_ang(y_pred[:, 3:].flatten(), y[:, 3:].flatten())
+
+        self.standarizer.to(y.device)
+        y = self.standarizer.unstandarize(yn=y)
+        y_pred = self.standarizer.unstandarize(yn=y_pred)
+
+        y = y.view(y.shape[0], self.model.num_bases, self.model.num_dimensions_per_base)
+        y_pred = y_pred.view(y_pred.shape[0], self.model.num_bases, self.model.num_dimensions_per_base)
+        y_lin_vel = y[:, :, :3].flatten(start_dim=1)
+        y_ang_vel = y[:, :, 3:].flatten(start_dim=1)
+        y_pred_lin_vel = y_pred[:, :, :3].flatten(start_dim=1)
+        y_pred_ang_vel = y_pred[:, :, 3:].flatten(start_dim=1)
+
+        self.cos_sim_lin = self.metric_cos_sim_lin(y_pred_lin_vel, y_lin_vel)
+        self.cos_sim_ang = self.metric_cos_sim_ang(y_pred_ang_vel, y_ang_vel)
+        self.avg_cos_sim = (self.cos_sim_lin + self.ang_weight * self.cos_sim_ang) / (1 + self.ang_weight)
+
+        self.loss = self.mse_loss
+
+    # def calculate_losses_step_test(self, y: torch.Tensor, y_pred: torch.Tensor):
+    #     '''
+    #     Only use the first base for testing
+    #     '''
+    #     # y, y_pred contains 4 bases, each with linear velocities and angular velocities, seperate first and then calculate loss
+    #     # y, y_pred [v1x, v1y, v1z, w1x, w1y, w1z, ..., v4x, v4y, v4z, w4x, w4y, w4z]
+    #     self.mse_loss = self.metric_mse(y_pred.flatten(), y.flatten())
+    #     self.rmse_loss = self.metric_rmse(y_pred.flatten(), y.flatten())
+
+    #     y = self.standarizer.unstandarize(yn=y)
+    #     y_pred = self.standarizer.unstandarize(yn=y_pred)
+
+    #     y = y.view(y.shape[0], self.model.num_bases, self.model.num_dimensions_per_base)
+    #     y_pred = y_pred.view(y_pred.shape[0], self.model.num_bases, self.model.num_dimensions_per_base)
+    #     y_lin_vel = y[:, 0, :3].flatten(start_dim=1)
+    #     y_ang_vel = y[:, 0, 3:].flatten(start_dim=1)
+    #     y_pred_lin_vel = y_pred[:, 0, :3].flatten(start_dim=1)
+    #     y_pred_ang_vel = y_pred[:, 0, 3:].flatten(start_dim=1)
+
+    #     self.cos_sim_lin = self.metric_cos_sim_lin(y_pred_lin_vel, y_lin_vel)
+    #     self.cos_sim_ang = self.metric_cos_sim_ang(y_pred_ang_vel, y_ang_vel)
+    #     self.avg_cos_sim = (self.cos_sim_lin + self.ang_weight * self.cos_sim_ang) / (1 + self.ang_weight)
+
+    def calculate_losses_epoch(self) -> None:
+        # TODO: check, if it needs .compute()
+        self.cos_sim_lin = self.metric_cos_sim_lin.compute()
+        self.cos_sim_ang = self.metric_cos_sim_ang.compute()
+        self.avg_cos_sim = (self.cos_sim_lin + self.cos_sim_ang) / 2
+        self.mse_loss = self.metric_mse.compute()
+        self.rmse_loss = self.metric_rmse.compute()
+
+        self.mse_loss_lin = self.metric_mse_lin.compute()
+        self.mse_loss_ang = self.metric_mse_ang.compute()
+
+        self.loss = self.mse_loss
+
+    def reset_all_metrics(self) -> None:
+        self.metric_cos_sim_lin.reset()
+        self.metric_cos_sim_ang.reset()
+        self.metric_mse.reset()
+        self.metric_rmse.reset()
+        self.metric_mse_lin.reset()
+        self.metric_mse_ang.reset()
+
+    # Training step:
+    def training_step(self, batch, batch_idx):
+        y, y_pred = self.step_helper_function(batch)
+        self.calculate_losses_step(y, y_pred)
+        self.log_losses("train", on_step=True)
+        return self.loss
+    
+    # Validation step:
+    def on_validation_epoch_start(self):
+        self.reset_all_metrics()
+
+    def validation_step(self, batch, batch_idx):
+        y, y_pred = self.step_helper_function(batch)
+        self.calculate_losses_step(y, y_pred)
+        return self.loss
+    
+    def on_validation_epoch_end(self):
+        self.calculate_losses_epoch()
+        self.log_losses("val", on_step=False)
+
+    # Testing step:
+    def on_test_epoch_start(self):
+        self.reset_all_metrics()
+
+    def test_step(self, batch, batch_idx):
+        y, y_pred = self.step_helper_function(batch)
+        self.calculate_losses_step_test(y, y_pred)
+        return self.loss
+
+    def on_test_epoch_end(self):
+        self.calculate_losses_epoch()
+        self.log_losses("test", on_step=False)
+
     
 class Full_Dynamics_Model_Lightning(Base_Lightning):
 
@@ -484,6 +796,7 @@ class Full_Dynamics_Model_Lightning(Base_Lightning):
         self.foot_mapping = pin_to_urdf_foot_mapping
         self.save_hyperparameters()
 
+        import pinocchio as pin
         # Build the pinnochio model
         self.model, self.collision_model, self.visual_model = pin.buildModelsFromUrdf(
             str(urdf_model_path), str(urdf_dir), pin.JointModelFreeFlyer(), verbose=True
@@ -518,6 +831,7 @@ class Full_Dynamics_Model_Lightning(Base_Lightning):
         # Setup array to hold predicted values
         y_pred = torch.zeros((batch_size, 4), dtype=torch.float64)
 
+        import pinocchio as pin
         # Evaluate on a sequence wise basis
         for i in range(0, batch_size):
             # Find Mass matrix (in local frame)
@@ -584,7 +898,10 @@ class Full_Dynamics_Model_Lightning(Base_Lightning):
 
 
 def evaluate_model(path_to_checkpoint: Path, predict_dataset: Subset,
-                   enable_testing_mode: bool = False):
+                   enable_testing_mode: bool = False,
+                   symmetry_mode: str = None,
+                   group_operator_path: str = None,
+                   data_path: Path = None):
     """
     Runs the provided model on the corresponding dataset,
     and returns the predicted values and the ground truth values.
@@ -623,6 +940,29 @@ def evaluate_model(path_to_checkpoint: Path, predict_dataset: Subset,
         model = MLP_Lightning.load_from_checkpoint(str(path_to_checkpoint))
     elif model_type == 'heterogeneous_gnn':
         model = Heterogeneous_GNN_Lightning.load_from_checkpoint(str(path_to_checkpoint))
+    elif model_type == 'heterogeneous_gnn_k4':
+        model = HGNN_K4_Lightning.load_from_checkpoint(
+            str(path_to_checkpoint),
+            symmetry_mode=symmetry_mode,
+            group_operator_path=group_operator_path,
+            strict=False
+        )
+    elif model_type == 'heterogeneous_gnn_c2':
+        model = HGNN_C2_Lightning.load_from_checkpoint(
+            str(path_to_checkpoint),
+            symmetry_mode=symmetry_mode,
+            group_operator_path=group_operator_path,
+            strict=False
+        )
+    elif model_type == 'heterogeneous_gnn_k4_com' or model_type == 'heterogeneous_gnn_s4_com':
+        model = COM_HGNN_Lightning.load_from_checkpoint(
+            str(path_to_checkpoint),
+            symmetry_mode=symmetry_mode,
+            group_operator_path=group_operator_path,
+            strict=False, 
+            model_type=model_type,
+            data_path=data_path
+        )
     elif model_type == 'dynamics':
         urdf_path = None
         try:
@@ -634,7 +974,7 @@ def evaluate_model(path_to_checkpoint: Path, predict_dataset: Subset,
                                             joint_mapping, foot_mapping)
                                                 
     else:
-        raise ValueError("model_type must be mlp, heterogeneous_gnn, or dynamics.")
+        raise ValueError("model_type must be mlp, heterogeneous_gnn, heterogeneous_gnn_k4, heterogeneous_gnn_c2, heterogeneous_gnn_k4_com, heterogeneous_gnn_s4_com, or dynamics.")
     model.eval()
     model.freeze()
 
@@ -654,10 +994,10 @@ def evaluate_model(path_to_checkpoint: Path, predict_dataset: Subset,
         # Return the results
         return pred, labels, model.mse_loss, model.rmse_loss, model.l1_loss
 
-    elif model_type == 'heterogeneous_gnn':
+    elif model_type == 'heterogeneous_gnn' or model_type == 'heterogeneous_gnn_k4' or model_type == 'heterogeneous_gnn_c2' or model_type == 'heterogeneous_gnn_k4_com' or model_type == 'heterogeneous_gnn_s4_com':
         pred = torch.zeros((0))
         labels = torch.zeros((0))
-        device = 'cpu'  # 'cuda' if torch.cuda.is_available() else
+        device = 'cpu' # 'cuda' if torch.cuda.is_available() else 'cpu' # TODO: Fix this
         model.model = model.model.to(device)
         with torch.no_grad():
             # Print visual output of prediction step
@@ -695,6 +1035,8 @@ def evaluate_model(path_to_checkpoint: Path, predict_dataset: Subset,
         if not model.regression:
             legs_avg_f1 = (model.f1_leg0 + model.f1_leg1 + model.f1_leg2 + model.f1_leg3) / 4.0
             return pred, labels, model.acc, model.f1_leg0, model.f1_leg1, model.f1_leg2, model.f1_leg3, legs_avg_f1
+        elif model_type == 'heterogeneous_gnn_k4_com' or model_type == 'heterogeneous_gnn_s4_com':
+            return pred, labels, model.rmse_loss, model.cos_sim_lin, model.cos_sim_ang
         else:
             return pred, labels, model.mse_loss, model.rmse_loss, model.l1_loss 
     
@@ -724,7 +1066,12 @@ def train_model(
         devices: int = 1,
         early_stopping: bool = False,
         disable_test: bool = False,
-        train_percentage_to_log = None):
+        train_percentage_to_log = None,
+        symmetry_mode: str = None,
+        group_operator_path: str = None,
+        subfoler_name: str = 'default',
+        data_path: Path = None,
+        wandb_api_key: str = None):
     """
     Train a learning model with the input datasets. If 
     'testing_mode' is enabled, limit the batches and epoch size
@@ -758,7 +1105,7 @@ def train_model(
     # Extract important information from the Subsets
     model_type = train_data_format
     data_metadata = None
-    if model_type == 'heterogeneous_gnn':
+    if model_type == 'heterogeneous_gnn' or model_type == 'heterogeneous_gnn_k4' or model_type == 'heterogeneous_gnn_c2' or model_type == 'heterogeneous_gnn_k4_com' or model_type == 'heterogeneous_gnn_s4_com':
         if isinstance(train_dataset.dataset, torch.utils.data.ConcatDataset):
             data_metadata = train_dataset.dataset.datasets[
                 0].dataset.get_data_metadata()
@@ -844,6 +1191,44 @@ def train_model(
             lr=lr,
             regression=regression)
         model_parameters = count_parameters(lightning_model.model)
+    elif model_type == 'heterogeneous_gnn_k4':
+        lightning_model = HGNN_K4_Lightning(
+            hidden_channels=hidden_size,
+            num_layers=num_layers,
+            data_metadata=data_metadata,
+            dummy_batch=dummy_batch,
+            optimizer=optimizer,
+            lr=lr,
+            regression=regression,
+            symmetry_mode=symmetry_mode,
+            group_operator_path=group_operator_path)
+        model_parameters = count_parameters(lightning_model.model)
+    elif model_type == 'heterogeneous_gnn_c2':
+        lightning_model = HGNN_C2_Lightning(
+            hidden_channels=hidden_size,
+            num_layers=num_layers,
+            data_metadata=data_metadata,
+            dummy_batch=dummy_batch,
+            optimizer=optimizer,
+            lr=lr,
+            regression=regression,
+            symmetry_mode=symmetry_mode,
+            group_operator_path=group_operator_path)
+        model_parameters = count_parameters(lightning_model.model)
+    elif model_type == 'heterogeneous_gnn_k4_com' or model_type == 'heterogeneous_gnn_s4_com':
+        lightning_model = COM_HGNN_Lightning(
+            hidden_channels=hidden_size,
+            num_layers=num_layers,
+            data_metadata=data_metadata,
+            dummy_batch=dummy_batch,
+            optimizer=optimizer,
+            lr=lr,
+            regression=regression,
+            symmetry_mode=symmetry_mode,
+            group_operator_path=group_operator_path,
+            model_type=model_type,
+            data_path=data_path)
+        model_parameters = count_parameters(lightning_model.model)
     else:
         raise ValueError("Invalid model type.")
 
@@ -854,6 +1239,9 @@ def train_model(
         if logger_project_name is None:
             raise ValueError(
                 "Need to define \"logger_project_name\" if logger is enabled.")
+        if wandb_api_key is not None:
+            import wandb
+            wandb.login(key=wandb_api_key)
         wandb_logger = WandbLogger(project=logger_project_name)
         wandb_logger.watch(lightning_model, log="all")
         wandb_logger.experiment.config["batch_size"] = batch_size
@@ -862,27 +1250,33 @@ def train_model(
         wandb_logger.experiment.config["seed"] = seed
         if train_percentage_to_log is not None:
             wandb_logger.experiment.config["train_percentage"] = train_percentage_to_log
-        path_to_save = str(Path("models", wandb_logger.experiment.name))
+        path_to_save = str(Path("models", subfoler_name, wandb_logger.experiment.name))
     else:
         path_to_save = str(
             Path("models", model_type + "_" + names.get_full_name()))
 
     # Set up precise checkpointing
     monitor = None
-    if regression:
+    if regression and (model_type == 'heterogeneous_gnn_k4_com' or model_type == 'heterogeneous_gnn_s4_com'):
         monitor = "val_MSE_loss"
+        monitor_mode = 'min'
+        monitor_second = "val_avg_cos_sim"
     else:
         monitor = "val_CE_loss"
+        monitor_mode = 'min'
+        monitor_second = "val_F1_Score_Leg_Avg"
     checkpoint_callback = ModelCheckpoint(dirpath=path_to_save,
                                           filename='{epoch}-{' + monitor +
-                                          ':.5f}',
-                                          save_top_k=5,
-                                          mode='min',
+                                          ':.5f}' + ('-{' + monitor_second + ':.5f}' 
+                                                     if monitor_second is not None else ''),
+                                          save_top_k=7,
+                                          mode=monitor_mode,
                                           monitor=monitor)
     last_model_callback = ModelCheckpoint(dirpath=path_to_save,
                                           filename='{epoch}-{' + monitor +
-                                          ':.5f}',
-                                          save_top_k=1,
+                                          ':.5f}' + ('-{' + monitor_second + ':.5f}' 
+                                                     if monitor_second is not None else ''),
+                                          save_top_k=3,
                                           mode='max',
                                           monitor="epoch")
 
@@ -892,7 +1286,7 @@ def train_model(
     # Setup early stopping mechanism to match MorphoSymm-Replication
     callbacks = [checkpoint_callback, last_model_callback]
     if early_stopping:
-        callbacks.append(EarlyStopping(monitor=monitor, patience=10, mode='min'))
+        callbacks.append(EarlyStopping(monitor=monitor, patience=10, mode=monitor_mode))
 
     # Train the model and test
     trainer = L.Trainer(

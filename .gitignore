@@ -166,7 +166,7 @@ cython_debug/
 models/
 
 # Ignore wandb information and datasets
-datasets/
+datasets/*
 wandb/
 lightning_logs/
 
@@ -175,3 +175,11 @@ lightning_logs/
 
 # Ignored generated animation files
 media/
+
+# Ignore checkpoint files
+ckpts/
+
+# Ignore sync files
+sync.sh
+include-file.txt
+exclude-file.txt
