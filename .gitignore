@@ -167,7 +167,6 @@ models/
 
 # Ignore wandb information and datasets
 datasets/*
-!datasets/Solo-12/
 wandb/
 lightning_logs/
 
