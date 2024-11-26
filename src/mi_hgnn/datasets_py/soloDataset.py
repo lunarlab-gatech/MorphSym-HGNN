@@ -105,7 +105,8 @@ class Solo12Dataset(FlexibleDataset):
                  swap_legs=None,
                  symmetry_operator=None,  # Can be 'gs' or 'gt' or 'gr' or None
                  symmetry_mode=None, # Can be 'Euclidean' or 'MorphSym' or None
-                 group_operator_path=None):
+                 group_operator_path=None,
+                 stage='train'):
         
         if swap_legs is not None and symmetry_operator is not None:
             raise ValueError("swap_legs is not None and symmetry_operator is not None is not supported.")
@@ -123,7 +124,7 @@ class Solo12Dataset(FlexibleDataset):
             else:
                 sorted_swap_legs = tuple([tuple(sorted(swap_legs))])
             self.swap_legs = sorted_swap_legs
-        
+
         # Set the symmetry parameters
         self.symmetry_operator = symmetry_operator
         self.symmetry_mode = symmetry_mode
@@ -162,15 +163,19 @@ class Solo12Dataset(FlexibleDataset):
             raise ValueError(f"Model type {model_type} is not implemented for Solo12 dataset.")
         
         self.normalize = normalize
-
-        if self.normalize:
-            path_to_npz = os.path.join(root, 'raw', 'data.npz')
-            raw_data = np.load(path_to_npz)
-            X = raw_data['X']
-            Y = raw_data['Y']
-            self.X_mean, self.X_std, self.Y_mean, self.Y_std = self.compute_normalization(X, Y)
-            self.standarizer = Standarizer(self.X_mean, self.X_std, self.Y_mean, self.Y_std, 'cpu')
         
+        path_to_npz = os.path.join(root, 'processed', f'{stage}.npz')
+        raw_data_npz = np.load(path_to_npz)
+        self.X = raw_data_npz['X']
+        self.Y = raw_data_npz['Y']
+        if self.normalize:
+            # self.X_mean, self.X_std, self.Y_mean, self.Y_std = self.compute_normalization(self.X, self.Y)
+            path_to_stats = os.path.join(root, 'processed', 'rss_stats.npz')
+            stat_data = np.load(path_to_stats)
+            self.X_mean, self.X_std, self.Y_mean, self.Y_std = stat_data['x_mean'], stat_data['x_std'], stat_data['y_mean'], stat_data['y_std']
+            self.standarizer = Standarizer(self.X_mean, self.X_std, self.Y_mean, self.Y_std, 'cpu')
+            self.X, self.Y = self.standarizer.transform(self.X, self.Y)
+
         super().__init__(root, path_to_urdf, urdf_package_name, 
                          urdf_package_relative_path, data_format=model_type, 
                          history_length=history_length, normalize=self.normalize)
@@ -197,12 +202,14 @@ class Solo12Dataset(FlexibleDataset):
             
             # Save statistics to processed/stats.npz
             processed_dir = os.path.join(self.root, 'processed')
-            np.savez(os.path.join(processed_dir, 'stats.npz'),
+            np.savez(os.path.join(processed_dir, f'{stage}_stats.npz'),
                     x_mean=self.X_mean,
                     x_std=self.X_std, 
                     y_mean=self.Y_mean,
                     y_std=self.Y_std)
 
+        self.length = self.Y.shape[0]
+        print(f"{stage} Dataset length: {self.length}")
     # def compute_normalization(self, q, qd, lin, ang):
     #     """
     #     Compute the mean and standard deviation for the joint and base data.
@@ -369,12 +376,16 @@ class Solo12Dataset(FlexibleDataset):
     def load_data_at_dataset_seq(self, seq_num: int):
         """Load data for a specified sequence"""
         # Load joint data
-        j_p = np.array(self.mat_data['q'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)
-        j_v = np.array(self.mat_data['qd'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)
+        # j_p = np.array(self.mat_data['q'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)
+        # j_v = np.array(self.mat_data['qd'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)
+        j_p = self.X[:, :12][seq_num:seq_num+self.history_length].reshape(self.history_length, 12)
+        j_v = self.X[:, 12:][seq_num:seq_num+self.history_length].reshape(self.history_length, 12)
         
         # Load base velocity data (as labels)
-        base_lin_vel = np.array(self.mat_data['base_lin_vel'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 3)
-        base_ang_vel = np.array(self.mat_data['base_ang_vel'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 3)
+        # base_lin_vel = np.array(self.mat_data['base_lin_vel'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 3)
+        # base_ang_vel = np.array(self.mat_data['base_ang_vel'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 3)
+        base_lin_vel = self.Y[:, :3][seq_num:seq_num+self.history_length].reshape(self.history_length, 3)
+        base_ang_vel = self.Y[:, 3:][seq_num:seq_num+self.history_length].reshape(self.history_length, 3)
         
         # Concatenate base velocities into a 6D vector as labels
         labels = np.concatenate([base_lin_vel[-1], base_ang_vel[-1]])  # Only use the last frame of the sequence as prediction target

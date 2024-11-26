@@ -648,7 +648,8 @@ def main(
         logger_project_name='main_cls_k4',
         model_type='heterogeneous_gnn_k4',
         symmetry_mode='MorphSym',
-        group_operator_path='cfg/mini_cheetah-k4.yaml'
+        group_operator_path='cfg/mini_cheetah-k4.yaml',
+        sample_ratio=0.85
     ):
     """
     Duplicate the experiment found in Section VI-B of "On discrete symmetries 
@@ -694,7 +695,7 @@ def main(
     train_subsets = []
     val_subsets = []
     for dataset in train_val_datasets:
-        split_index = int(np.round(dataset.__len__() * 0.85)) # When value has .5, round to nearest-even
+        split_index = int(np.round(dataset.__len__() * sample_ratio)) # When value has .5, round to nearest-even
         train_subsets.append(torch.utils.data.Subset(dataset, np.arange(0, split_index)))
         val_subsets.append(torch.utils.data.Subset(dataset, np.arange(split_index, dataset.len())))
     train_dataset = torch.utils.data.ConcatDataset(train_subsets)
@@ -719,7 +720,7 @@ def main(
     test_dataset = torch.utils.data.Subset(test_dataset, np.arange(0, test_dataset.__len__()))
 
     # Ensure we match MorphoSymm exactly in the way that they split the datasets 
-    ensure_dataset_splits_match_morphoSymm(train_dataset, val_dataset, test_dataset)
+    # ensure_dataset_splits_match_morphoSymm(train_dataset, val_dataset, test_dataset)
 
     # Train the model
     train_model(train_dataset, val_dataset, test_dataset, normalize, num_layers=num_layers, hidden_size=hidden_size, 
@@ -736,6 +737,7 @@ if __name__ == "__main__":
     parser.add_argument('--hidden_size', type=int, default=128, help='Hidden size')
     parser.add_argument('--lr', type=float, default=0.0001, help='Learning rate')
     parser.add_argument('--epochs', type=int, default=49, help='Number of epochs')
+    parser.add_argument('--sample_ratio', type=float, default=0.85, help='Sample ratio')
     # Logging parameters
     parser.add_argument('--logger_project_name', type=str, default='main_cls_c2', help='Logger project name')
 	# Symmetry parameters

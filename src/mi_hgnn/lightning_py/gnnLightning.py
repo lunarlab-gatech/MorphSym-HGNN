@@ -579,7 +579,7 @@ class COM_HGNN_Lightning(Base_Lightning):
         """
         super().__init__(optimizer, lr, regression)
 
-        stats = np.load(os.path.join(data_path, 'processed', 'stats.npz'))
+        stats = np.load(os.path.join(data_path, 'processed', 'rss_stats.npz'))
         x_means = stats['x_mean']
         x_stds = stats['x_std']
         y_means = stats['y_mean']
@@ -684,7 +684,7 @@ class COM_HGNN_Lightning(Base_Lightning):
         self.cos_sim_ang = self.metric_cos_sim_ang(y_pred_ang_vel, y_ang_vel)
         self.avg_cos_sim = (self.cos_sim_lin + self.ang_weight * self.cos_sim_ang) / (1 + self.ang_weight)
 
-        self.loss = self.mse_loss_ang
+        self.loss = self.mse_loss
 
     # def calculate_losses_step_test(self, y: torch.Tensor, y_pred: torch.Tensor):
     #     '''
@@ -720,7 +720,7 @@ class COM_HGNN_Lightning(Base_Lightning):
         self.mse_loss_lin = self.metric_mse_lin.compute()
         self.mse_loss_ang = self.metric_mse_ang.compute()
 
-        self.loss = self.mse_loss_ang
+        self.loss = self.mse_loss
 
     def reset_all_metrics(self) -> None:
         self.metric_cos_sim_lin.reset()
