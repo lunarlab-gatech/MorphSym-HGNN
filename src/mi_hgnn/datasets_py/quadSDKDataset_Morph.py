@@ -549,19 +549,27 @@ class QuadSDKDataset_A1(QuadSDKDataset_NewGraph):
         j_v = np.array(self.mat_data['qd'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)
         j_T = np.array(self.mat_data['tau'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)
         # TODO: This should be GRF, not Z-GRF
-        z_grfs = np.squeeze(np.array(self.mat_data['F'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)[-1,z_indices])
+        # z_grfs = np.squeeze(np.array(self.mat_data['F'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)[-1,z_indices])
+        grfs = np.squeeze(np.array(self.mat_data['F'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12))[-1]
         r_p = np.array(self.mat_data['r_p'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 3)
         r_quat = np.array(self.mat_data['r_o'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 4)
         timestamps = np.array(self.mat_data['timestamps'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 3)
 
+        world_to_body_R = Rotation.from_quat(r_quat[-1])
+        grfs_T = np.array(grfs.reshape(4, 3), dtype=np.double).T
+        grfs_body = (world_to_body_R.as_matrix() @ grfs_T).T
+        grfs = grfs_body.flatten()
+
+        z_grfs = grfs[z_indices]
+
         # Convert the lin_acc and ang_vel from body frame to world frame
-        for i in range(0, self.history_length):
-            world_to_body_R = Rotation.from_quat(r_quat[i])
-            body_to_world_R = world_to_body_R.inv().as_matrix()
-            lin_acc_T = np.array([[lin_acc[i][0]], [lin_acc[i][1]], [lin_acc[i][2]]], dtype=np.double)
-            ang_vel_T = np.array([[ang_vel[i][0]], [ang_vel[i][1]], [ang_vel[i][2]]], dtype=np.double)
-            lin_acc[i] = ((body_to_world_R @ lin_acc_T).T)[0]
-            ang_vel[i] = ((body_to_world_R @ ang_vel_T).T)[0]
+        # for i in range(0, self.history_length):
+        #     world_to_body_R = Rotation.from_quat(r_quat[i])
+        #     body_to_world_R = world_to_body_R.inv().as_matrix()
+        #     lin_acc_T = np.array([[lin_acc[i][0]], [lin_acc[i][1]], [lin_acc[i][2]]], dtype=np.double)
+        #     ang_vel_T = np.array([[ang_vel[i][0]], [ang_vel[i][1]], [ang_vel[i][2]]], dtype=np.double)
+        #     lin_acc[i] = ((body_to_world_R @ lin_acc_T).T)[0]
+        #     ang_vel[i] = ((body_to_world_R @ ang_vel_T).T)[0]
 
         return lin_acc, ang_vel, j_p, j_v, j_T, None, None, z_grfs, r_p, r_quat, timestamps
 

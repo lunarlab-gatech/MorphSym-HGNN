@@ -33,6 +33,10 @@ class GRF_HGNN_C2(torch.nn.Module):
         self.num_joints = self.num_legs * num_joints_per_leg
         self.num_dimensions_per_foot = 3
         self.num_dimensions_per_base = 3
+        if self.regression:
+            self.num_variables_per_joint = 3
+        else:
+            self.num_variables_per_joint = 2
         # Initialize the joint coefficients based on the symmetry mode and group operator path
         if symmetry_mode and group_operator_path:
             with open(group_operator_path, 'r') as file:
@@ -130,7 +134,7 @@ class GRF_HGNN_C2(torch.nn.Module):
         # debug use, check the parameters:
         # self.check_parameter_sharing()
 
-        x_dict = self.apply_symmetry(x_dict)
+        # x_dict = self.apply_symmetry(x_dict)
 
         # Initial feature encoding
         x_dict = self.encoder(x_dict)
@@ -173,7 +177,7 @@ class GRF_HGNN_C2(torch.nn.Module):
         joint_x = x_dict['joint']  # shape: [batch_size * num_joints, num_timesteps * num_variables]
         # Reshape the joint data to separate different joints and variables
         # [batch_size * num_joints, num_timesteps * num_variables] -> [batch_size, num_joints, num_timesteps, num_variables]
-        joint_x = joint_x.view(-1, self.num_joints, self.num_timesteps, 2)
+        joint_x = joint_x.view(-1, self.num_joints, self.num_timesteps, self.num_variables_per_joint)
         # Apply the coefficients to each variable separately, ensuring same device
         weights_j = self.joints_linear_weights.to(joint_x.device).view(1, -1, 1, 1)
         joint_x = joint_x * weights_j

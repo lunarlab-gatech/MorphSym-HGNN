@@ -1257,10 +1257,14 @@ def train_model(
 
     # Set up precise checkpointing
     monitor = None
-    if regression and (model_type == 'heterogeneous_gnn_k4_com' or model_type == 'heterogeneous_gnn_s4_com'):
+    if regression and 'com' in model_type.lower():
         monitor = "val_MSE_loss"
         monitor_mode = 'min'
         monitor_second = "val_avg_cos_sim"
+    elif regression:
+        monitor = "val_MSE_loss"
+        monitor_mode = 'min'
+        monitor_second = "val_L1_loss"
     else:
         monitor = "val_CE_loss"
         monitor_mode = 'min'
