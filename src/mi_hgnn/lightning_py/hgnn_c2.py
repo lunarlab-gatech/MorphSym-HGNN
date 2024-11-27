@@ -66,7 +66,7 @@ class GRF_HGNN_C2(torch.nn.Module):
             b_e_coeffs_lin = torch.ones(self.num_dimensions_per_base, dtype=torch.float64)
             b_gs_coeffs_ang = torch.ones(self.num_dimensions_per_base, dtype=torch.float64)
             b_e_coeffs_ang = torch.ones(self.num_dimensions_per_base, dtype=torch.float64)
-        # joints = [Back_Left, Frong_Left, Back_Right, Front_Right]
+        # joints = [Frong_Left, Back_Left, Front_Right, Back_Right]
         joint_weights_array = torch.cat((j_e_coeffs, j_e_coeffs, j_gs_coeffs, j_gs_coeffs), dim=0)
         self.joints_linear_weights = joint_weights_array
         print(f'===> self.joints_linear_weights: {self.joints_linear_weights}')
@@ -134,7 +134,7 @@ class GRF_HGNN_C2(torch.nn.Module):
         # debug use, check the parameters:
         # self.check_parameter_sharing()
 
-        # x_dict = self.apply_symmetry(x_dict)
+        x_dict = self.apply_symmetry(x_dict)
 
         # Initial feature encoding
         x_dict = self.encoder(x_dict)
@@ -167,7 +167,12 @@ class GRF_HGNN_C2(torch.nn.Module):
         # self.check_parameter_sharing()
 
         # Final prediction for foot nodes
-        return self.decoder(x_dict['foot'])
+        final_output = self.decoder(x_dict['foot'])
+
+        # Apply morphological symmetry to the final output
+        # final_output = self.ms_decoder(final_output)
+        
+        return final_output
     
     def apply_symmetry(self, x_dict):
         """
@@ -182,7 +187,7 @@ class GRF_HGNN_C2(torch.nn.Module):
         weights_j = self.joints_linear_weights.to(joint_x.device).view(1, -1, 1, 1)
         joint_x = joint_x * weights_j
         # Reshape back to the original shape [batch_size, num_joints, num_timesteps, num_variables] -> [batch_size, num_timesteps * num_variables]
-        x_dict['joint'] = joint_x.reshape(-1, self.num_timesteps * 2)
+        x_dict['joint'] = joint_x.reshape(-1, self.num_timesteps * self.num_variables_per_joint)
 
         if not self.regression:
             batch_size = x_dict['foot'].shape[0] // self.num_legs

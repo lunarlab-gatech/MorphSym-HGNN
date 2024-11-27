@@ -129,8 +129,8 @@ class QuadSDKDataset_NewGraph(QuadSDKDataset):
             else:
                 sorted_foot_list.append(None)
         
-        if self.symmetry_operator is not None:
-            sorted_foot_list = self.apply_symmetry(sorted_foot_list, part='foot')
+        # if self.symmetry_operator is not None:
+        #     sorted_foot_list = self.apply_symmetry(sorted_foot_list, part='foot')
 
         # Sort the ground truth labels
         labels_sorted = None

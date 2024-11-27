@@ -85,7 +85,7 @@ if __name__ == '__main__':
     parser.add_argument('--lr', type=float, default=0.0001, help='Learning rate')
     parser.add_argument('--epochs', type=int, default=30, help='Number of epochs')
     # Logging parameters
-    parser.add_argument('--logger_project_name', type=str, default='grf_c2_debug', help='Logger project name')
+    parser.add_argument('--logger_project_name', type=str, default='main_grf_c2', help='Logger project name')
     # Model parameters
     parser.add_argument('--model_type', type=str, default='heterogeneous_gnn_c2', help='Model type, options: heterogeneous_gnn_c2')
     args = parser.parse_args()
