@@ -481,7 +481,7 @@ class QuadSDKDataset_A1(QuadSDKDataset_NewGraph):
 
     def load_data_at_dataset_seq(self, seq_num: int):
         z_indices = [2, 5, 8, 11]
-        lin_acc, ang_vel, j_p, j_v, j_T, grfs, r_p, r_quat, timestamps = self.load_data_at_dataset_seq_3d(seq_num)
+        lin_acc, ang_vel, j_p, j_v, j_T, _, _, grfs, r_p, r_quat, timestamps = self.load_data_at_dataset_seq_3d(seq_num)
         z_grfs = grfs[z_indices]
 
         return lin_acc, ang_vel, j_p, j_v, j_T, None, None, z_grfs, r_p, r_quat, timestamps

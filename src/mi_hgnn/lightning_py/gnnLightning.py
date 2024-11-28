@@ -553,10 +553,12 @@ class HGNN_C2_Lightning(Base_Lightning):
             self.metric_mse_worldframe: torchmetrics.MeanSquaredError = torchmetrics.regression.MeanSquaredError(squared=True)
             self.metric_rmse_worldframe: torchmetrics.MeanSquaredError = torchmetrics.regression.MeanSquaredError(squared=False)
             self.metric_l1_worldframe: torchmetrics.MeanAbsoluteError = torchmetrics.regression.MeanAbsoluteError()
-
             self.mse_loss_worldframe = None
             self.rmse_loss_worldframe = None
             self.l1_loss_worldframe = None
+            self.calculate_losses_step = self.calculate_losses_step_worldframe
+        else:
+            self.calculate_losses_step = self.calculate_losses_step_original
 
     def log_losses_worldframe(self, step_name: str, on_step: bool):
         self.log_losses(step_name, on_step)
@@ -565,12 +567,42 @@ class HGNN_C2_Lightning(Base_Lightning):
         self.log(step_name + "_L1_loss_WorldFrame", self.l1_loss_worldframe, on_step=on_step, on_epoch=not on_step)
 
     def calculate_losses_step_worldframe(self, y: torch.Tensor, y_pred: torch.Tensor, batch_r_quat: torch.Tensor):
-        self.calculate_losses_step(y, y_pred)
+        self.calculate_losses_step_original(y, y_pred)
         y_world = self.body_frame_to_world_frame(batch_r_quat, y)
         y_pred_world = self.body_frame_to_world_frame(batch_r_quat, y_pred)
         self.mse_loss_worldframe = self.metric_mse_worldframe(y_pred_world, y_world)
         self.rmse_loss_worldframe = self.metric_rmse_worldframe(y_pred_world, y_world)
         self.l1_loss_worldframe = self.metric_l1_worldframe(y_pred_world, y_world)
+
+    def calculate_losses_step_original(self, y: torch.Tensor, y_pred: torch.Tensor):
+        if self.regression:
+            y = y.flatten()
+            y_pred = y_pred.flatten()
+            self.mse_loss = self.metric_mse(y_pred, y)
+            self.rmse_loss = self.metric_rmse(y_pred, y)
+            self.l1_loss = self.metric_l1(y_pred, y)
+        else:
+            batch_size = y_pred.shape[0]
+
+            # Calculate useful values
+            y_pred_per_foot, y_pred_per_foot_prob, y_pred_per_foot_prob_only_1 = \
+                    self.classification_calculate_useful_values(y_pred, batch_size)
+
+            # Calculate CE_loss
+            self.ce_loss = self.metric_ce(y_pred_per_foot, y.long().flatten())
+
+            # Calculate 16 class accuracy
+            y_pred_16, y_16 = self.classification_conversion_16_class(y_pred_per_foot_prob_only_1, y)
+            y_16 = y_16.squeeze(dim=1)
+            self.acc = self.metric_acc(torch.argmax(y_pred_16, dim=1), y_16)
+
+            # Calculate binary class predictions for f1-scores
+            y_pred_2 = torch.reshape(torch.argmax(y_pred_per_foot_prob, dim=1), (batch_size, 4))
+            self.f1_leg0 = self.metric_f1_leg0(y_pred_2[:,0], y[:,0])
+            self.f1_leg1 = self.metric_f1_leg1(y_pred_2[:,1], y[:,1])
+            self.f1_leg2 = self.metric_f1_leg2(y_pred_2[:,2], y[:,2])
+            self.f1_leg3 = self.metric_f1_leg3(y_pred_2[:,3], y[:,3])
+
 
     def body_frame_to_world_frame(self, batch_r_quat, grf_bodyFrame):
         '''
@@ -1030,6 +1062,8 @@ def evaluate_model(path_to_checkpoint: Path, predict_dataset: Subset,
                    symmetry_mode: str = None,
                    group_operator_path: str = None,
                    data_path: Path = None, 
+                   grf_body_to_world_frame: bool = True,
+                   grf_dimension: int = 3,
                    batch_size: int = 100):
     """
     Runs the provided model on the corresponding dataset,
@@ -1081,6 +1115,8 @@ def evaluate_model(path_to_checkpoint: Path, predict_dataset: Subset,
             str(path_to_checkpoint),
             symmetry_mode=symmetry_mode,
             group_operator_path=group_operator_path,
+            grf_body_to_world_frame=grf_body_to_world_frame,
+            grf_dimension=grf_dimension,
             strict=False
         )
     elif model_type == 'heterogeneous_gnn_k4_com' or model_type == 'heterogeneous_gnn_s4_com':
@@ -1137,7 +1173,11 @@ def evaluate_model(path_to_checkpoint: Path, predict_dataset: Subset,
             # Predict with the model
             for batch in valLoader:
                 labels_batch, y_pred = model.step_helper_function(batch)
-                model.calculate_losses_step(labels_batch, y_pred)
+                if model.body_to_world_frame:
+                    batch_r_quat = batch.r_o.view(batch.batch_size, 4)
+                    model.calculate_losses_step_worldframe(labels_batch, y_pred, batch_r_quat)
+                else:
+                    model.calculate_losses_step_original(labels_batch, y_pred)
 
                 # If classification, convert to 16 class predictions and labels
                 if not model.regression:
@@ -1157,8 +1197,11 @@ def evaluate_model(path_to_checkpoint: Path, predict_dataset: Subset,
                 # Print current status
                 batch_num += 1
                 print("Prediction: ", batch_num, "/", total_batches, "\r", end="")
-
-            model.calculate_losses_epoch()
+            
+            if model.body_to_world_frame:
+                model.calculate_losses_epoch_worldframe()
+            else:
+                model.calculate_losses_epoch()
         
         # Return the results
         if not model.regression:
@@ -1167,7 +1210,10 @@ def evaluate_model(path_to_checkpoint: Path, predict_dataset: Subset,
         elif model_type == 'heterogeneous_gnn_k4_com' or model_type == 'heterogeneous_gnn_s4_com':
             return pred, labels, model.rmse_loss, model.cos_sim_lin, model.cos_sim_ang
         else:
-            return pred, labels, model.mse_loss, model.rmse_loss, model.l1_loss 
+            if model.body_to_world_frame:
+                return pred, labels, model.mse_loss_worldframe, model.rmse_loss_worldframe, model.l1_loss_worldframe
+            else:
+                return pred, labels, model.mse_loss, model.rmse_loss, model.l1_loss 
     
     else:
         problem_type = "regression" if model.regression else "classification"
