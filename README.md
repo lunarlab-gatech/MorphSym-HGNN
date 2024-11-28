@@ -1,5 +1,5 @@
-# MI-HGNN for contact estimation/classification on various robots
-This repository implements a Morphology-Informed Heterogeneous Graph Neural Network (MI-HGNN) for estimating contact information on the feet of a quadruped robot.
+# MS-HGNN for contact estimation/classification on various robots
+This repository implements a Morphology-Informed Heterogeneous Graph Neural Network (MS-HGNN) for estimating contact information on the feet of a quadruped robot.
 
 Additionally, by providing a compatible URDF file, this software can convert a variety of robot structures to graph format for learning with the MI-HGNN. See [#Applying-MI-HGNN-to-your-own-robot
 ](#applying-mi-hgnn-to-your-own-robot) for more information.
@@ -11,8 +11,8 @@ For information on our method, see our [project page](https://lunarlab-gatech.gi
 ## Installation
 To get started, setup a Conda Python environment with Python=3.11:
 ```
-conda create -n mi-hgnn python=3.11
-conda activate mi-hgnn
+conda create -n msgn python=3.11
+conda activate msgn
 ```
 
 Then, install the library (and dependencies) with the following command:
@@ -46,21 +46,18 @@ broken critical functionality, run the test cases found in the `tests` directory
 
 If you'd like to contribute to the repository, write sufficient and necessary test cases for your additions in the `tests` directory, and then open a pull request.
 
+## Acknowledgements
+
+We would like to thank [Daniel Chase Butterfield](https://scholar.google.com/citations?user=i5PF63IAAAAJ&hl=en) for the awesome work on the original implementation of the [Morphology-Informed-HGNN](https://github.com/lunarlab-gatech/Morphology-Informed-HGNN). And thank [Lingjun Zhao](https://scholar.google.com/citations?user=iyNynZwAAAAJ&hl=en) for the helpful discussions on the implementation of the code.
+
 ## Citation
 
 If you find our repository or our work useful, please cite the relevant publication:
 
 ```
-@article{butterfield2024mi,
-  title={MI-HGNN: Morphology-Informed Heterogeneous Graph Neural Network for Legged Robot Contact Perception},
-  author={Butterfield, Daniel and Garimella, Sandilya Sai and Cheng, Nai-Jen and Gan, Lu},
-  journal={arXiv preprint arXiv:2409.11146},
-  year={2024},
-  eprint={2409.11146},
-  url={https://arxiv.org/abs/2409.11146},
-}
+TBD
 ```
 
 ## Contact / Issues
 
-For any issues with this repository, feel free to open an issue on GitHub. For other inquiries, please contact Daniel Butterfield (dbutterfield3@gatech.edu) or the Lunar Lab (https://sites.gatech.edu/lunarlab/).
+For any issues with this repository, feel free to open an issue on GitHub. For other inquiries, please contact Sizhe Wei (swei@gatech.edu) or the Lunar Lab (https://sites.gatech.edu/lunarlab/).
