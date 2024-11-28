@@ -604,6 +604,7 @@ class FlexibleDataset(Dataset):
         data['base'].x = base_x
         data['joint'].x = joint_x
         data['foot'].x = foot_x
+
         return data
 
     def find_variables_to_use(self, variables_to_check: list[list]) -> np.array:

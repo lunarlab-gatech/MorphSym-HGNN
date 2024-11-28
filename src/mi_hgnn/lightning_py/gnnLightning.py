@@ -417,7 +417,7 @@ class Heterogeneous_GNN_Lightning(Base_Lightning):
 
     def __init__(self, hidden_channels: int, num_layers: int, data_metadata,
                  dummy_batch, optimizer: str = "adam", lr: float = 0.003,
-                 regression: bool = True, activation_fn = nn.ReLU()):
+                 regression: bool = True, activation_fn = nn.ReLU(), grf_dimension: int = 1):
         """
         Constructor for Heterogeneous GNN.
 
@@ -434,7 +434,8 @@ class Heterogeneous_GNN_Lightning(Base_Lightning):
                               num_layers=num_layers,
                               data_metadata=data_metadata,
                               regression=regression,
-                              activation_fn=activation_fn)
+                              activation_fn=activation_fn,
+                              grf_dimension=grf_dimension)
         self.regression = regression
 
         # Initialize lazy modules
@@ -1366,7 +1367,8 @@ def train_model(
             dummy_batch=dummy_batch,
             optimizer=optimizer,
             lr=lr,
-            regression=regression)
+            regression=regression,
+            grf_dimension=grf_dimension)
         model_parameters = count_parameters(lightning_model.model)
     elif model_type == 'heterogeneous_gnn_k4':
         lightning_model = HGNN_K4_Lightning(

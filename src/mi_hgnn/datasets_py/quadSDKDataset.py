@@ -6,6 +6,7 @@ from .flexibleDataset import FlexibleDataset
 import numpy as np
 import scipy.io as sio
 from scipy.spatial.transform import Rotation
+import torch
 
 class QuadSDKDataset(FlexibleDataset):
     """
@@ -284,6 +285,102 @@ class QuadSDKDataset_A1_DEPRECATED(QuadSDKDataset):
         return lin_acc, ang_vel, j_p, j_v, j_T, None, None, z_grfs, r_p, r_quat, timestamps
 
 class QuadSDKDataset_A1(QuadSDKDataset):
+    def __init__(self,
+                 root,
+                 urdf_path: Path,
+                 ros_builtin_path: str,
+                 urdf_to_desc_path: str,
+                 data_format: str = 'heterogeneous_gnn',
+                 history_length: int = 1,
+                 normalize: bool = False,
+                 urdf_path_dynamics: Path = None,
+                 grf_body_to_world_frame: bool = True,
+                 grf_dimension: int = 3
+                 ):
+        
+        self.grf_body_to_world_frame = grf_body_to_world_frame
+        self.grf_dimension = grf_dimension  
+
+        if self.grf_dimension == 3:
+            self.load_data_at_dataset_seq = self.load_data_at_dataset_seq_3d
+        else:
+            self.load_data_at_dataset_seq = self.load_data_at_dataset_seq_1d
+
+        super().__init__(root, urdf_path, ros_builtin_path, urdf_to_desc_path, data_format, history_length, normalize, urdf_path_dynamics)
+
+    def load_data_sorted(self, seq_num: int):
+        """
+        Loads data from the dataset at the provided sequence number.
+        However, the joint and feet are sorted so that they match 
+        the order in the URDF file. Additionally, the foot labels 
+        are sorted so it matches the order in the URDF file.
+
+        Next, labels are checked to make sure they aren't None. 
+        Finally, normalize the data if self.normalize was set as True.
+        We calculate the standard deviation for this normalization 
+        using Bessel's correction (n-1 used instead of n).
+
+        Parameters:
+            seq_num (int): The sequence number of the txt file
+                whose data should be loaded.
+
+        Returns:
+            Same values as load_data_at_dataset_seq(), but order of
+            values inside arrays have been sorted (and potentially
+            normalized).
+        """
+        lin_acc, ang_vel, j_p, j_v, j_T, f_p, f_v, labels, r_p, r_o, timestamps = self.load_data_at_dataset_seq(seq_num)
+
+        # Sort the joint information
+        unsorted_list = [j_p, j_v, j_T]
+        sorted_list = []
+        for unsorted_array in unsorted_list:
+            if unsorted_array is not None:
+                sorted_list.append(unsorted_array[:,self.joint_node_indices_sorted])
+            else:
+                sorted_list.append(None)
+
+        # Sort the foot information
+        unsorted_foot_list = [f_p, f_v]
+        sorted_foot_list = []
+        for unsorted_array in unsorted_foot_list:
+            if unsorted_array is not None:
+                sorted_indices = []
+                for index in self.foot_node_indices_sorted:
+                    for i in range(0, 3):
+                        sorted_indices.append(int(index*3+i))
+                sorted_foot_list.append(unsorted_array[:,sorted_indices])
+            else:
+                sorted_foot_list.append(None)
+
+        # Sort the ground truth labels
+        labels_sorted = None
+        if labels is None:
+            raise ValueError("Dataset must provide labels.")
+        elif self.grf_dimension == 1:
+            labels_sorted = labels[self.foot_node_indices_sorted]
+        elif self.grf_dimension == 3:
+            unsorted_grfs = labels
+            sorted_grfs = []
+            for index in self.foot_node_indices_sorted:
+                for i in range(0, 3):
+                    sorted_grfs.append(int(index*3+i))
+            labels_sorted = unsorted_grfs[sorted_grfs]
+
+        # Normalize the data if desired
+        norm_arrs = [None, None, None, None, None, None, None, None, None]
+        if self.normalize:
+            # Normalize all data except the labels
+            to_normalize_array = [lin_acc, ang_vel, sorted_list[0], sorted_list[1], sorted_list[2], sorted_foot_list[0], sorted_foot_list[1], r_p, r_o]
+            for i, array in enumerate(to_normalize_array):
+                if (array is not None) and (array.shape[0] > 1):
+                    array_tensor = torch.from_numpy(array)
+                    norm_arrs[i] = np.nan_to_num((array_tensor-torch.mean(array_tensor,axis=0))/torch.std(array_tensor, axis=0, correction=1).numpy(), copy=False, nan=0.0)
+
+            return norm_arrs[0], norm_arrs[1], norm_arrs[2], norm_arrs[3], norm_arrs[4], norm_arrs[5], norm_arrs[6], labels_sorted, norm_arrs[7], norm_arrs[8], timestamps
+        else:
+            return lin_acc, ang_vel, sorted_list[0], sorted_list[1], sorted_list[2], sorted_foot_list[0], sorted_foot_list[1], labels_sorted, r_p, r_o, timestamps
+        
     # ===================== DATASET PROPERTIES =======================
     def get_expected_urdf_name(self):
         return "a1_description"
@@ -361,7 +458,7 @@ class QuadSDKDataset_A1(QuadSDKDataset):
         return [6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5], [2, 3, 0, 1]
 
     # ======================== DATA LOADING ==========================
-    def load_data_at_dataset_seq(self, seq_num: int):
+    def load_data_at_dataset_seq_3d(self, seq_num: int):
         """
         The units of the return values are as follows:
         - lin_acc (meters/sec^2, represented in the world frame (converted from body frame))
@@ -381,32 +478,40 @@ class QuadSDKDataset_A1(QuadSDKDataset):
         - f_p (meters, represented in robot's body frame) 
         - f_v (meters/sec, represented in robot's body frame)
         """
-
-        # Outline the indices to extract the just the Z-GRFs
-        z_indices = [2, 5, 8, 11]
-
         # Convert them all to numpy arrays
         lin_acc = np.array(self.mat_data['imu_acc'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 3)
         ang_vel = np.array(self.mat_data['imu_omega'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 3)
         j_p = np.array(self.mat_data['q'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)
         j_v = np.array(self.mat_data['qd'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)
         j_T = np.array(self.mat_data['tau'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)
-        z_grfs = np.squeeze(np.array(self.mat_data['F'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)[-1,z_indices])
+        grfs = np.squeeze(np.array(self.mat_data['F'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12))[-1]
         r_p = np.array(self.mat_data['r_p'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 3)
         r_quat = np.array(self.mat_data['r_o'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 4)
         timestamps = np.array(self.mat_data['timestamps'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 3)
 
+        world_to_body_R = Rotation.from_quat(r_quat[-1])
+        grfs_T = np.array(grfs.reshape(4, 3), dtype=np.double).T
+        grfs_body = (world_to_body_R.as_matrix() @ grfs_T).T
+        grfs = grfs_body.flatten()
+
         # Convert the lin_acc and ang_vel from body frame to world frame
-        for i in range(0, self.history_length):
-            world_to_body_R = Rotation.from_quat(r_quat[i])
-            body_to_world_R = world_to_body_R.inv().as_matrix()
-            lin_acc_T = np.array([[lin_acc[i][0]], [lin_acc[i][1]], [lin_acc[i][2]]], dtype=np.double)
-            ang_vel_T = np.array([[ang_vel[i][0]], [ang_vel[i][1]], [ang_vel[i][2]]], dtype=np.double)
-            lin_acc[i] = ((body_to_world_R @ lin_acc_T).T)[0]
-            ang_vel[i] = ((body_to_world_R @ ang_vel_T).T)[0]
+        # for i in range(0, self.history_length):
+        #     world_to_body_R = Rotation.from_quat(r_quat[i])
+        #     body_to_world_R = world_to_body_R.inv().as_matrix()
+        #     lin_acc_T = np.array([[lin_acc[i][0]], [lin_acc[i][1]], [lin_acc[i][2]]], dtype=np.double)
+        #     ang_vel_T = np.array([[ang_vel[i][0]], [ang_vel[i][1]], [ang_vel[i][2]]], dtype=np.double)
+        #     lin_acc[i] = ((body_to_world_R @ lin_acc_T).T)[0]
+        #     ang_vel[i] = ((body_to_world_R @ ang_vel_T).T)[0]
+
+        return lin_acc, ang_vel, j_p, j_v, j_T, None, None, grfs, r_p, r_quat, timestamps
+    
+    def load_data_at_dataset_seq_1d(self, seq_num: int):
+        z_indices = [2, 5, 8, 11]
+        lin_acc, ang_vel, j_p, j_v, j_T, _, _, grfs, r_p, r_quat, timestamps = self.load_data_at_dataset_seq_3d(seq_num)
+        z_grfs = grfs[z_indices]
 
         return lin_acc, ang_vel, j_p, j_v, j_T, None, None, z_grfs, r_p, r_quat, timestamps
-
+    
 
 class QuadSDKDataset_Go2(QuadSDKDataset):
     # ===================== DATASET PROPERTIES =======================
