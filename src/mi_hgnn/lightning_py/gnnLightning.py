@@ -23,6 +23,8 @@ from .hgnn_k4_com import COM_HGNN_K4
 from torch_geometric.profile import count_parameters
 from ..datasets_py.flexibleDataset import FlexibleDataset
 from ..datasets_py.soloDataset import Standarizer
+from scipy.spatial.transform import Rotation
+
 
 class Base_Lightning(L.LightningModule):
     """
@@ -455,7 +457,8 @@ class Heterogeneous_GNN_Lightning(Base_Lightning):
         y_pred = torch.reshape(out_raw.squeeze(), (batch_size, self.model.out_channels_per_foot * 4))
 
         # Get the labels
-        y = torch.reshape(batch.y, (batch_size, 4))
+        y = torch.reshape(batch.y, (batch_size, self.model.out_channels_per_foot * 4))
+
         return y, y_pred
 
 class HGNN_K4_Lightning(Base_Lightning):
@@ -513,7 +516,8 @@ class HGNN_C2_Lightning(Base_Lightning):
     def __init__(self, hidden_channels: int, num_layers: int, data_metadata,
                  dummy_batch, optimizer: str = "adam", lr: float = 0.003,
                  regression: bool = True, activation_fn = nn.ReLU(),
-                 symmetry_mode: str = None, group_operator_path: str = None):
+                 symmetry_mode: str = None, group_operator_path: str = None,
+                 grf_body_to_world_frame: bool = True, grf_dimension: int = 3):
         """
         Constructor for Heterogeneous GNN with K4 structure.
 
@@ -532,7 +536,8 @@ class HGNN_C2_Lightning(Base_Lightning):
                               regression=regression,
                               activation_fn=activation_fn,
                               symmetry_mode=symmetry_mode,
-                              group_operator_path=group_operator_path)
+                              group_operator_path=group_operator_path,
+                              grf_dimension=grf_dimension)
         self.regression = regression
 
         # Initialize lazy modules
@@ -540,7 +545,47 @@ class HGNN_C2_Lightning(Base_Lightning):
             self.model(x_dict=dummy_batch.x_dict,
                        edge_index_dict=dummy_batch.edge_index_dict)
         self.save_hyperparameters()
+        
+        # Setup the metrics
+        # To compare fairly with MI-HGNN, we should use the merics on the world frame
+        self.body_to_world_frame = grf_body_to_world_frame
+        if self.body_to_world_frame:
+            self.metric_mse_worldframe: torchmetrics.MeanSquaredError = torchmetrics.regression.MeanSquaredError(squared=True)
+            self.metric_rmse_worldframe: torchmetrics.MeanSquaredError = torchmetrics.regression.MeanSquaredError(squared=False)
+            self.metric_l1_worldframe: torchmetrics.MeanAbsoluteError = torchmetrics.regression.MeanAbsoluteError()
 
+            self.mse_loss_worldframe = None
+            self.rmse_loss_worldframe = None
+            self.l1_loss_worldframe = None
+
+    def log_losses_worldframe(self, step_name: str, on_step: bool):
+        self.log_losses(step_name, on_step)
+        self.log(step_name + "_MSE_loss_WorldFrame", self.mse_loss_worldframe, on_step=on_step, on_epoch=not on_step)
+        self.log(step_name + "_RMSE_loss_WorldFrame", self.rmse_loss_worldframe, on_step=on_step, on_epoch=not on_step)
+        self.log(step_name + "_L1_loss_WorldFrame", self.l1_loss_worldframe, on_step=on_step, on_epoch=not on_step)
+
+    def calculate_losses_step_worldframe(self, y: torch.Tensor, y_pred: torch.Tensor, batch_r_quat: torch.Tensor):
+        self.calculate_losses_step(y, y_pred)
+        y_world = self.body_frame_to_world_frame(batch_r_quat, y)
+        y_pred_world = self.body_frame_to_world_frame(batch_r_quat, y_pred)
+        self.mse_loss_worldframe = self.metric_mse_worldframe(y_pred_world, y_world)
+        self.rmse_loss_worldframe = self.metric_rmse_worldframe(y_pred_world, y_world)
+        self.l1_loss_worldframe = self.metric_l1_worldframe(y_pred_world, y_world)
+
+    def body_frame_to_world_frame(self, batch_r_quat, grf_bodyFrame):
+        '''
+        Convert the force from body frame to world frame.
+        batch_r_quat: the quaternion of the body frame, shape: (N, 4)
+        grf_bodyFrame: the force in the body frame, shape: (N, 4*3), or (N, 4*1) if only z axis is considered
+        '''
+        batch_r_quat = batch_r_quat.cpu().numpy()
+        world_to_body_R = Rotation.from_quat(batch_r_quat)
+        body_to_world_R = world_to_body_R.inv().as_matrix() # shape: (3, 3)
+        body_to_world_R = torch.from_numpy(body_to_world_R).to(grf_bodyFrame.device)
+        grf_bodyFrame = grf_bodyFrame.view(-1, 4, 3).permute(0, 2, 1)
+        force_world = (body_to_world_R @ grf_bodyFrame).permute(0, 2, 1).flatten(start_dim=1)
+        return force_world
+    
     # Rewrite the step helper function to match the base class
     # Same with Heterogeneous_GNN_Lightning()
     def step_helper_function(self, batch):
@@ -557,8 +602,91 @@ class HGNN_C2_Lightning(Base_Lightning):
         y_pred = torch.reshape(out_raw.squeeze(), (batch_size, self.model.out_channels_per_foot * 4))
 
         # Get the labels
-        y = torch.reshape(batch.y, (batch_size, 4))
+        y = torch.reshape(batch.y, (batch_size, self.model.out_channels_per_foot * 4))
         return y, y_pred
+
+    def calculate_losses_epoch_worldframe(self) -> None:
+        self.calculate_losses_epoch()
+        self.mse_loss_worldframe = self.metric_mse_worldframe.compute()
+        self.rmse_loss_worldframe = self.metric_rmse_worldframe.compute()
+        self.l1_loss_worldframe = self.metric_l1_worldframe.compute()
+
+    def reset_all_metrics_worldframe(self) -> None:
+        self.reset_all_metrics()
+        self.metric_mse_worldframe.reset()
+        self.metric_rmse_worldframe.reset()
+        self.metric_l1_worldframe.reset()
+
+    def training_step(self, batch, batch_idx):
+        y, y_pred = self.step_helper_function(batch)
+        if self.body_to_world_frame:
+            batch_r_quat = batch.r_o.view(batch.batch_size, 4)
+            self.calculate_losses_step_worldframe(y, y_pred, batch_r_quat)
+            self.log_losses_worldframe("train", on_step=True)
+            return self.mse_loss
+        else:
+            self.calculate_losses_step(y, y_pred)
+            self.log_losses("train", on_step=True)
+            if self.regression:
+                return self.mse_loss
+            else:
+                return self.ce_loss
+
+    # ======================= Validation =======================
+    def on_validation_epoch_start(self):
+        if self.body_to_world_frame:
+            self.reset_all_metrics_worldframe()
+        else:
+            self.reset_all_metrics()
+
+    def validation_step(self, batch, batch_idx):
+        y, y_pred = self.step_helper_function(batch)
+        if self.body_to_world_frame:
+            batch_r_quat = batch.r_o.view(batch.batch_size, 4)
+            self.calculate_losses_step_worldframe(y, y_pred, batch_r_quat)
+            return self.mse_loss
+        else:
+            self.calculate_losses_step(y, y_pred)
+            if self.regression:
+                return self.mse_loss
+            else:
+                return self.ce_loss
+
+    def on_validation_epoch_end(self):
+        if self.body_to_world_frame:
+            self.calculate_losses_epoch_worldframe()
+            self.log_losses_worldframe("val", on_step=False)
+        else:
+            self.calculate_losses_epoch()
+            self.log_losses("val", on_step=False)
+
+    # ======================= Testing =======================
+    def on_test_epoch_start(self):
+        if self.body_to_world_frame:
+            self.reset_all_metrics_worldframe()
+        else:
+            self.reset_all_metrics()
+
+    def test_step(self, batch, batch_idx):
+        y, y_pred = self.step_helper_function(batch)
+        if self.body_to_world_frame:
+            batch_r_quat = batch.r_o.view(batch.batch_size, 4)
+            self.calculate_losses_step_worldframe(y, y_pred, batch_r_quat)
+            return self.mse_loss
+        else:
+            self.calculate_losses_step(y, y_pred)
+            if self.regression:
+                return self.mse_loss
+            else:
+                return self.ce_loss
+
+    def on_test_epoch_end(self):
+        if self.body_to_world_frame:
+            self.calculate_losses_epoch_worldframe()
+            self.log_losses_worldframe("test", on_step=False)
+        else:
+            self.calculate_losses_epoch()
+            self.log_losses("test", on_step=False)
 
 class COM_HGNN_Lightning(Base_Lightning):
     def __init__(self, hidden_channels: int, num_layers: int, data_metadata,
@@ -901,7 +1029,8 @@ def evaluate_model(path_to_checkpoint: Path, predict_dataset: Subset,
                    enable_testing_mode: bool = False,
                    symmetry_mode: str = None,
                    group_operator_path: str = None,
-                   data_path: Path = None):
+                   data_path: Path = None, 
+                   batch_size: int = 100):
     """
     Runs the provided model on the corresponding dataset,
     and returns the predicted values and the ground truth values.
@@ -979,7 +1108,7 @@ def evaluate_model(path_to_checkpoint: Path, predict_dataset: Subset,
     model.freeze()
 
     # Create a validation dataloader
-    valLoader: DataLoader = DataLoader(predict_dataset, batch_size=100, shuffle=False, num_workers=15)
+    valLoader: DataLoader = DataLoader(predict_dataset, batch_size=batch_size, shuffle=False, num_workers=15)
 
     # Predict with the model
     pred = torch.zeros((0, 4))
@@ -1070,8 +1199,10 @@ def train_model(
         symmetry_mode: str = None,
         group_operator_path: str = None,
         subfoler_name: str = 'default',
-        data_path: Path = None,
-        wandb_api_key: str = None):
+        data_path: Path = None, # Only used for COM_HGNN, not used for other models
+        wandb_api_key: str = None,
+        grf_body_to_world_frame: bool = True, # Whether to convert GRF to world frame, only used for heterogeneous_gnn_c2
+        grf_dimension: int = 3): # Dimension of GRF, only used for heterogeneous_gnn_c2
     """
     Train a learning model with the input datasets. If 
     'testing_mode' is enabled, limit the batches and epoch size
@@ -1213,7 +1344,9 @@ def train_model(
             lr=lr,
             regression=regression,
             symmetry_mode=symmetry_mode,
-            group_operator_path=group_operator_path)
+            group_operator_path=group_operator_path,
+            grf_body_to_world_frame=grf_body_to_world_frame,
+            grf_dimension=grf_dimension)
         model_parameters = count_parameters(lightning_model.model)
     elif model_type == 'heterogeneous_gnn_k4_com' or model_type == 'heterogeneous_gnn_s4_com':
         lightning_model = COM_HGNN_Lightning(

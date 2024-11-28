@@ -28,12 +28,16 @@ class QuadSDKDataset_NewGraph(QuadSDKDataset):
                  path_to_urdf_dynamics=None,
                  symmetry_operator=None,  # Can be 'gs' or 'gt' or 'gr' or None
                  symmetry_mode=None, # Can be 'Euclidean' or 'MorphSym' or None
-                 group_operator_path=None):
+                 group_operator_path=None,
+                 grf_body_to_world_frame=False,
+                 grf_dimension=1):
 
         # Set the symmetry parameters
         self.symmetry_operator = symmetry_operator
         self.symmetry_mode = symmetry_mode
         self.group_operator_path = group_operator_path 
+        self.grf_body_to_world_frame = grf_body_to_world_frame
+        self.grf_dimension = grf_dimension
 
         # TODO: should be checked, how to support c2 symmetry
         if self.symmetry_operator is not None:
@@ -93,8 +97,13 @@ class QuadSDKDataset_NewGraph(QuadSDKDataset):
 
     # ===================== DATA LOADING ==========================
     def load_data_sorted_c2(self, seq_num: int):
-        lin_acc, ang_vel, j_p, j_v, j_T, f_p, f_v, labels, r_p, r_o, timestamps = self.load_data_at_dataset_seq(seq_num)
-
+        if self.grf_dimension == 1:
+            lin_acc, ang_vel, j_p, j_v, j_T, f_p, f_v, labels, r_p, r_o, timestamps = self.load_data_at_dataset_seq(seq_num)
+        elif self.grf_dimension == 3:
+            lin_acc, ang_vel, j_p, j_v, j_T, f_p, f_v, labels, r_p, r_o, timestamps = self.load_data_at_dataset_seq_3d(seq_num)
+        else:
+            raise ValueError(f"Invalid grf_dimension: {self.grf_dimension}")
+        
         # duplicate the base information for each base node, no need to sort
         # lin_acc, ang_vel shape: [history_length, 3] ==> [history_length, 2*3]
         lin_acc = np.tile(lin_acc, (1, 2))
@@ -136,8 +145,15 @@ class QuadSDKDataset_NewGraph(QuadSDKDataset):
         labels_sorted = None
         if labels is None:
             raise ValueError("Dataset must provide labels.")
-        else:
+        elif self.grf_dimension == 1:
             labels_sorted = labels[self.foot_node_indices_sorted]
+        elif self.grf_dimension == 3:
+            unsorted_grfs = labels
+            sorted_grfs = []
+            for index in self.foot_node_indices_sorted:
+                for i in range(0, 3):
+                    sorted_grfs.append(int(index*3+i))
+            labels_sorted = unsorted_grfs[sorted_grfs]
 
         if self.symmetry_operator is not None:
             labels_sorted = self.apply_symmetry([labels_sorted], part='label')[0]
@@ -185,11 +201,14 @@ class QuadSDKDataset_NewGraph(QuadSDKDataset):
             elif part == 'foot':
                 permutation_Q = self.permutation_Q_fs
                 coefficients = self.foot_coefficients
-            elif part == 'label': 
-                # for labels, data shape: (4,), for classification task, 
-                # we need to apply Euclidean symmetry to labels
+            elif part == 'label' and self.grf_dimension == 1: 
+                # for labels, data shape: (4,) for 1D GRF
                 permutation_Q = self.permutation_Q_ls
                 coefficients = self.label_coefficients
+            elif part == 'label' and self.grf_dimension == 3:
+                # for labels, data shape: (3*4, ) for 3D GRF
+                permutation_Q = self.permutation_Q_fs
+                coefficients = self.foot_coefficients
             else:
                 raise ValueError(f"Invalid part: {part}")
 
@@ -199,7 +218,7 @@ class QuadSDKDataset_NewGraph(QuadSDKDataset):
                 if data is None:
                     new_data_list.append(None)
                     continue
-                # for labels, data shape: (4,)
+                # for labels, data shape: (4,) or (3*4, )
                 if data.ndim == 1: 
                     if self.symmetry_operator == 'gs':
                         data = data[permutation_Q[0]].copy() * coefficients['gs']
@@ -343,6 +362,10 @@ class QuadSDKDataset_NewGraph(QuadSDKDataset):
         data['foot'].x = foot_x
         data.num_nodes = sum(self.hgnn_number_nodes)
 
+        if self.grf_body_to_world_frame:    
+            # Use the world frame GRF as the target
+            data.r_o = torch.tensor(r_o[-1], dtype=torch.float64) # shape:(4,)
+
         return data
 
     # ===================== Tools ===============================
@@ -372,72 +395,6 @@ class QuadSDKDataset_NewGraph(QuadSDKDataset):
 # ================================================================
 # ======================== SUBCLASSES ============================
 # ================================================================
-'''
-class QuadSDKDataset_A1_DEPRECATED(QuadSDKDataset):
-    """
-    Note: This class is deprecated, but is kept around to support 
-    test cases that ensure the FlexibleDataset is working. Don't
-    use this class for any development, as the units/frames of the
-    values aren't verified and the sorting values might not be 
-    correct.
-    """
-
-    # ===================== DATASET PROPERTIES =======================
-    def get_expected_urdf_name(self):
-        return "a1"
-    
-    # ============= DATA SORTING ORDER AND MAPPINGS ==================    
-    def get_urdf_name_to_dataset_array_index(self):
-        # Our URDF order for A1 robot is FR, FL, RR, RL.
-        
-        return {
-            # Order of joint data can be found here: https://github.com/robomechanics/quad-sdk/wiki/FAQ.
-            # Note: Because they refer to the first joint as the abduction/adduction joint, and the second 
-            # joint as the hip joint, this means that our "hip_joint" corresponds to their abduction/adduction 
-            # joint, and our "thigh_joint" corresponds to what they call the hip joint.
-            'floating_base': 0,
-            
-            'FR_hip_joint': 6,
-            'FR_thigh_joint': 7,
-            'FR_calf_joint': 8,
-            'FL_hip_joint': 0,
-            'FL_thigh_joint': 1,
-            'FL_calf_joint': 2,
-            'RR_hip_joint': 9,
-            'RR_thigh_joint': 10,
-            'RR_calf_joint': 11,
-            'RL_hip_joint': 3,
-            'RL_thigh_joint': 4,
-            'RL_calf_joint': 5,
-
-            # Label order is from here: https://github.com/lunarlab-gatech/quad_sdk_fork/blob/devel/quad_simulator/gazebo_scripts/src/contact_state_publisher.cpp,
-            # referring to the URDF to see order of toes. It's the same order as the joint data.
-
-            'FR_foot_fixed': 2,
-            'FL_foot_fixed': 0,
-            'RR_foot_fixed': 3,
-            'RL_foot_fixed': 1 
-        }
-    
-    # ======================== DATA LOADING ==========================
-    def load_data_at_dataset_seq(self, seq_num: int):
-        # Outline the indices to extract the just the Z-GRFs
-        z_indices = [2, 5, 8, 11]
-
-        # Convert them all to numpy arrays
-        lin_acc = np.array(self.mat_data['imu_acc'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 3)
-        ang_vel = np.array(self.mat_data['imu_omega'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 3)
-        j_p = np.array(self.mat_data['q'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)
-        j_v = np.array(self.mat_data['qd'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)
-        j_T = np.array(self.mat_data['tau'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)
-        z_grfs = np.squeeze(np.array(self.mat_data['F'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)[-1,z_indices])
-        r_p = np.array(self.mat_data['r_p'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 3)
-        r_quat = np.array(self.mat_data['r_o'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 4)
-        timestamps = np.array(self.mat_data['timestamps'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 3)
-
-        return lin_acc, ang_vel, j_p, j_v, j_T, None, None, z_grfs, r_p, r_quat, timestamps
-'''
-
 class QuadSDKDataset_A1(QuadSDKDataset_NewGraph):
     # ===================== DATASET PROPERTIES =======================
     def get_expected_urdf_name(self):
@@ -483,41 +440,8 @@ class QuadSDKDataset_A1(QuadSDKDataset_NewGraph):
             'jtoe3': 3,
         }
 
-    '''
-    def urdf_to_pin_order_mapping(self):
-        """
-        See flexibleDataset.py for definition of this function.
-
-        Nb joints = 14 (nq=19,nv=18)
-            Joint 0 universe: parent=0
-            Joint 1 root_joint: parent=0
-            Joint 2 10: parent=1
-            Joint 3 4: parent=2
-            Joint 4 5: parent=3
-            Joint 5 11: parent=1
-            Joint 6 6: parent=5
-            Joint 7 7: parent=6
-            Joint 8 8: parent=1
-            Joint 9 0: parent=8
-            Joint 10 1: parent=9
-            Joint 11 9: parent=1
-            Joint 12 2: parent=11
-            Joint 13 3: parent=12
-
-             Therefore pinnochio order is FR, RR, FL, RL.
-           The A1-Quad URDF order is FL, RL, FR, RR.
-           This gives the URDF->Pin mapping seen below.
-        """
-
-        # Specifically for the Go2 Robot. 
-        return [6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5], [2, 3, 0, 1]
-    
-    def pin_to_urdf_order_mapping(self):
-        return [6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5], [2, 3, 0, 1]
-    '''
-
     # ======================== DATA LOADING ==========================
-    def load_data_at_dataset_seq(self, seq_num: int):
+    def load_data_at_dataset_seq_3d(self, seq_num: int):
         """
         The units of the return values are as follows:
         - lin_acc (meters/sec^2, represented in the world frame (converted from body frame))
@@ -537,19 +461,12 @@ class QuadSDKDataset_A1(QuadSDKDataset_NewGraph):
         - f_p (meters, represented in robot's body frame) 
         - f_v (meters/sec, represented in robot's body frame)
         """
-
-        # TODO: This should be GRF, not Z-GRF
-        # Outline the indices to extract the just the Z-GRFs
-        z_indices = [2, 5, 8, 11]
-
         # Convert them all to numpy arrays
         lin_acc = np.array(self.mat_data['imu_acc'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 3)
         ang_vel = np.array(self.mat_data['imu_omega'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 3)
         j_p = np.array(self.mat_data['q'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)
         j_v = np.array(self.mat_data['qd'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)
         j_T = np.array(self.mat_data['tau'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)
-        # TODO: This should be GRF, not Z-GRF
-        # z_grfs = np.squeeze(np.array(self.mat_data['F'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)[-1,z_indices])
         grfs = np.squeeze(np.array(self.mat_data['F'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12))[-1]
         r_p = np.array(self.mat_data['r_p'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 3)
         r_quat = np.array(self.mat_data['r_o'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 4)
@@ -560,160 +477,14 @@ class QuadSDKDataset_A1(QuadSDKDataset_NewGraph):
         grfs_body = (world_to_body_R.as_matrix() @ grfs_T).T
         grfs = grfs_body.flatten()
 
+        return lin_acc, ang_vel, j_p, j_v, j_T, None, None, grfs, r_p, r_quat, timestamps
+
+    def load_data_at_dataset_seq(self, seq_num: int):
+        z_indices = [2, 5, 8, 11]
+        lin_acc, ang_vel, j_p, j_v, j_T, grfs, r_p, r_quat, timestamps = self.load_data_at_dataset_seq_3d(seq_num)
         z_grfs = grfs[z_indices]
 
-        # Convert the lin_acc and ang_vel from body frame to world frame
-        # for i in range(0, self.history_length):
-        #     world_to_body_R = Rotation.from_quat(r_quat[i])
-        #     body_to_world_R = world_to_body_R.inv().as_matrix()
-        #     lin_acc_T = np.array([[lin_acc[i][0]], [lin_acc[i][1]], [lin_acc[i][2]]], dtype=np.double)
-        #     ang_vel_T = np.array([[ang_vel[i][0]], [ang_vel[i][1]], [ang_vel[i][2]]], dtype=np.double)
-        #     lin_acc[i] = ((body_to_world_R @ lin_acc_T).T)[0]
-        #     ang_vel[i] = ((body_to_world_R @ ang_vel_T).T)[0]
-
         return lin_acc, ang_vel, j_p, j_v, j_T, None, None, z_grfs, r_p, r_quat, timestamps
-
-'''
-class QuadSDKDataset_Go2(QuadSDKDataset):
-    # ===================== DATASET PROPERTIES =======================
-    def get_expected_urdf_name(self):
-        return "go2_description"
-    
-    # ============= DATA SORTING ORDER AND MAPPINGS ==================    
-    def get_urdf_name_to_dataset_array_index(self):
-        # Our URDF order for the Go2 is FR, FL, RR, RL.
-
-        return {
-            'floating_base': 0,
-            
-            # Joint Order is specified here: https://github.com/robomechanics/quad-sdk/wiki/FAQ .
-            # It goes abd->hip->knee, which in our framing, is hip->thigh->calf, and this matches
-            # our URDF order.
-            # Leg order goes FL, RL, FR, RR, which matches our URDF order of FL, RL, FR, RR.
-
-            # FL Leg
-            '8': 0,
-            '0': 1,
-            '1': 2,
-
-            # RL Leg
-            '9': 3,
-            '2': 4,
-            '3': 5,
-
-            # FR Leg
-            '10': 6,
-            '4': 7,
-            '5': 8,
-
-            # RR Leg
-            '11': 9,
-            '6': 10,
-            '7': 11,
-
-            # Feet orders (which matches leg orders)
-            'jtoe0': 0,
-            'jtoe1': 1,
-            'jtoe2': 2,
-            'jtoe3': 3,
-        }
-
-    
-    def urdf_to_pin_order_mapping(self):
-        """
-        See flexibleDataset.py for definition of this function.
-
-        Nb joints = 14 (nq=19,nv=18)
-            Joint 0 universe: parent=0
-            Joint 1 root_joint: parent=0
-            Joint 2 10: parent=1
-            Joint 3 4: parent=2
-            Joint 4 5: parent=3
-            Joint 5 11: parent=1
-            Joint 6 6: parent=5
-            Joint 7 7: parent=6
-            Joint 8 8: parent=1
-            Joint 9 0: parent=8
-            Joint 10 1: parent=9
-            Joint 11 9: parent=1
-            Joint 12 2: parent=11
-            Joint 13 3: parent=12
-
-             Therefore their order is FR, RR, FL, RL.
-           The Go2-Quad URDF order is FL, RL, FR, RR.
-           This gives the URDF->Pin mapping seen below.
-        """
-
-        # Specifically for the Go2 Robot. 
-        return [6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5], [2, 3, 0, 1]
-    
-    def pin_to_urdf_order_mapping(self):
-        return [6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5], [2, 3, 0, 1]
-
-    # ======================== DATA LOADING ==========================
-    def load_data_at_dataset_seq(self, seq_num: int):
-        """
-        The units of the return values are as follows:
-        - lin_acc (meters/sec^2, represented in the world frame (converted from body frame))
-        - ang_vel (rad/sec, represented in the world frame (converted from body frame))
-        - j_p (rad)
-        - j_v (rad/sec)
-        - j_T (Newton-meters)
-        - z_grfs (Newtons, represented in the world frame)
-        - r_p (meters, represented in the world frame)
-        - r_quat (N/A (Quaternion), represented in the world frame) (x, y, z, w)
-        - timestamps (secs)
-
-        This dataset does have the following values available, but doesn't load
-        them because they aren't employed by the Dynamics model, so we don't
-        want them included in the learning model automatically.
-
-        - f_p (meters, represented in robot's body frame) 
-        - f_v (meters/sec, represented in robot's body frame)
-        """
-
-        # Outline the indices to extract the just the Z-GRFs
-        z_indices = [2, 5, 8, 11]
-
-        # Convert them all to numpy arrays
-        lin_acc = np.array(self.mat_data['imu_acc'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 3)
-        ang_vel = np.array(self.mat_data['imu_omega'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 3)
-        j_p = np.array(self.mat_data['q'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)
-        j_v = np.array(self.mat_data['qd'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)
-        j_T = np.array(self.mat_data['tau'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)
-        z_grfs = np.squeeze(np.array(self.mat_data['F'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)[-1,z_indices])
-        r_p = np.array(self.mat_data['r_p'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 3)
-        r_quat = np.array(self.mat_data['r_o'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 4)
-        timestamps = np.array(self.mat_data['timestamps'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 3)
-
-        # Convert the lin_acc and ang_vel from body frame to world frame
-        for i in range(0, self.history_length):
-            world_to_body_R = Rotation.from_quat(r_quat[i])
-            body_to_world_R = world_to_body_R.inv().as_matrix()
-            lin_acc_T = np.array([[lin_acc[i][0]], [lin_acc[i][1]], [lin_acc[i][2]]], dtype=np.double)
-            ang_vel_T = np.array([[ang_vel[i][0]], [ang_vel[i][1]], [ang_vel[i][2]]], dtype=np.double)
-            lin_acc[i] = ((body_to_world_R @ lin_acc_T).T)[0]
-            ang_vel[i] = ((body_to_world_R @ ang_vel_T).T)[0]
-
-        return lin_acc, ang_vel, j_p, j_v, j_T, None, None, z_grfs, r_p, r_quat, timestamps
-
-# ================================================================
-# ===================== DATASET SEQUENCES ========================
-# ================================================================
-
-# A1_DEPRECATED
-class QuadSDKDataset_A1Speed0_5_DEPRECATED(QuadSDKDataset_A1_DEPRECATED):
-    def get_file_id_and_loc(self):
-        return "17tvm0bmipTpueehUNQ-hJ8w5arc79q0M", "Google"
-
-class QuadSDKDataset_A1Speed1_0_DEPRECATED(QuadSDKDataset_A1_DEPRECATED):
-    def get_file_id_and_loc(self):
-        return "1qSdm8Rm6UazwhzCV5DfMHF0AoyKNrthf", "Google"
-
-class QuadSDKDataset_A1Speed1_5FlippedOver_DEPRECATED(QuadSDKDataset_A1_DEPRECATED):
-    def get_file_id_and_loc(self):
-        return "1h5CN-IIJlLnMvWp0sk5Ho-hiJq2NMqCT", "Google"
-'''
 
 # A1
 class QuadSDKDataset_A1_Alpha(QuadSDKDataset_A1):
@@ -820,8 +591,3 @@ class QuadSDKDataset_A1_Uniform(QuadSDKDataset_A1):
     # Speed: 1.00 mps, Terrain: Rough, Mu: 50
     def get_file_id_and_loc(self):
         return "https://www.dropbox.com/scl/fi/fswpwmltqgwxa8pwb1rif/robot_1_a1_1p0mps_rough_mu1_50_mu2_50_trial1_2024-09-10-17-19-24.bag?rlkey=gqjn6458dt5rbmhv1klymm6xl&st=f9obhple&dl=1", "Dropbox"
-
-# Go2
-# class QuadSDKDataset_Go2_Flat_Speed0_5_Mu_50(QuadSDKDataset_Go2):
-#     def get_file_id_and_loc(self):
-#         return "https://www.dropbox.com/scl/fi/qxsgvg9qhg6fmhkkrpdtp/robot_1_go2_0.5mps_mu50_mu250_trial1_2024-09-02-18-54-26.bag?rlkey=f9rjl7r4cvejupxharda64ctj&st=fy9g8fn2&dl=1", "Dropbox"

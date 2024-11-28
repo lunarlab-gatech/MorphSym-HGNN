@@ -28,18 +28,18 @@ def init_test_datasets_debug(a1Dataset, path_to_urdf, path_to_urdf_dynamics, mod
     return to_evaluate, dataset_names
 
 
-def init_test_datasets(a1Dataset, path_to_urdf, path_to_urdf_dynamics, model_type, history_length, normalize, swap_legs):
+def init_test_datasets(a1Dataset, path_to_urdf, path_to_urdf_dynamics, model_type, history_length, normalize, symmetry_operator, symmetry_mode, group_operator_path, grf_body_to_world_frame, grf_dimension):
     # ======================= Initalize the test datasets =======================
     
     # Unseen Friction
     alpha = a1Dataset.QuadSDKDataset_A1_Alpha(Path(Path('.').parent, 'datasets', 'QuadSDK-A1-Alpha').absolute(), path_to_urdf, 
-                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics)
+                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics, symmetry_operator, symmetry_mode, group_operator_path, grf_body_to_world_frame, grf_dimension)
     delta = a1Dataset.QuadSDKDataset_A1_Delta(Path(Path('.').parent, 'datasets', 'QuadSDK-A1-Delta').absolute(), path_to_urdf, 
-                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics)
+                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics, symmetry_operator, symmetry_mode, group_operator_path, grf_body_to_world_frame, grf_dimension)
     india = a1Dataset.QuadSDKDataset_A1_India(Path(Path('.').parent, 'datasets', 'QuadSDK-A1-India').absolute(), path_to_urdf, 
-                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics)
+                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics, symmetry_operator, symmetry_mode, group_operator_path, grf_body_to_world_frame, grf_dimension)
     lima = a1Dataset.QuadSDKDataset_A1_Lima(Path(Path('.').parent, 'datasets', 'QuadSDK-A1-Lima').absolute(), path_to_urdf, 
-                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics)
+                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics, symmetry_operator, symmetry_mode, group_operator_path, grf_body_to_world_frame, grf_dimension)
     unseen_friction_dataset = [alpha, delta, india, lima]
     for i, dataset in enumerate(unseen_friction_dataset): # Remove last entry, as dynamics can't use it.
         unseen_friction_dataset[i] = torch.utils.data.Subset(dataset, np.arange(0, dataset.__len__() - 1))
@@ -47,13 +47,13 @@ def init_test_datasets(a1Dataset, path_to_urdf, path_to_urdf_dynamics, model_typ
     
     # Unseen Speed
     quebec = a1Dataset.QuadSDKDataset_A1_Quebec(Path(Path('.').parent, 'datasets', 'QuadSDK-A1-Quebec').absolute(), path_to_urdf, 
-                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics)
+                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics, symmetry_operator, symmetry_mode, group_operator_path, grf_body_to_world_frame, grf_dimension)
     romeo = a1Dataset.QuadSDKDataset_A1_Romeo(Path(Path('.').parent, 'datasets', 'QuadSDK-A1-Romeo').absolute(), path_to_urdf, 
-                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics)
+                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics, symmetry_operator, symmetry_mode, group_operator_path, grf_body_to_world_frame, grf_dimension)
     sierra = a1Dataset.QuadSDKDataset_A1_Sierra(Path(Path('.').parent, 'datasets', 'QuadSDK-A1-Sierra').absolute(), path_to_urdf, 
-                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics)
+                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics, symmetry_operator, symmetry_mode, group_operator_path, grf_body_to_world_frame, grf_dimension)
     tango = a1Dataset.QuadSDKDataset_A1_Tango(Path(Path('.').parent, 'datasets', 'QuadSDK-A1-Tango').absolute(), path_to_urdf, 
-                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics)
+                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics, symmetry_operator, symmetry_mode, group_operator_path, grf_body_to_world_frame, grf_dimension)
     unseen_speed_dataset = [quebec, romeo, sierra, tango]
     for i, dataset in enumerate(unseen_speed_dataset):
         unseen_speed_dataset[i] = torch.utils.data.Subset(dataset, np.arange(0, dataset.__len__() - 1))
@@ -61,13 +61,13 @@ def init_test_datasets(a1Dataset, path_to_urdf, path_to_urdf_dynamics, model_typ
     
     # Unseen Terrain
     golf = a1Dataset.QuadSDKDataset_A1_Golf(Path(Path('.').parent, 'datasets', 'QuadSDK-A1-Golf').absolute(), path_to_urdf, 
-                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics)
+                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics, symmetry_operator, symmetry_mode, group_operator_path, grf_body_to_world_frame, grf_dimension)
     hotel = a1Dataset.QuadSDKDataset_A1_Hotel(Path(Path('.').parent, 'datasets', 'QuadSDK-A1-Hotel').absolute(), path_to_urdf, 
-                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics)
+                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics, symmetry_operator, symmetry_mode, group_operator_path, grf_body_to_world_frame, grf_dimension)
     oscar = a1Dataset.QuadSDKDataset_A1_Oscar(Path(Path('.').parent, 'datasets', 'QuadSDK-A1-Oscar').absolute(), path_to_urdf, 
-                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics)
+                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics, symmetry_operator, symmetry_mode, group_operator_path, grf_body_to_world_frame, grf_dimension)
     papa = a1Dataset.QuadSDKDataset_A1_Papa(Path(Path('.').parent, 'datasets', 'QuadSDK-A1-Papa').absolute(), path_to_urdf, 
-                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics)
+                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics, symmetry_operator, symmetry_mode, group_operator_path, grf_body_to_world_frame, grf_dimension)
     unseen_terrain_dataset = [golf, hotel, oscar, papa]
     for i, dataset in enumerate(unseen_terrain_dataset):
         unseen_terrain_dataset[i] = torch.utils.data.Subset(dataset, np.arange(0, dataset.__len__() - 1))
@@ -75,7 +75,7 @@ def init_test_datasets(a1Dataset, path_to_urdf, path_to_urdf_dynamics, model_typ
 
     # Unseen All (Friction, Speed, and Terrain)
     uniform = a1Dataset.QuadSDKDataset_A1_Uniform(Path(Path('.').parent, 'datasets', 'QuadSDK-A1-Uniform').absolute(), path_to_urdf, 
-                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics, swap_legs=swap_legs)
+                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics, symmetry_operator, symmetry_mode, group_operator_path, grf_body_to_world_frame, grf_dimension)
     unseen_all_dataset = torch.utils.data.ConcatDataset([torch.utils.data.Subset(uniform, np.arange(0, uniform.__len__() - 1))])
 
     # Combine into one test set
@@ -132,18 +132,19 @@ def main(MorphSym_version: str,
          path_to_checkpoint=None,
          symmetry_operator_list=None,
          symmetry_mode=None, # Can be 'Euclidean' or 'MorphSym' or None
-         group_operator_path=None):
+         group_operator_path=None,
+         grf_body_to_world_frame=True,
+         grf_dimension=3,
+         batch_size: int = 100):
 
     if MorphSym_version == 'S4':
         import mi_hgnn.datasets_py.quadSDKDataset as a1Dataset
         model_type = 'heterogeneous_gnn'
-        symmetry_operator_list = [None, (1, 3), (1, 0), (1, 2)]
         symmetry_mode = 'Euclidean'
         legs_dict = {0: 'RL', 1: 'FL', 2: 'RR', 3: 'FR'}
     elif MorphSym_version == 'C2':
         import mi_hgnn.datasets_py.quadSDKDataset_Morph as a1Dataset
         model_type = 'heterogeneous_gnn_c2'
-        symmetry_operator_list = [None, 'gs', 'gt', 'gr']
         symmetry_mode = 'MorphSym'
     else:
         raise ValueError(f"MorphSym_version {MorphSym_version} not supported.")
@@ -169,7 +170,7 @@ def main(MorphSym_version: str,
     # Initialize DataFrame outside the loop
     columns = ["Swap"]
     # Get dataset names from first iteration to set up columns
-    _, dataset_names = init_test_datasets_debug(a1Dataset, path_to_urdf, path_to_urdf_dynamics, model_type, history_length, normalize, None, None, None)
+    _, dataset_names = init_test_datasets(a1Dataset, path_to_urdf, path_to_urdf_dynamics, model_type, history_length, normalize, None, None, None, False, 1)
     for name in dataset_names:
         columns.append(name + "-MSE")
         columns.append(name + "-RMSE")
@@ -181,25 +182,28 @@ def main(MorphSym_version: str,
         print("================================================")
         if symmetry_mode == 'Euclidean':
             print(f"Swapping legs: {legs_dict[symmetry_operator[0]]} and {legs_dict[symmetry_operator[1]]}")
+            swap_str = f"{legs_dict[symmetry_operator[0]]} and {legs_dict[symmetry_operator[1]]}"
         elif symmetry_mode == 'MorphSym':
             print(f"Using symmetry operator: {symmetry_operator}")
+            swap_str = f"{symmetry_operator}"
         else:
             print("No symmetry operator")
+            swap_str = "None"
         print("================================================")
 
         # Initialize test datasets
-        to_evaluate, _ = init_test_datasets_debug(a1Dataset, path_to_urdf, path_to_urdf_dynamics, model_type, history_length, normalize, symmetry_operator, symmetry_mode, group_operator_path)
+        to_evaluate, dataset_names = init_test_datasets(a1Dataset, path_to_urdf, path_to_urdf_dynamics, model_type, history_length, normalize, symmetry_operator, symmetry_mode, group_operator_path, grf_body_to_world_frame, grf_dimension)
 
         # ======================= Evaluation =======================    
-        if symmetry_mode == 'Euclidean':
-            swap_str = f"{legs_dict[symmetry_operator[0]]} and {legs_dict[symmetry_operator[1]]}"
-        elif symmetry_mode == 'MorphSym':
-            swap_str = f"{symmetry_operator}"
-        else:
-            swap_str = "None"
         results = [swap_str]
-        for dataset in to_evaluate:
-            pred, labels, mse, rmse, l1 = evaluate_model(path_to_checkpoint, torch.utils.data.Subset(dataset, np.arange(0, dataset.__len__())))
+        for idx, dataset in enumerate(to_evaluate):
+            print(f"Evaluating {dataset_names[idx]} ...")
+            pred, labels, mse, rmse, l1 = evaluate_model(
+                path_to_checkpoint, 
+                torch.utils.data.Subset(dataset, np.arange(0, dataset.__len__())),
+                symmetry_mode=symmetry_mode,
+                group_operator_path=group_operator_path,
+                batch_size=batch_size)
             results.append(mse.item())
             results.append(rmse.item())
             results.append(l1.item())
@@ -213,18 +217,35 @@ def main(MorphSym_version: str,
         df.to_csv("regression_results.csv", index=False)
 
 if __name__ == '__main__':
+    batch_size = 100
     # K4
     MorphSym_version = 'C2'
-    path_to_checkpoint = "ckpts/Regression Experiment/hgnns/wise-firebrand-23/epoch=27-val_MSE_loss=74.51168.ckpt"
+    path_to_checkpoint = "models/main_grf_c2/wandering-snowflake-1/epoch=15-val_MSE_loss=73.72983-val_L1_loss=1.79910.ckpt"
     group_operator_path = 'cfg/a1-c2.yaml'
     symmetry_operator_list = [None]  # Can be 'gs' or 'gt' or 'gr' or None
     symmetry_mode = 'MorphSym' # Can be 'Euclidean' or 'MorphSym' or None
+    grf_body_to_world_frame = True
+    grf_dimension = 3
 
     if os.path.isdir(path_to_checkpoint):
         checkpoint_files = glob.glob(os.path.join(path_to_checkpoint, "*.ckpt"))
         # Sort checkpoint files by epoch number
         checkpoint_files.sort(key=lambda x: int(x.split('epoch=')[1].split('-')[0]))
         for file in checkpoint_files:
-            main(MorphSym_version=MorphSym_version, path_to_checkpoint=file, symmetry_operator_list=symmetry_operator_list, symmetry_mode=symmetry_mode, group_operator_path=group_operator_path)
+            main(MorphSym_version=MorphSym_version, 
+                 path_to_checkpoint=file, 
+                 symmetry_operator_list=symmetry_operator_list, 
+                 symmetry_mode=symmetry_mode, 
+                 group_operator_path=group_operator_path,
+                 grf_body_to_world_frame=grf_body_to_world_frame,
+                 grf_dimension=grf_dimension,
+                 batch_size=batch_size)
     else:
-        main(MorphSym_version=MorphSym_version, path_to_checkpoint=path_to_checkpoint, symmetry_operator_list=symmetry_operator_list, symmetry_mode=symmetry_mode, group_operator_path=group_operator_path)
+        main(MorphSym_version=MorphSym_version, 
+             path_to_checkpoint=path_to_checkpoint, 
+             symmetry_operator_list=symmetry_operator_list, 
+             symmetry_mode=symmetry_mode, 
+             group_operator_path=group_operator_path,
+             grf_body_to_world_frame=grf_body_to_world_frame,
+             grf_dimension=grf_dimension,
+             batch_size=batch_size)

@@ -11,7 +11,12 @@ def main(seed,
          lr=0.0001,
          epochs=30,
          logger_project_name='grf_c2_debug',
-         model_type='heterogeneous_gnn_c2'):
+         model_type='heterogeneous_gnn_c2',
+         symmetry_operator=None,
+         symmetry_mode='MorphSym',
+         group_operator_path='cfg/a1-c2.yaml',
+         grf_body_to_world_frame=True,
+         grf_dimension=3):
     # ================================= CHANGE THESE ===================================
     wandb_api_key = "eed5fa86674230b63649180cc343f14e1f1ace78"
     # ==================================================================================
@@ -31,21 +36,21 @@ def main(seed,
 
     # Initalize the Train datasets
     bravo = QuadSDKDataset.QuadSDKDataset_A1_Bravo(Path(Path('.').parent, 'datasets', 'QuadSDK-A1-Bravo').absolute(), path_to_urdf, 
-                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics)
+                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics, symmetry_operator, symmetry_mode, group_operator_path, grf_body_to_world_frame, grf_dimension)
     charlie = QuadSDKDataset.QuadSDKDataset_A1_Charlie(Path(Path('.').parent, 'datasets', 'QuadSDK-A1-Charlie').absolute(), path_to_urdf, 
-                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics)
+                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics, symmetry_operator, symmetry_mode, group_operator_path, grf_body_to_world_frame, grf_dimension)
     echo = QuadSDKDataset.QuadSDKDataset_A1_Echo(Path(Path('.').parent, 'datasets', 'QuadSDK-A1-Echo').absolute(), path_to_urdf, 
-                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics)
+                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics, symmetry_operator, symmetry_mode, group_operator_path, grf_body_to_world_frame, grf_dimension)
     foxtrot = QuadSDKDataset.QuadSDKDataset_A1_Foxtrot(Path(Path('.').parent, 'datasets', 'QuadSDK-A1-Foxtrot').absolute(), path_to_urdf, 
-                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics)
+                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics, symmetry_operator, symmetry_mode, group_operator_path, grf_body_to_world_frame, grf_dimension)
     juliett = QuadSDKDataset.QuadSDKDataset_A1_Juliett(Path(Path('.').parent, 'datasets', 'QuadSDK-A1-Juliett').absolute(), path_to_urdf, 
-                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics)
+                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics, symmetry_operator, symmetry_mode, group_operator_path, grf_body_to_world_frame, grf_dimension)
     kilo = QuadSDKDataset.QuadSDKDataset_A1_Kilo(Path(Path('.').parent, 'datasets', 'QuadSDK-A1-Kilo').absolute(), path_to_urdf, 
-                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics)
+                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics, symmetry_operator, symmetry_mode, group_operator_path, grf_body_to_world_frame, grf_dimension)
     mike = QuadSDKDataset.QuadSDKDataset_A1_Mike(Path(Path('.').parent, 'datasets', 'QuadSDK-A1-Mike').absolute(), path_to_urdf, 
-                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics)
+                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics, symmetry_operator, symmetry_mode, group_operator_path, grf_body_to_world_frame, grf_dimension)
     november = QuadSDKDataset.QuadSDKDataset_A1_November(Path(Path('.').parent, 'datasets', 'QuadSDK-A1-November').absolute(), path_to_urdf, 
-                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics)
+                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics, symmetry_operator, symmetry_mode, group_operator_path, grf_body_to_world_frame, grf_dimension)
     
     # Define train and val sets
     train_val_datasets = [bravo, charlie, echo, foxtrot, juliett, kilo, mike, november]
@@ -71,8 +76,12 @@ def main(seed,
                 num_layers=num_layers, hidden_size=hidden_size, logger_project_name=logger_project_name, 
                 batch_size=batch_size, regression=True, lr=lr, epochs=epochs, seed=seed, devices=1, early_stopping=True,
                 disable_test=True,
+                symmetry_mode=symmetry_mode,
+                group_operator_path=group_operator_path,
                 subfoler_name=logger_project_name,
-                wandb_api_key=wandb_api_key)
+                wandb_api_key=wandb_api_key,
+                grf_body_to_world_frame=grf_body_to_world_frame,
+                grf_dimension=grf_dimension)
 
 if __name__ == '__main__':
     import argparse
@@ -85,9 +94,11 @@ if __name__ == '__main__':
     parser.add_argument('--lr', type=float, default=0.0001, help='Learning rate')
     parser.add_argument('--epochs', type=int, default=30, help='Number of epochs')
     # Logging parameters
-    parser.add_argument('--logger_project_name', type=str, default='main_grf_c2', help='Logger project name')
+    parser.add_argument('--logger_project_name', type=str, default='main_grf_c2_d=3', help='Logger project name') # TODO: change
     # Model parameters
     parser.add_argument('--model_type', type=str, default='heterogeneous_gnn_c2', help='Model type, options: heterogeneous_gnn_c2')
+    parser.add_argument('--grf_body_to_world_frame', type=bool, default=True, help='Whether to convert GRF to world frame') # TODO: change
+    parser.add_argument('--grf_dimension', type=int, default=3, help='Dimension of GRF') # TODO: change
     args = parser.parse_args()
 
     print(f"args: {args}")
@@ -99,4 +110,6 @@ if __name__ == '__main__':
          lr=args.lr, 
          epochs=args.epochs,
          logger_project_name=args.logger_project_name,
-         model_type=args.model_type)
+         model_type=args.model_type,
+         grf_body_to_world_frame=args.grf_body_to_world_frame,
+         grf_dimension=args.grf_dimension)

@@ -8,7 +8,8 @@ class GRF_HGNN_C2(torch.nn.Module):
     Modified GRF_HGNN for the C2 graph structure with 2 base nodes and new edge types
     """
     def __init__(self, hidden_channels: int, num_layers: int, data_metadata, 
-                 regression: bool = True, activation_fn = nn.ReLU(), symmetry_mode: str = None, group_operator_path: str = None):
+                 regression: bool = True, activation_fn = nn.ReLU(), symmetry_mode: str = None, group_operator_path: str = None,
+                 grf_dimension: int = 3):
         """
         Implementation of the modified MI-HGNN model for C2 structure.
 
@@ -37,6 +38,8 @@ class GRF_HGNN_C2(torch.nn.Module):
             self.num_variables_per_joint = 3
         else:
             self.num_variables_per_joint = 2
+        self.grf_dimension = grf_dimension
+        
         # Initialize the joint coefficients based on the symmetry mode and group operator path
         if symmetry_mode and group_operator_path:
             with open(group_operator_path, 'r') as file:
@@ -118,10 +121,13 @@ class GRF_HGNN_C2(torch.nn.Module):
         )
 
         # Output layer remains the same
-        if self.regression:
+        if self.regression and self.grf_dimension == 1:
             self.out_channels_per_foot = 1
+        elif self.regression and self.grf_dimension == 3:
+            self.out_channels_per_foot = 3
         else:
             self.out_channels_per_foot = 2
+        
         self.decoder = Linear(hidden_channels, self.out_channels_per_foot)
         
     def forward(self, x_dict, edge_index_dict):
@@ -167,13 +173,21 @@ class GRF_HGNN_C2(torch.nn.Module):
         # self.check_parameter_sharing()
 
         # Final prediction for foot nodes
-        final_output = self.decoder(x_dict['foot'])
+        final_output = self.decoder(x_dict['foot']) # shape: [batch_size * num_feet, out_channels_per_foot]
 
         # Apply morphological symmetry to the final output
-        # final_output = self.ms_decoder(final_output)
+        if self.grf_dimension == 3:
+            final_output = self.ms_foot_decoder(final_output)
         
         return final_output
     
+    def ms_foot_decoder(self, x):
+        """
+        Apply morphological symmetry to the final output for the foot nodes
+        """
+        x = x.view(-1, self.num_legs, self.out_channels_per_foot).flatten(start_dim=1)
+        return self.feet_linear_weights.to(x.device) * x
+
     def apply_symmetry(self, x_dict):
         """
         Apply the symmetry to the node features
