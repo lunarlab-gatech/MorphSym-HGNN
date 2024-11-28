@@ -18,6 +18,7 @@ from .customMetrics import CrossEntropyLossMetric, BinaryF1Score, CosineSimilari
 from .hgnn import GRF_HGNN
 from .hgnn_k4 import GRF_HGNN_K4
 from .hgnn_c2 import GRF_HGNN_C2
+from .gnnLightning_com import COM_MLP_Lightning
 from .hgnn_s4_com import COM_HGNN_S4
 from .hgnn_k4_com import COM_HGNN_K4
 from torch_geometric.profile import count_parameters
@@ -1412,6 +1413,22 @@ def train_model(
             symmetry_mode=symmetry_mode,
             group_operator_path=group_operator_path,
             model_type=model_type,
+            data_path=data_path)
+        model_parameters = count_parameters(lightning_model.model)
+    elif model_type == 'mlp_com':
+        # Determine the number of output channels
+        out_channels = None
+        out_channels = 6
+        # Create the model
+        lightning_model = COM_MLP_Lightning(
+            in_channels=train_dataset[0][0].shape[0],
+            hidden_channels=hidden_size,
+            out_channels=out_channels,
+            num_layers=num_layers,
+            batch_size=batch_size,
+            optimizer=optimizer,
+            lr=lr,
+            regression=regression,
             data_path=data_path)
         model_parameters = count_parameters(lightning_model.model)
     else:

@@ -11,9 +11,10 @@ def main(seed,
          lr=0.0024,
          epochs=30,
          logger_project_name='com_debug',
-         model_type='heterogeneous_gnn_s4_com'):
+         model_type='heterogeneous_gnn_s4_com',
+         wandb_api_key = "eed5fa86674230b63649180cc343f14e1f1ace78"):
     # ================================= CHANGE THESE ===================================
-    wandb_api_key = "eed5fa86674230b63649180cc343f14e1f1ace78"
+#     wandb_api_key = "eed5fa86674230b63649180cc343f14e1f1ace78"
     # ==================================================================================
 
     # Define model information
@@ -76,6 +77,7 @@ if __name__ == '__main__':
     parser.add_argument('--logger_project_name', type=str, default='com_debug', help='Logger project name')
     # Model parameters
     parser.add_argument('--model_type', type=str, default='heterogeneous_gnn_s4_com', help='Model type, options: heterogeneous_gnn_s4_com, heterogeneous_gnn_k4_com')
+    parser.add_argument('--wandb_api_key', type=str, default='eed5fa86674230b63649180cc343f14e1f1ace78', help="Check your key at https://wandb.ai/authorize",)
     args = parser.parse_args()
 
     print(f"args: {args}")
@@ -87,4 +89,5 @@ if __name__ == '__main__':
          lr=args.lr, 
          epochs=args.epochs,
          logger_project_name=args.logger_project_name,
-         model_type=args.model_type)
+         model_type=args.model_type,
+         wandb_api_key=args.wandb_api_key)
