@@ -157,7 +157,7 @@ class Solo12Dataset(FlexibleDataset):
         
         if model_type == 'heterogeneous_gnn_k4_com':
             self.load_data_sorted = self.load_data_sorted_k4
-        elif model_type == 'heterogeneous_gnn_s4_com':
+        elif model_type == 'heterogeneous_gnn_s4_com' or 'mlp_com':
             self.load_data_sorted = self.load_data_sorted
         else:
             raise ValueError(f"Model type {model_type} is not implemented for Solo12 dataset.")
@@ -186,7 +186,7 @@ class Solo12Dataset(FlexibleDataset):
             self.hgnn_number_nodes = (4, self.hgnn_number_nodes[1], self.hgnn_number_nodes[2])
             # initialize new edges
             self._init_new_edges_k4()
-        elif self.model_type == 'heterogeneous_gnn_s4_com':
+        elif self.model_type == 'heterogeneous_gnn_s4_com' or 'mlp_com':
             # initialize new edges
             print(f"Model type: {self.model_type} is initialized.")
         else:
@@ -293,6 +293,9 @@ class Solo12Dataset(FlexibleDataset):
         elif self.model_type == 'heterogeneous_gnn_s4_com':
             lin_acc, ang_vel, j_p, j_v, j_T, f_p, f_v, labels, r_p, r_o, timestamps = self.load_data_sorted(idx)
 
+        self.variables_to_use_base = self.find_variables_to_use([lin_acc, ang_vel])
+        self.variables_to_use_joint = self.find_variables_to_use([j_p, j_v])
+
         # For each base specified
         base_data = [lin_acc, ang_vel] # lin_acc, ang_vel shape: [history_length, 3*4]
         for i in range(self.hgnn_number_nodes[0]):
@@ -321,6 +324,35 @@ class Solo12Dataset(FlexibleDataset):
         data.num_nodes = sum(self.hgnn_number_nodes)
 
         return data
+    
+    def get_helper_mlp(self, idx: int):
+        """
+        Gets a Dataset entry if we are using an MLP model.
+        """
+
+        # Load the dataset information
+        x = None
+
+        # Only add variables that aren't None
+        lin_acc, ang_vel, j_p, j_v, j_T, f_p, f_v, labels, r_p, r_o, timestamps = self.load_data_sorted(idx)
+        self.variables_to_use_all = self.find_variables_to_use([j_p, j_v])
+        
+        dataset_inputs = [j_p, j_v]
+        final_input = np.array([])
+        for y in self.variables_to_use_all:
+            final_input = np.concatenate((final_input, dataset_inputs[y].flatten('F')), axis=0) 
+
+        # Construct the input tensor
+        x = torch.tensor((final_input), 
+                                dtype=torch.float64).unsqueeze(0)
+
+        # Flatten the tensor if necessary
+        if len(x.size()) > 1:
+            x = torch.flatten(torch.transpose(x, 0, 1), 0, 1)
+
+        # Create the ground truth labels
+        y = torch.tensor(labels, dtype=torch.float64)
+        return x, y
 
     # ======================== DATA LOADING ==========================
     def load_data_sorted(self, seq_num: int):
