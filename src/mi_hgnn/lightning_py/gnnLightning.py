@@ -1174,11 +1174,13 @@ def evaluate_model(path_to_checkpoint: Path, predict_dataset: Subset,
             # Predict with the model
             for batch in valLoader:
                 labels_batch, y_pred = model.step_helper_function(batch)
-                if model.body_to_world_frame:
+                if hasattr(model, 'body_to_world_frame') and model.body_to_world_frame:
                     batch_r_quat = batch.r_o.view(batch.batch_size, 4)
                     model.calculate_losses_step_worldframe(labels_batch, y_pred, batch_r_quat)
-                else:
+                elif hasattr(model, 'calculate_losses_step_original'):
                     model.calculate_losses_step_original(labels_batch, y_pred)
+                else:
+                    model.calculate_losses_step(labels_batch, y_pred)
 
                 # If classification, convert to 16 class predictions and labels
                 if not model.regression:
@@ -1199,8 +1201,10 @@ def evaluate_model(path_to_checkpoint: Path, predict_dataset: Subset,
                 batch_num += 1
                 print("Prediction: ", batch_num, "/", total_batches, "\r", end="")
             
-            if model.body_to_world_frame:
+            if hasattr(model, 'body_to_world_frame') and model.body_to_world_frame:
                 model.calculate_losses_epoch_worldframe()
+            elif hasattr(model, 'calculate_losses_epoch_original'):
+                model.calculate_losses_epoch_original()
             else:
                 model.calculate_losses_epoch()
         
@@ -1211,7 +1215,7 @@ def evaluate_model(path_to_checkpoint: Path, predict_dataset: Subset,
         elif model_type == 'heterogeneous_gnn_k4_com' or model_type == 'heterogeneous_gnn_s4_com':
             return pred, labels, model.rmse_loss, model.cos_sim_lin, model.cos_sim_ang
         else:
-            if model.body_to_world_frame:
+            if hasattr(model, 'body_to_world_frame') and model.body_to_world_frame:
                 return pred, labels, model.mse_loss_worldframe, model.rmse_loss_worldframe, model.l1_loss_worldframe
             else:
                 return pred, labels, model.mse_loss, model.rmse_loss, model.l1_loss 

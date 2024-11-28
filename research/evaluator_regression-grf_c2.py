@@ -12,7 +12,7 @@ def init_test_datasets_debug(a1Dataset, path_to_urdf, path_to_urdf_dynamics, mod
     # ======================= Initalize the test datasets =======================
     # Unseen All (Friction, Speed, and Terrain)
     uniform = a1Dataset.QuadSDKDataset_A1_Uniform(Path(Path('.').parent, 'datasets', 'QuadSDK-A1-Uniform').absolute(), path_to_urdf, 
-                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics, symmetry_operator, symmetry_mode, group_operator_path)
+                'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics, symmetry_operator, symmetry_mode, group_operator_path, grf_body_to_world_frame, grf_dimension)
     unseen_all_dataset = torch.utils.data.ConcatDataset([torch.utils.data.Subset(uniform, np.arange(0, uniform.__len__() - 1))])
 
     # Combine into one test set
@@ -170,7 +170,7 @@ def main(MorphSym_version: str,
     # Initialize DataFrame outside the loop
     columns = ["Swap"]
     # Get dataset names from first iteration to set up columns
-    _, dataset_names = init_test_datasets(a1Dataset, path_to_urdf, path_to_urdf_dynamics, model_type, history_length, normalize, None, None, None, False, 1)
+    _, dataset_names = init_test_datasets(a1Dataset, path_to_urdf, path_to_urdf_dynamics, model_type, history_length, normalize, None, symmetry_mode, group_operator_path, grf_body_to_world_frame, grf_dimension)
     for name in dataset_names:
         columns.append(name + "-MSE")
         columns.append(name + "-RMSE")
@@ -203,6 +203,8 @@ def main(MorphSym_version: str,
                 torch.utils.data.Subset(dataset, np.arange(0, dataset.__len__())),
                 symmetry_mode=symmetry_mode,
                 group_operator_path=group_operator_path,
+                grf_body_to_world_frame=grf_body_to_world_frame,
+                grf_dimension=grf_dimension,
                 batch_size=batch_size)
             results.append(mse.item())
             results.append(rmse.item())
@@ -218,9 +220,10 @@ def main(MorphSym_version: str,
 
 if __name__ == '__main__':
     batch_size = 100
-    # K4
+    # MS-HGNN
     MorphSym_version = 'C2'
-    path_to_checkpoint = "models/main_grf_c2/wandering-snowflake-1/epoch=15-val_MSE_loss=73.72983-val_L1_loss=1.79910.ckpt"
+    # path_to_checkpoint = "models/main_grf_c2_d=3/atomic-haze-1"
+    path_to_checkpoint = "models/main_grf_c2_d=3/atomic-haze-1"
     group_operator_path = 'cfg/a1-c2.yaml'
     symmetry_operator_list = [None]  # Can be 'gs' or 'gt' or 'gr' or None
     symmetry_mode = 'MorphSym' # Can be 'Euclidean' or 'MorphSym' or None
