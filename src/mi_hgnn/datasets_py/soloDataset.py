@@ -308,7 +308,7 @@ class Solo12Dataset(FlexibleDataset):
         # process joint and foot features (same as original implementation)
         # refer to the joint and foot feature processing part in the FlexibleDataset.get_helper_heterogeneous_gnn method L570-L596
         # For each joint specified
-        joint_data = [j_p, j_v, j_T]
+        joint_data = [j_p, j_v]
         for i, urdf_node_name in enumerate(self.urdf_name_to_graph_index_joint.keys()):
             # For each variable to use
             final_input = torch.ones((0), dtype=torch.float64)

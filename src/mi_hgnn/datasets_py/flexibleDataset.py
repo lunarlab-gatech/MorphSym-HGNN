@@ -449,15 +449,13 @@ class FlexibleDataset(Dataset):
         # Return data in the proper format
         if self.data_format == 'dynamics':
             return self.get_helper_dynamics(idx)
-        elif self.data_format == 'mlp' or 'mlp_com':
+        elif self.data_format == 'mlp' or self.data_format == 'mlp_com':
             return self.get_helper_mlp(idx)
         elif self.data_format == 'heterogeneous_gnn' or self.data_format == 'heterogeneous_gnn_k4':
             return self.get_helper_heterogeneous_gnn(idx)
         elif self.data_format == 'heterogeneous_gnn_c2':
             return self.get_helper_heterogeneous_gnn_c2(idx)
-        elif self.data_format == 'heterogeneous_gnn_k4_com':
-            return self.get_helper_heterogeneous_gnn(idx)
-        elif self.data_format == 'heterogeneous_gnn_s4_com':
+        elif self.data_format == 'heterogeneous_gnn_k4_com' or self.data_format == 'heterogeneous_gnn_s4_com':
             return self.get_helper_heterogeneous_gnn(idx)
         else:
             raise ValueError("Invalid data format.")
@@ -600,6 +598,7 @@ class FlexibleDataset(Dataset):
         
         # Make the labels
         data.y = torch.tensor(labels, dtype=torch.float64)
+        print("!!!!!!!!!!!!!!!!!!!!!!!")
 
         # Save the matrices into the HeteroData object
         data['base'].x = base_x

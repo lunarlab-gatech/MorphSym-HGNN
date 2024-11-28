@@ -57,7 +57,7 @@ def main(seed,
     # Train the model (evaluate later, so no test set)
     train_model(train_dataset, val_dataset, None, normalize, 
                 num_layers=num_layers, hidden_size=hidden_size, logger_project_name=logger_project_name, 
-                batch_size=batch_size, regression=True, lr=lr, epochs=epochs, seed=seed, devices=1, early_stopping=True,
+                batch_size=batch_size, regression=True, lr=lr, epochs=epochs, seed=seed, devices=1, early_stopping=False,
                 disable_test=True, 
                 data_path = root, 
                 subfoler_name=logger_project_name,

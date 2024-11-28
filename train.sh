@@ -29,7 +29,7 @@ python research/train_regression-com_msgn.py\
     --lr 0.0012\
     --epochs 60\
     --logger_project_name com_debug\
-    --model_type mlp_com\
+    --model_type heterogeneous_gnn_s4_com\
     --wandb_api_key 9a342aac9d095ea22ea22bfd71b4b56ff4175f9f
 
 # Main Experiment 3: Sample Efficiency, Classification K4
