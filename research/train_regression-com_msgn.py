@@ -11,7 +11,10 @@ def main(seed,
          lr=0.0024,
          epochs=30,
          logger_project_name='com_debug',
-         model_type='heterogeneous_gnn_s4_com',
+         model_type='heterogeneous_gnn_k4_com',
+         symmetry_operator=None,
+         symmetry_mode='MorphSym',
+         group_operator_path='cfg/solo-k4.yaml',
          wandb_api_key = "eed5fa86674230b63649180cc343f14e1f1ace78"):
     # ================================= CHANGE THESE ===================================
 #     wandb_api_key = "eed5fa86674230b63649180cc343f14e1f1ace78"
@@ -61,6 +64,8 @@ def main(seed,
                 disable_test=True, 
                 data_path = root, 
                 subfoler_name=logger_project_name,
+                symmetry_mode=symmetry_mode,
+                group_operator_path=group_operator_path,
                 wandb_api_key=wandb_api_key)
 
 if __name__ == '__main__':

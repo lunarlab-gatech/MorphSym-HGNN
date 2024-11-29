@@ -7,43 +7,7 @@ import yaml
 from scipy.spatial.transform import Rotation
 from torch_geometric.data import HeteroData
 
-# class Standarizer_Seperate:
-#     """
-#     Class to standardize the data.
-#     """
-#     def __init__(self, q_mean, q_std, qd_mean, qd_std, lin_mean, lin_std, ang_mean, ang_std, device):
-#         self.q_mean, self.q_std = torch.tensor(q_mean).to(device), torch.tensor(q_std).to(device)
-#         self.qd_mean, self.qd_std = torch.tensor(qd_mean).to(device), torch.tensor(qd_std).to(device)
-#         self.lin_mean, self.lin_std = torch.tensor(lin_mean).to(device), torch.tensor(lin_std).to(device)
-#         self.ang_mean, self.ang_std = torch.tensor(ang_mean).to(device), torch.tensor(ang_std).to(device)
 
-#     def transform(self, q=None, qd=None, lin=None, ang=None):
-#         if isinstance(q, np.ndarray):
-#             q_mean, q_std = self.q_mean.cpu().numpy(), self.q_std.cpu().numpy()
-#             qd_mean, qd_std = self.qd_mean.cpu().numpy(), self.qd_std.cpu().numpy()
-#             lin_mean, lin_std = self.lin_mean.cpu().numpy(), self.lin_std.cpu().numpy()
-#             ang_mean, ang_std = self.ang_mean.cpu().numpy(), self.ang_std.cpu().numpy()
-#         else:
-#             q_mean, q_std = self.q_mean, self.q_std
-#             qd_mean, qd_std = self.qd_mean, self.qd_std
-#             lin_mean, lin_std = self.lin_mean, self.lin_std
-#             ang_mean, ang_std = self.ang_mean, self.ang_std
-
-#         return (q - q_mean) / q_std, (qd - qd_mean) / qd_std, (lin - lin_mean) / lin_std, (ang - ang_mean) / ang_std
-
-#     def unstandarize(self, qn=None, qdn=None, linn=None, angn=None):
-#         if isinstance(qn, np.ndarray):
-#             q_mean, q_std = self.q_mean.cpu().numpy(), self.q_std.cpu().numpy()
-#             qd_mean, qd_std = self.qd_mean.cpu().numpy(), self.qd_std.cpu().numpy()
-#             lin_mean, lin_std = self.lin_mean.cpu().numpy(), self.lin_std.cpu().numpy()
-#             ang_mean, ang_std = self.ang_mean.cpu().numpy(), self.ang_std.cpu().numpy()
-#         else:
-#             q_mean, q_std = self.q_mean, self.q_std
-#             qd_mean, qd_std = self.qd_mean, self.qd_std
-#             lin_mean, lin_std = self.lin_mean, self.lin_std
-#             ang_mean, ang_std = self.ang_mean, self.ang_std
-
-#         return qn * q_std + q_mean, qdn * qd_std + qd_mean, linn * lin_std + lin_mean, angn * ang_std + ang_mean
 
 class Standarizer:
 
@@ -210,24 +174,7 @@ class Solo12Dataset(FlexibleDataset):
 
         self.length = self.Y.shape[0]
         print(f"{stage} Dataset length: {self.length}")
-    # def compute_normalization(self, q, qd, lin, ang):
-    #     """
-    #     Compute the mean and standard deviation for the joint and base data.
-    #     Adapted from MorphSymm's repo: datasets/com_momentum/com_momentum.py
-    #     """
-    #     q_mean, qd_mean, lin_mean, ang_mean = 0., 0., 0., 0.
-    #     q_std, qd_std, lin_std, ang_std = 1., 1., 1., 1.
-        
-    #     q_mean = np.mean(q, axis=0)
-    #     qd_mean = np.mean(qd, axis=0)
-    #     lin_mean = np.mean(lin, axis=0)
-    #     ang_mean = np.mean(ang, axis=0)
-    #     q_std = np.std(q, axis=0)
-    #     qd_std = np.std(qd, axis=0)
-    #     lin_std = np.std(lin, axis=0)
-    #     ang_std = np.std(ang, axis=0)
 
-    #     return q_mean, q_std, qd_mean, qd_std, lin_mean, lin_std, ang_mean, ang_std
 
     def compute_normalization(self, X, Y):
         """
@@ -408,14 +355,10 @@ class Solo12Dataset(FlexibleDataset):
     def load_data_at_dataset_seq(self, seq_num: int):
         """Load data for a specified sequence"""
         # Load joint data
-        # j_p = np.array(self.mat_data['q'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)
-        # j_v = np.array(self.mat_data['qd'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)
         j_p = self.X[:, :12][seq_num:seq_num+self.history_length].reshape(self.history_length, 12)
         j_v = self.X[:, 12:][seq_num:seq_num+self.history_length].reshape(self.history_length, 12)
         
         # Load base velocity data (as labels)
-        # base_lin_vel = np.array(self.mat_data['base_lin_vel'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 3)
-        # base_ang_vel = np.array(self.mat_data['base_ang_vel'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 3)
         base_lin_vel = self.Y[:, :3][seq_num:seq_num+self.history_length].reshape(self.history_length, 3)
         base_ang_vel = self.Y[:, 3:][seq_num:seq_num+self.history_length].reshape(self.history_length, 3)
         
@@ -619,6 +562,12 @@ class Solo12Dataset(FlexibleDataset):
         if self.symmetry_operator is not None:
             labels_sorted = self.apply_symmetry([labels_sorted], part='label')[0]
 
+        # Reorder the labels
+        labels_sorted = [labels_sorted[0][:3],   labels_sorted[1][:3], \
+                         labels_sorted[0][3:6],  labels_sorted[1][3:6], \
+                         labels_sorted[0][6:9],  labels_sorted[1][6:9], \
+                         labels_sorted[0][9:12], labels_sorted[1][9:12]]
+
         return sorted_base_list[0], sorted_base_list[1], sorted_joint_list[0], sorted_joint_list[1], sorted_joint_list[2], sorted_foot_list[0], sorted_foot_list[1], labels_sorted, r_p, r_o, timestamps
 
     def apply_symmetry(self, data_list, part='joint'):
@@ -645,9 +594,6 @@ class Solo12Dataset(FlexibleDataset):
             if part == 'joint':
                 permutation_Q = self.permutation_Q_js
                 coefficients = self.joint_coefficients
-            elif part == 'foot':
-                permutation_Q = self.permutation_Q_fs
-                coefficients = self.foot_coefficients
             elif part == 'label': 
                 # for labels, data shape: (4,), for classification task, 
                 # we need to apply Euclidean symmetry to labels

@@ -1,0 +1,38 @@
+group_label: K4
+
+# QJ: Joint Space symmetries____________________________________
+#        _____RL____|___FL____|____RR____|____FR___|
+# q    = [ 0, 1, 2,  3, 4, 5,  6,  7,  8, 9, 10, 11]
+# Configure qj (joint-space) group actions
+#                  _______gs (Sagittal Symmetry)__________|_______gt (Transversal symmetry)______
+permutation_Q_js: [[6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5], [3, 4, 5, 0, 1, 2, 9, 10, 11, 6, 7, 8]]
+# Reflections are determined by joint frame predefined orientation.
+reflection_Q_js: [[-1, 1, 1, -1, 1, 1, -1, 1, 1, -1, 1, 1], [1, -1, -1, 1, -1, -1, 1, -1, -1, 1, -1, -1]]
+
+# B: Body Space symmetries____________________________________
+#                    RL,         FL,         RR,         FR
+# q_lin (acc) = [x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3]
+# q_ang (vel) = [x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3]
+#                  _______gs (Sagittal Symmetry)__________|_______gt (Transversal symmetry)______
+permutation_Q_bs: [[6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5], [3, 4, 5, 0, 1, 2, 9, 10, 11, 6, 7, 8]]
+# Reflections are determined by body frame predefined orientation.
+reflection_Q_bs_lin: [[1, -1, 1, 1, -1, 1, 1, -1, 1, 1, -1, 1], [-1, 1, 1, -1, 1, 1, -1, 1, 1, -1, 1, 1]]
+reflection_Q_bs_ang: [[-1, 1, -1, -1, 1, -1, -1, 1, -1, -1, 1, -1], [1, -1, -1, 1, -1, -1, 1, -1, -1, 1, -1, -1]]
+
+# # F: Foot Space symmetries____________________________________
+# #      RL,          FL,          RR,          FR
+# # q = [x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3]
+# #                  _______gs (Sagittal Symmetry)__________|_______gt (Transversal symmetry)______
+# permutation_Q_fs: [[6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5], [3, 4, 5, 0, 1, 2, 9, 10, 11, 6, 7, 8]]
+# # Reflections are determined by body frame predefined orientation.
+# # gs: [1, -1, 1], gt: [-1, 1, 1]
+# reflection_Q_fs: [[1, -1, 1, 1, -1, 1, 1, -1, 1, 1, -1, 1], [-1, 1, 1, -1, 1, 1, -1, 1, 1, -1, 1, 1]]
+
+# L: Label Space symmetries____________________________________
+#      RL,FL,RR,FR
+# q = [0, 1, 2, 3]
+#                  _____gs______|______gt_____
+permutation_Q_ls: [[6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5], [3, 4, 5, 0, 1, 2, 9, 10, 11, 6, 7, 8]]
+# Reflections are determined by body frame predefined orientation.
+reflection_Q_ls_lin: [[1, -1, 1, 1, -1, 1, 1, -1, 1, 1, -1, 1], [-1, 1, 1, -1, 1, 1, -1, 1, 1, -1, 1, 1]]
+reflection_Q_ls_ang: [[-1, 1, -1, -1, 1, -1, -1, 1, -1, -1, 1, -1], [1, -1, -1, 1, -1, -1, 1, -1, -1, 1, -1, -1]]

@@ -25,14 +25,14 @@ class COM_HGNN_K4(torch.nn.Module):
         self.regression = regression
         self.activation = activation_fn
 
-        # NOTE: hardcoded for mini_cheetah
-        self.num_timesteps = 150
+        # NOTE: hardcoded for Solo CoM Exp
+        self.num_timesteps = 1
         num_joints_per_leg = 3
         self.num_legs = 4
         self.num_bases = 4
         self.num_joints = self.num_legs * num_joints_per_leg
-        self.num_dimensions_per_foot = 3
         self.num_dimensions_per_base = 6
+
         # Initialize the joint coefficients based on the symmetry mode and group operator path
         if symmetry_mode and group_operator_path:
             with open(group_operator_path, 'r') as file:
@@ -44,21 +44,15 @@ class COM_HGNN_K4(torch.nn.Module):
             j_e_coeffs = torch.ones_like(j_gs_coeffs, dtype=torch.float64) # rotational symmetry, shape [num_joints_per_leg]
             j_gr_coeffs = j_gs_coeffs * j_gt_coeffs
 
-            reflection_Q_fs = group_data.get('reflection_Q_fs', [])
-            f_gs_coeffs = torch.tensor(reflection_Q_fs[0][:self.num_dimensions_per_foot], dtype=torch.float64) # sagittal symmetry, shape [num_legs]
-            f_gt_coeffs = torch.tensor(reflection_Q_fs[1][:self.num_dimensions_per_foot], dtype=torch.float64) # transversal symmetry, shape [num_legs]
-            f_e_coeffs = torch.ones_like(f_gs_coeffs, dtype=torch.float64) # rotational symmetry, shape [num_legs]
-            f_gr_coeffs = f_gs_coeffs * f_gt_coeffs
-
             reflection_Q_bs_lin = group_data.get('reflection_Q_bs_lin', [])
-            b_gs_coeffs_lin = torch.tensor(reflection_Q_bs_lin[0][:self.num_dimensions_per_base], dtype=torch.float64) # sagittal symmetry, shape [3]
-            b_gt_coeffs_lin = torch.tensor(reflection_Q_bs_lin[1][:self.num_dimensions_per_base], dtype=torch.float64) # transversal symmetry, shape [3]
+            b_gs_coeffs_lin = torch.tensor(reflection_Q_bs_lin[0][:self.num_dimensions_per_base // 2], dtype=torch.float64) # sagittal symmetry, shape [3]
+            b_gt_coeffs_lin = torch.tensor(reflection_Q_bs_lin[1][:self.num_dimensions_per_base // 2], dtype=torch.float64) # transversal symmetry, shape [3]
             b_e_coeffs_lin = torch.ones_like(b_gs_coeffs_lin, dtype=torch.float64) # rotational symmetry, shape [3]
             b_gr_coeffs_lin = b_gs_coeffs_lin * b_gt_coeffs_lin
 
             reflection_Q_bs_ang = group_data.get('reflection_Q_bs_ang', [])
-            b_gs_coeffs_ang = torch.tensor(reflection_Q_bs_ang[0][:self.num_dimensions_per_base], dtype=torch.float64) # sagittal symmetry, shape [3]
-            b_gt_coeffs_ang = torch.tensor(reflection_Q_bs_ang[1][:self.num_dimensions_per_base], dtype=torch.float64) # transversal symmetry, shape [3]
+            b_gs_coeffs_ang = torch.tensor(reflection_Q_bs_ang[0][:self.num_dimensions_per_base // 2], dtype=torch.float64) # sagittal symmetry, shape [3]
+            b_gt_coeffs_ang = torch.tensor(reflection_Q_bs_ang[1][:self.num_dimensions_per_base // 2], dtype=torch.float64) # transversal symmetry, shape [3]
             b_e_coeffs_ang = torch.ones_like(b_gs_coeffs_ang, dtype=torch.float64) # rotational symmetry, shape [3]
             b_gr_coeffs_ang = b_gs_coeffs_ang * b_gt_coeffs_ang
         else:
@@ -66,25 +60,20 @@ class COM_HGNN_K4(torch.nn.Module):
             j_gt_coeffs = torch.ones(num_joints_per_leg, dtype=torch.float64)
             j_gr_coeffs = torch.ones(num_joints_per_leg, dtype=torch.float64)
             j_e_coeffs = torch.ones(num_joints_per_leg, dtype=torch.float64)
-            f_gs_coeffs = torch.ones(self.num_dimensions_per_foot, dtype=torch.float64)
-            f_gt_coeffs = torch.ones(self.num_dimensions_per_foot, dtype=torch.float64)
-            f_gr_coeffs = torch.ones(self.num_dimensions_per_foot, dtype=torch.float64)
-            f_e_coeffs = torch.ones(self.num_dimensions_per_foot, dtype=torch.float64)
-            b_gs_coeffs_lin = torch.ones(self.num_dimensions_per_base, dtype=torch.float64)
-            b_gt_coeffs_lin = torch.ones(self.num_dimensions_per_base, dtype=torch.float64)
-            b_gr_coeffs_lin = torch.ones(self.num_dimensions_per_base, dtype=torch.float64)
-            b_e_coeffs_lin = torch.ones(self.num_dimensions_per_base, dtype=torch.float64)
-            b_gs_coeffs_ang = torch.ones(self.num_dimensions_per_base, dtype=torch.float64)
-            b_gt_coeffs_ang = torch.ones(self.num_dimensions_per_base, dtype=torch.float64)
-            b_gr_coeffs_ang = torch.ones(self.num_dimensions_per_base, dtype=torch.float64)
-            b_e_coeffs_ang = torch.ones(self.num_dimensions_per_base, dtype=torch.float64)
+
+            b_gs_coeffs_lin = torch.ones(self.num_dimensions_per_base // 2, dtype=torch.float64)
+            b_gt_coeffs_lin = torch.ones(self.num_dimensions_per_base // 2, dtype=torch.float64)
+            b_gr_coeffs_lin = torch.ones(self.num_dimensions_per_base // 2, dtype=torch.float64)
+            b_e_coeffs_lin = torch.ones(self.num_dimensions_per_base // 2, dtype=torch.float64)
+
+            b_gs_coeffs_ang = torch.ones(self.num_dimensions_per_base // 2, dtype=torch.float64)
+            b_gt_coeffs_ang = torch.ones(self.num_dimensions_per_base // 2, dtype=torch.float64)
+            b_gr_coeffs_ang = torch.ones(self.num_dimensions_per_base // 2, dtype=torch.float64)
+            b_e_coeffs_ang = torch.ones(self.num_dimensions_per_base // 2, dtype=torch.float64)
         # joints = [Back_Left, Frong_Left, Back_Right, Front_Right]
         joint_weights_array = torch.cat((j_e_coeffs, j_gt_coeffs, j_gs_coeffs, j_gr_coeffs), dim=0)
         self.joints_linear_weights = joint_weights_array
         print(f'===> self.joints_linear_weights: {self.joints_linear_weights}')
-        foot_weights_array = torch.cat((f_e_coeffs, f_gt_coeffs, f_gs_coeffs, f_gr_coeffs), dim=0)
-        self.feet_linear_weights = foot_weights_array
-        print(f'===> self.feet_linear_weights: {self.feet_linear_weights}')
 
         base_weights_lin_array = torch.cat((b_e_coeffs_lin, b_gt_coeffs_lin, b_gs_coeffs_lin, b_gr_coeffs_lin), dim=0)
         self.base_coefficients_lin = base_weights_lin_array
@@ -130,24 +119,17 @@ class COM_HGNN_K4(torch.nn.Module):
         )
 
         # Output layer remains the same
-        self.decoder = Linear(hidden_channels * self.num_bases, self.num_dimensions_per_base * self.num_bases)
+        self.decoder = Linear(hidden_channels, self.num_dimensions_per_base)
         
     def forward(self, x_dict, edge_index_dict):
         """
         Forward pass with special handling for the K4 structure
         """
-        # x_dict = self.apply_symmetry(x_dict)
+        x_dict = self.apply_symmetry(x_dict)
 
         # Initial feature encoding
         x_dict = self.encoder(x_dict)
         x_dict = {key: self.activation(x) for key, x in x_dict.items()}
-
-        # # The original message passing layers, without the base transformation and residual connections
-        # for conv in self.convs:
-        #     x_dict = conv(x_dict, edge_index_dict)
-        #     x_dict = {key: self.activation(x) for key, x in x_dict.items()}
-        
-        # return self.decoder(x_dict['foot'])
 
         # Message passing layers, with the base transformation and residual connections
         for conv in self.convs:
@@ -168,21 +150,18 @@ class COM_HGNN_K4(torch.nn.Module):
                 for key in x_dict_new
             }
 
-        # debug use, visualize the GNN structure:
-        # save_dir = "/home/swei303/Documents/proj/MorphSym-HGNN/models/debug"
-        # self.visualize_gnn_structure(save_dir+'/hgnn_k4_structure.png')
-
-        # debug use, check the parameters:
-        # self.check_parameter_sharing()
-
-        # Final prediction for base nodes
-        # Reshape base features from (batch_size*4, hidden_channels) to (batch_size, 4*hidden_channels)
-        batch_size = x_dict['base'].shape[0] // self.num_bases
-        base_features = x_dict['base'].view(batch_size, self.num_bases, -1).flatten(start_dim=1)
-        
-        # Decode to get velocities (batch_size, 4*6) where each base has 3D linear + 3D angular velocity
-        out = self.decoder(base_features)
-        return out
+        out = self.decoder(x_dict['base'])
+        return self.morphological_symmetry_decoder(out)
+    
+    def morphological_symmetry_decoder(self, x):
+        batch_size = x.shape[0] // self.num_bases
+        x = x.reshape(batch_size, self.num_bases, self.num_dimensions_per_base)
+        x_lin = x[:, :, :3].flatten(start_dim=1) * self.base_coefficients_lin.to(x.device).view(1, -1)
+        x_lin = x_lin.reshape(batch_size, self.num_bases, 3)
+        x_ang = x[:, :, 3:].flatten(start_dim=1) * self.base_coefficients_ang.to(x.device).view(1, -1)
+        x_ang = x_ang.reshape(batch_size, self.num_bases, 3)
+        x = torch.cat((x_lin, x_ang), dim=-1)
+        return x
     
     def apply_symmetry(self, x_dict):
         """
@@ -190,92 +169,12 @@ class COM_HGNN_K4(torch.nn.Module):
         """
         # Apply morphological symmetry to the joint features
         joint_x = x_dict['joint']  # shape: [batch_size * num_joints, num_timesteps * num_variables]
-        # Reshape the joint data to separate different joints and variables
-        # [batch_size * num_joints, num_timesteps * num_variables] -> [batch_size, num_joints, num_timesteps, num_variables]
-        joint_x = joint_x.view(-1, self.num_joints, self.num_timesteps, 2)
-        # Apply the coefficients to each variable separately, ensuring same device
-        weights_j = self.joints_linear_weights.to(joint_x.device).view(1, -1, 1, 1)
+        joint_x = joint_x.view(-1, self.num_joints, 2)
+        weights_j = self.joints_linear_weights.to(joint_x.device).view(1, -1, 1)
         joint_x = joint_x * weights_j
-        # Reshape back to the original shape [batch_size, num_joints, num_timesteps, num_variables] -> [batch_size, num_timesteps * num_variables]
-        x_dict['joint'] = joint_x.reshape(-1, self.num_timesteps * 2)
-
-        batch_size = x_dict['foot'].shape[0] // self.num_legs
-        # Apply morphological symmetry to the foot features
-        foot_x = x_dict['foot']  # shape: [batch_size * num_legs, num_timesteps * num_variables]
-        # f_p, f_v: shape [batch_size, num_timesteps, num_legs*num_dimensions]
-        f_p, f_v = self.unpack_data(foot_x, batch_size)
-        # Apply the coefficients to each variable separately, ensuring same device
-        weights_f = self.feet_linear_weights.to(f_p.device).view(1, 1, -1)
-        f_p = f_p * weights_f
-        f_v = f_v * weights_f
-        # Pack f_p and f_v back into foot_x
-        foot_x = self.pack_data(f_p, f_v, batch_size)
-        x_dict['foot'] = foot_x
-
-        # Apply morphological symmetry to the base features
-        batch_size = x_dict['base'].shape[0] // self.num_bases
-        base_x = x_dict['base']  # shape: [batch_size * num_bases, num_timesteps * num_variables]
-        lin, ang = self.unpack_data(base_x, batch_size)
-        weights_b_lin = self.base_coefficients_lin.to(lin.device).view(1, 1, -1)
-        weights_b_ang = self.base_coefficients_ang.to(ang.device).view(1, 1, -1)
-        lin = lin * weights_b_lin
-        ang = ang * weights_b_ang
-        base_x = self.pack_data(lin, ang, batch_size)
-        x_dict['base'] = base_x
-
+        x_dict['joint'] = joint_x.reshape(-1, 2)
         return x_dict
 
-    def unpack_data(self, data, batch_size):
-        """
-        Unpack input data of shape [batch_size*4, 900] into f_p and f_v
-        
-        Args:
-            data: Input data with shape [batch_size*num_legs, num_timesteps*num_dimensions*2]
-            batch_size: Size of batch
-        
-        Returns:
-            f_p: Position data with shape [batch_size, num_timesteps, num_legs*num_dimensions]
-            f_v: Velocity data with shape [batch_size, num_timesteps, num_legs*num_dimensions]
-        """
-        x = data.view(batch_size, self.num_legs, -1)
-
-        # Separate position and velocity data
-        features_per_var = self.num_timesteps * self.num_dimensions_per_foot
-        position_data = x[:, :, :features_per_var]  # [batch_size, num_legs, timesteps*dim]
-        velocity_data = x[:, :, features_per_var:]  
-
-        # Separate x, y, z and reshape to [batch_size, self.num_legs, self.num_timesteps, 1]
-        f_p_xyz = torch.ones((0), dtype=torch.float64).to(position_data.device)
-        f_v_xyz = torch.ones((0), dtype=torch.float64).to(velocity_data.device)
-        for i in range(self.num_dimensions_per_foot):
-            f_p_xyz = torch.cat((f_p_xyz, position_data[:, :, i*self.num_timesteps:(i+1)*self.num_timesteps].view(batch_size, self.num_legs, self.num_timesteps, 1)), dim=3)
-            f_v_xyz = torch.cat((f_v_xyz, velocity_data[:, :, i*self.num_timesteps:(i+1)*self.num_timesteps].view(batch_size, self.num_legs, self.num_timesteps, 1)), dim=3)
-
-        # Permute to [batch_size, self.num_timesteps, self.num_legs*3]
-        f_p = f_p_xyz.permute(0, 2, 1, 3).reshape(batch_size, self.num_timesteps, -1)
-        f_v = f_v_xyz.permute(0, 2, 1, 3).reshape(batch_size, self.num_timesteps, -1)
-
-        return f_p, f_v
-
-    def pack_data(self, f_p, f_v, batch_size):
-        """
-        Pack f_p and f_v back into data
-        
-        Args:
-            f_p: Position data with shape [batch_size, num_timesteps, num_legs*num_dimensions]
-            f_v: Velocity data with shape [batch_size, num_timesteps, num_legs*num_dimensions]
-            batch_size: Size of batch
-        
-        Returns:
-            data: Packed data with shape [batch_size*num_legs, num_timesteps*num_dimensions*2]
-        """
-        position_data = f_p.view(batch_size, self.num_timesteps, self.num_legs, self.num_dimensions_per_foot)
-        velocity_data = f_v.view(batch_size, self.num_timesteps, self.num_legs, self.num_dimensions_per_foot)
-        position_data = position_data.permute(0, 2, 3, 1).reshape(batch_size, self.num_legs, -1)
-        velocity_data = velocity_data.permute(0, 2, 3, 1).reshape(batch_size, self.num_legs, -1)
-        data = torch.cat([position_data, velocity_data], dim=2).reshape(batch_size * self.num_legs, -1)
-        
-        return data
 
     def reset_parameters(self):
         """Reset all learnable parameters"""

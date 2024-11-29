@@ -598,7 +598,6 @@ class FlexibleDataset(Dataset):
         
         # Make the labels
         data.y = torch.tensor(labels, dtype=torch.float64)
-        print("!!!!!!!!!!!!!!!!!!!!!!!")
 
         # Save the matrices into the HeteroData object
         data['base'].x = base_x

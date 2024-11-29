@@ -91,11 +91,12 @@ class COM_Base_Lightning(L.LightningModule):
 
     # ======================= Loss Calculation =======================
     def calculate_losses_step(self, y: torch.Tensor, y_pred: torch.Tensor):
-
         self.mse_loss = self.metric_mse(y_pred.flatten(), y.flatten())
         self.rmse_loss = self.metric_rmse(y_pred.flatten(), y.flatten())
-        self.mse_loss_lin = self.metric_mse_lin(y_pred[:, :3].flatten(), y[:, :3].flatten())
-        self.mse_loss_ang = self.metric_mse_ang(y_pred[:, 3:].flatten(), y[:, 3:].flatten())
+        y = y.view(y.shape[0], self.model.num_bases, self.model.num_dimensions_per_base)
+        y_pred = y_pred.view(y_pred.shape[0], self.model.num_bases, self.model.num_dimensions_per_base)
+        self.mse_loss_lin = self.metric_mse_lin(y_pred[:, :, :3].flatten(), y[:, :, :3].flatten())
+        self.mse_loss_ang = self.metric_mse_ang(y_pred[:, :, 3:].flatten(), y[:, :, 3:].flatten())
         # self.l1_loss = self.metric_l1(y_pred, y)
 
         # Unstandarize the data for cos similarity metrics
@@ -105,10 +106,10 @@ class COM_Base_Lightning(L.LightningModule):
 
         y = y.view(y.shape[0], self.model.num_bases, self.model.num_dimensions_per_base)
         y_pred = y_pred.view(y_pred.shape[0], self.model.num_bases, self.model.num_dimensions_per_base)
-        y_lin_vel = y[:, :, :3].flatten(start_dim=1)
-        y_ang_vel = y[:, :, 3:].flatten(start_dim=1)
-        y_pred_lin_vel = y_pred[:, :, :3].flatten(start_dim=1)
-        y_pred_ang_vel = y_pred[:, :, 3:].flatten(start_dim=1)
+        y_lin_vel = y[:, 0, :3].flatten(start_dim=1)
+        y_ang_vel = y[:, 0, 3:].flatten(start_dim=1)
+        y_pred_lin_vel = y_pred[:, 0, :3].flatten(start_dim=1)
+        y_pred_ang_vel = y_pred[:, 0, 3:].flatten(start_dim=1)
 
         self.cos_sim_lin = self.metric_cos_sim_lin(y_pred_lin_vel, y_lin_vel)
         self.cos_sim_ang = self.metric_cos_sim_ang(y_pred_ang_vel, y_ang_vel)
@@ -299,6 +300,7 @@ class COM_HGNN_Lightning(COM_Base_Lightning):
             See hgnn.py for information on remaining parameters.
         """
         super().__init__(optimizer, lr, data_path)
+
         self.model = COM_HGNN(hidden_channels=hidden_channels,
                               num_layers=num_layers,
                               data_metadata=data_metadata,

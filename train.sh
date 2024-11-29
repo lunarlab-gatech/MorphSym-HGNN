@@ -24,12 +24,12 @@ pip install .
 python research/train_regression-com_msgn.py\
     --seed 42\
     --batch_size 64\
-    --num_layers 8\
+    --num_layers 4\
     --hidden_size 128\
-    --lr 0.0012\
+    --lr 0.00012\
     --epochs 60\
     --logger_project_name com_debug\
-    --model_type heterogeneous_gnn_s4_com\
+    --model_type heterogeneous_gnn_k4_com\
     --wandb_api_key 9a342aac9d095ea22ea22bfd71b4b56ff4175f9f
 
 # Main Experiment 3: Sample Efficiency, Classification K4
