@@ -137,6 +137,11 @@ def print_results(acc, f1_leg_0, f1_leg_1, f1_leg_2, f1_leg_3, f1_avg_legs):
     print("F1-Score Legs Avg: ", f1_avg_legs.item())
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--path_to_checkpoint', type=str, default=None, help='Path to checkpoint')
+    args = parser.parse_args()
+
     # S4
     # MorphSym_version = 'S4'
     # path_to_checkpoint = "ckpts/Classification Experiment/Main Experiment/leafy-totem-5/epoch=10-val_CE_loss=0.30258.ckpt"
@@ -146,7 +151,7 @@ if __name__ == "__main__":
 
     # C2
     MorphSym_version = 'C2'
-    path_to_checkpoint = "models/main_cls_c2/jolly-tree-2"
+    path_to_checkpoint = args.path_to_checkpoint
     group_operator_path = 'cfg/mini_cheetah-c2.yaml'
     symmetry_operator_list = [None]  # Can be 'gs' or 'gt' or 'gr' or None
     symmetry_mode = 'MorphSym' # Can be 'Euclidean' or 'MorphSym' or None
