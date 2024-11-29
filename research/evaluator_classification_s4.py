@@ -80,7 +80,7 @@ def main():
         test_dataset = torch.utils.data.Subset(test_dataset, np.arange(0, test_dataset.__len__()))
 
         # Evaluate with model
-        pred, labels, acc, f1_leg_0, f1_leg_1, f1_leg_2, f1_leg_3, f1_avg_legs = evaluate_model(path_to_checkpoint, test_dataset)
+        pred, labels, acc, f1_leg_0, f1_leg_1, f1_leg_2, f1_leg_3, f1_avg_legs = evaluate_model(path_to_checkpoint, test_dataset, task_type='classification')
         # Save to DataFrame
         df = pandas.concat([df, pandas.DataFrame([[swap_str, acc.item(), f1_leg_0.item(), f1_leg_1.item(), f1_leg_2.item(), f1_leg_3.item(), f1_avg_legs.item()]], columns=columns)], ignore_index=True)
 

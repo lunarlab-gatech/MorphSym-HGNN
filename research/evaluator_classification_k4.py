@@ -78,7 +78,7 @@ def main(MorphSym_version: str,
         test_dataset = prepare_test_dataset(linData, path_to_urdf, model_type, history_length, normalize=True, swap_legs=swap_legs, symmetry_operator=symmetry_operator, symmetry_mode=symmetry_mode, group_operator_path=group_operator_path)
 
         # Evaluate with model
-        pred, labels, acc, f1_leg_0, f1_leg_1, f1_leg_2, f1_leg_3, f1_avg_legs = evaluate_model(path_to_checkpoint, test_dataset, symmetry_mode=symmetry_mode, group_operator_path=group_operator_path)
+        pred, labels, acc, f1_leg_0, f1_leg_1, f1_leg_2, f1_leg_3, f1_avg_legs = evaluate_model(path_to_checkpoint, test_dataset, symmetry_mode=symmetry_mode, group_operator_path=group_operator_path, task_type='classification')
         # Save to DataFrame
         df = pandas.concat([df, pandas.DataFrame([[symmetry_operator, acc.item(), f1_leg_0.item(), f1_leg_1.item(), f1_leg_2.item(), f1_leg_3.item(), f1_avg_legs.item()]], columns=columns)], ignore_index=True)
 
@@ -145,16 +145,18 @@ if __name__ == "__main__":
     # symmetry_mode = 'Euclidean' # Can be 'Euclidean' or 'MorphSym' or None
 
     # C2
-    # MorphSym_version = 'C2'
-    # path_to_checkpoint = "models/autumn-brook-16"
-    # group_operator_path = 'cfg/mini_cheetah-c2.yaml'
-
-    # K4
-    MorphSym_version = 'K4'
-    path_to_checkpoint = "models/comfy-shape-20"
-    group_operator_path = 'cfg/mini_cheetah-k4.yaml'
+    MorphSym_version = 'C2'
+    path_to_checkpoint = "models/main_cls_c2/jolly-tree-2"
+    group_operator_path = 'cfg/mini_cheetah-c2.yaml'
     symmetry_operator_list = [None]  # Can be 'gs' or 'gt' or 'gr' or None
     symmetry_mode = 'MorphSym' # Can be 'Euclidean' or 'MorphSym' or None
+
+    # K4
+    # MorphSym_version = 'K4'
+    # path_to_checkpoint = "models/main_cls_c2/jolly-tree-2"
+    # group_operator_path = 'cfg/mini_cheetah-k4.yaml'
+    # symmetry_operator_list = [None]  # Can be 'gs' or 'gt' or 'gr' or None
+    # symmetry_mode = 'MorphSym' # Can be 'Euclidean' or 'MorphSym' or None
 
     if os.path.isdir(path_to_checkpoint):
         checkpoint_files = glob.glob(os.path.join(path_to_checkpoint, "*.ckpt"))

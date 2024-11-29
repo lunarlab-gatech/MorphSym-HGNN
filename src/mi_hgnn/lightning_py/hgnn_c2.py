@@ -176,7 +176,7 @@ class GRF_HGNN_C2(torch.nn.Module):
         final_output = self.decoder(x_dict['foot']) # shape: [batch_size * num_feet, out_channels_per_foot]
 
         # Apply morphological symmetry to the final output
-        if self.grf_dimension == 3:
+        if self.regression and self.grf_dimension == 3:
             final_output = self.ms_foot_decoder(final_output)
         
         return final_output

@@ -135,6 +135,7 @@ def main(MorphSym_version: str,
          group_operator_path=None,
          grf_body_to_world_frame=True,
          grf_dimension=3,
+         test_only_on_z=False,
          batch_size: int = 100):
 
     if MorphSym_version == 'S4':
@@ -157,7 +158,7 @@ def main(MorphSym_version: str,
     ckpt_name = path_to_checkpoint.split('/')[-1].replace('.ckpt', '')
     time_stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     # add the swap legs and leg swap mode to the path
-    path_to_save_csv = path_to_save_csv.replace(ckpt_name, ckpt_name + '-symmetry_operator_list={}-symmetry_mode={}-{}'.format(symmetry_operator_list, symmetry_mode, time_stamp))
+    path_to_save_csv = path_to_save_csv.replace(ckpt_name, ckpt_name + '-symmetry_operator_list={}-symmetry_mode={}-test_only_on_z={}-{}'.format(symmetry_operator_list, symmetry_mode, test_only_on_z, time_stamp))
     print("===> Results saving to: ", path_to_save_csv)
 
     # Define model type
@@ -205,7 +206,8 @@ def main(MorphSym_version: str,
                 group_operator_path=group_operator_path,
                 grf_body_to_world_frame=grf_body_to_world_frame,
                 grf_dimension=grf_dimension,
-                batch_size=batch_size)
+                batch_size=batch_size,
+                test_only_on_z=test_only_on_z)
             results.append(mse.item())
             results.append(rmse.item())
             results.append(l1.item())
@@ -223,12 +225,13 @@ if __name__ == '__main__':
     # MS-HGNN
     MorphSym_version = 'C2'
     # path_to_checkpoint = "models/main_grf_c2_d=3/atomic-haze-1"
-    path_to_checkpoint = "models/main_grf_c2_d=3/atomic-haze-1"
+    path_to_checkpoint = "models/main_grf_c2_d=3/atomic-haze-1/epoch=12-val_MSE_loss=57.35700-val_L1_loss=2.34450.ckpt"
     group_operator_path = 'cfg/a1-c2.yaml'
     symmetry_operator_list = [None]  # Can be 'gs' or 'gt' or 'gr' or None
     symmetry_mode = 'MorphSym' # Can be 'Euclidean' or 'MorphSym' or None
     grf_body_to_world_frame = True
     grf_dimension = 3
+    test_only_on_z = True
 
     if os.path.isdir(path_to_checkpoint):
         checkpoint_files = glob.glob(os.path.join(path_to_checkpoint, "*.ckpt"))
@@ -242,7 +245,8 @@ if __name__ == '__main__':
                  group_operator_path=group_operator_path,
                  grf_body_to_world_frame=grf_body_to_world_frame,
                  grf_dimension=grf_dimension,
-                 batch_size=batch_size)
+                 batch_size=batch_size,
+                 test_only_on_z=test_only_on_z)
     else:
         main(MorphSym_version=MorphSym_version, 
              path_to_checkpoint=path_to_checkpoint, 
@@ -251,4 +255,5 @@ if __name__ == '__main__':
              group_operator_path=group_operator_path,
              grf_body_to_world_frame=grf_body_to_world_frame,
              grf_dimension=grf_dimension,
-             batch_size=batch_size)
+             batch_size=batch_size,
+             test_only_on_z=test_only_on_z)
