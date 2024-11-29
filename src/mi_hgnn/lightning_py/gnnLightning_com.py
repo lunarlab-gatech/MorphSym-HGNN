@@ -18,6 +18,7 @@ from .customMetrics import CrossEntropyLossMetric, BinaryF1Score, CosineSimilari
 from .hgnn import COM_HGNN
 from .hgnn_s4_com import COM_HGNN_S4
 from .hgnn_k4_com import COM_HGNN_K4
+from .hgnn_c2_com import COM_HGNN_C2
 from torch_geometric.profile import count_parameters
 from ..datasets_py.flexibleDataset import FlexibleDataset
 from ..datasets_py.soloDataset import Standarizer
@@ -356,6 +357,14 @@ class COM_HGNN_SYM_Lightning(COM_Base_Lightning):
 
         if model_type == 'heterogeneous_gnn_k4_com':
             self.model = COM_HGNN_K4(hidden_channels=hidden_channels,
+                              num_layers=num_layers,
+                              data_metadata=data_metadata,
+                              regression=regression,
+                              activation_fn=activation_fn,
+                              symmetry_mode=symmetry_mode,
+                              group_operator_path=group_operator_path)
+        elif model_type == 'heterogeneous_gnn_c2_com':
+            self.model = COM_HGNN_C2(hidden_channels=hidden_channels,
                               num_layers=num_layers,
                               data_metadata=data_metadata,
                               regression=regression,

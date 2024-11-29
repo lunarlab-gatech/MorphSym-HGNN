@@ -1078,7 +1078,7 @@ def train_model(
     # Extract important information from the Subsets
     model_type = train_data_format
     data_metadata = None
-    if model_type == 'heterogeneous_gnn' or model_type == 'heterogeneous_gnn_k4' or model_type == 'heterogeneous_gnn_c2' or model_type == 'heterogeneous_gnn_k4_com' or model_type == 'heterogeneous_gnn_s4_com':
+    if model_type == 'heterogeneous_gnn' or model_type == 'heterogeneous_gnn_k4' or model_type == 'heterogeneous_gnn_c2' or model_type == 'heterogeneous_gnn_k4_com' or model_type == 'heterogeneous_gnn_c2_com' or model_type == 'heterogeneous_gnn_s4_com':
         if isinstance(train_dataset.dataset, torch.utils.data.ConcatDataset):
             data_metadata = train_dataset.dataset.datasets[
                 0].dataset.get_data_metadata()
@@ -1203,7 +1203,7 @@ def train_model(
     #         regression=regression,
     #         data_path=data_path)
     #     model_parameters = count_parameters(lightning_model.model)
-    elif model_type == 'heterogeneous_gnn_k4_com' or model_type == 'heterogeneous_gnn_s4_com':
+    elif model_type == 'heterogeneous_gnn_k4_com' or model_type == 'heterogeneous_gnn_c2_com' or model_type == 'heterogeneous_gnn_s4_com':
         lightning_model = COM_HGNN_SYM_Lightning(
             hidden_channels=hidden_size,
             num_layers=num_layers,
