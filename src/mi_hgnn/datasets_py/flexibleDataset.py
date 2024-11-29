@@ -449,7 +449,7 @@ class FlexibleDataset(Dataset):
         # Return data in the proper format
         if self.data_format == 'dynamics':
             return self.get_helper_dynamics(idx)
-        elif self.data_format == 'mlp' or 'mlp_com':
+        elif self.data_format == 'mlp' or self.data_format == 'mlp_com':
             return self.get_helper_mlp(idx)
         elif self.data_format == 'heterogeneous_gnn' or self.data_format == 'heterogeneous_gnn_k4':
             return self.get_helper_heterogeneous_gnn(idx)
