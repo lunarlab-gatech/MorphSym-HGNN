@@ -56,10 +56,11 @@ def main(MorphSym_version: str,
         print(f"Model Type: {model_type}")
         print(f"Path to Checkpoint: {path_to_checkpoint}")
         print("================================================")
-
-        test_dataset = prepare_test_dataset(Solo12Dataset, path_to_urdf, model_type, history_length, normalize=True, swap_legs=swap_legs, symmetry_operator=symmetry_operator, symmetry_mode=symmetry_mode, group_operator_path=group_operator_path)
-
+        
         root = Path(Path('.').parent, 'datasets', 'Solo-12').absolute()
+        test_dataset = prepare_test_dataset(Solo12Dataset, root, path_to_urdf, model_type, history_length, normalize=True, 
+                                                symmetry_operator=symmetry_operator, symmetry_mode=symmetry_mode, group_operator_path=group_operator_path)
+        
         # Evaluate with model
         pred, labels, loss, cos_sim_lin, cos_sim_ang = evaluate_model(path_to_checkpoint, test_dataset, symmetry_mode=symmetry_mode, group_operator_path=group_operator_path, data_path = root)
         # Save to DataFrame
@@ -72,17 +73,14 @@ def main(MorphSym_version: str,
     df.to_csv(path_to_save_csv, index=False)
     print("===> Evaluation Finished! Results saved to: ", path_to_save_csv)
 
-def prepare_test_dataset(Solo12Dataset, path_to_urdf, model_type, history_length, normalize=True, swap_legs=None, symmetry_operator=None, symmetry_mode=None, group_operator_path=None):
+def prepare_test_dataset(Solo12Dataset, root, path_to_urdf, model_type, history_length, normalize=True, symmetry_operator=None, symmetry_mode=None, group_operator_path=None):
     """Prepare the test dataset"""
     # Define train and val sets
-    test_dataset = Solo12Dataset(Path(Path('.').parent, 'datasets', 'Solo-12').absolute(), path_to_urdf, 
-                       'package://yobotics_description/', 'mini-cheetah-gazebo-urdf/yobo_model/yobotics_description', model_type, history_length, normalize)
+    solo12data_test = Solo12Dataset(root, path_to_urdf, 
+                       'package://yobotics_description/', 'mini-cheetah-gazebo-urdf/yobo_model/yobotics_description', model_type, history_length, normalize, stage='test', 
+                       symmetry_operator=symmetry_operator, symmetry_mode=symmetry_mode, group_operator_path=group_operator_path)
 
-    # Take first 85% for training, and last 15% for validation
-    # Also remove the last entries, as dynamics models can't use last entry due to derivative calculation
-    data_len_minus_1 = test_dataset.__len__() - 1
-    split_index_test = int(np.round(data_len_minus_1 * 0.85)) # When value has .5, round to nearest-even
-    test_dataset = torch.utils.data.Subset(test_dataset, np.arange(0, split_index_test))
+    test_dataset = torch.utils.data.Subset(solo12data_test, np.arange(0, solo12data_test.__len__()))
     
     return test_dataset
 
@@ -94,9 +92,9 @@ def print_results(loss, cos_sim_lin, cos_sim_ang):
 
 if __name__ == "__main__":
     # K4
-    MorphSym_version = 'S4'
-    path_to_checkpoint = "models/rich-sky-40/epoch=22-val_MSE_loss=0.36576-val_avg_cos_sim=0.70491.ckpt"
-    group_operator_path = 'cfg/mini_cheetah-k4.yaml'
+    MorphSym_version = 'K4'
+    path_to_checkpoint = "Your Checkpoint File Path"
+    group_operator_path = "Your Config File Path"
     symmetry_operator_list = [None]  # Can be 'gs' or 'gt' or 'gr' or None
     symmetry_mode = 'MorphSym' # Can be 'Euclidean' or 'MorphSym' or None
 
