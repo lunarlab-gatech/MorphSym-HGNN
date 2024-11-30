@@ -16,7 +16,8 @@ def main(seed,
          symmetry_mode='MorphSym',
          group_operator_path='cfg/a1-c2.yaml',
          grf_body_to_world_frame=False,
-         grf_dimension=1):
+         grf_dimension=1,
+         ckpt_path=None):
     # ================================= CHANGE THESE ===================================
     wandb_api_key = "eed5fa86674230b63649180cc343f14e1f1ace78"
     # ==================================================================================
@@ -81,7 +82,8 @@ def main(seed,
                 subfoler_name=logger_project_name,
                 wandb_api_key=wandb_api_key,
                 grf_body_to_world_frame=grf_body_to_world_frame,
-                grf_dimension=grf_dimension)
+                grf_dimension=grf_dimension,
+                ckpt_path=ckpt_path)
 
 if __name__ == '__main__':
     import argparse
@@ -99,6 +101,7 @@ if __name__ == '__main__':
     parser.add_argument('--model_type', type=str, default='heterogeneous_gnn_c2', help='Model type, options: heterogeneous_gnn_c2')
     parser.add_argument('--grf_body_to_world_frame', type=bool, default=False, help='Whether to convert GRF to world frame') # TODO: change
     parser.add_argument('--grf_dimension', type=int, default=3, help='Dimension of GRF') # TODO: change
+    parser.add_argument('--ckpt_path', type=str, default=None, help='Path to the checkpoint file to resume training from')
     args = parser.parse_args()
 
     print(f"args: {args}")
@@ -112,4 +115,5 @@ if __name__ == '__main__':
          logger_project_name=args.logger_project_name,
          model_type=args.model_type,
          grf_body_to_world_frame=args.grf_body_to_world_frame,
-         grf_dimension=args.grf_dimension)
+         grf_dimension=args.grf_dimension,
+         ckpt_path=args.ckpt_path)

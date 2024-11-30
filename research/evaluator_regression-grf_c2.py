@@ -221,17 +221,30 @@ def main(MorphSym_version: str,
         df.to_csv("regression_results.csv", index=False)
 
 if __name__ == '__main__':
+
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--path_to_checkpoint', type=str, default=None, help='Path to checkpoint')
+    parser.add_argument('--group_operator_path', type=str, default='cfg/a1-c2.yaml', help='Path to group operator')
+    parser.add_argument('--symmetry_mode', type=str, default='MorphSym', help='Symmetry mode')
+    parser.add_argument('--grf_body_to_world_frame', type=bool, default=False, help='GRF body to world frame')
+    parser.add_argument('--test_only_on_z', type=bool, default=True, help='Test only on z')
+    parser.add_argument('--grf_dimension', type=int, default=1, help='Dimension of GRF')
+
+    args = parser.parse_args()
+
+    print(args)
+
     batch_size = 100
-    # MS-HGNN
+    path_to_checkpoint = args.path_to_checkpoint
+    group_operator_path = args.group_operator_path
+    symmetry_mode = args.symmetry_mode
+    grf_body_to_world_frame = args.grf_body_to_world_frame
+    grf_dimension = args.grf_dimension
+    test_only_on_z = args.test_only_on_z
+
     MorphSym_version = 'C2'
-    # path_to_checkpoint = "models/main_grf_c2_d=3/atomic-haze-1"
-    path_to_checkpoint = "models/main_grf_c2_d=3/atomic-haze-1/epoch=12-val_MSE_loss=57.35700-val_L1_loss=2.34450.ckpt"
-    group_operator_path = 'cfg/a1-c2.yaml'
     symmetry_operator_list = [None]  # Can be 'gs' or 'gt' or 'gr' or None
-    symmetry_mode = 'MorphSym' # Can be 'Euclidean' or 'MorphSym' or None
-    grf_body_to_world_frame = True
-    grf_dimension = 3
-    test_only_on_z = True
 
     if os.path.isdir(path_to_checkpoint):
         checkpoint_files = glob.glob(os.path.join(path_to_checkpoint, "*.ckpt"))
