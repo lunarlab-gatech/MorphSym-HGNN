@@ -24,11 +24,11 @@ pip install .
 python research/train_regression-com_msgn.py\
     --seed 42\
     --batch_size 64\
-    --num_layers 4\
+    --num_layers 8\
     --hidden_size 128\
     --lr 0.00012\
-    --epochs 60\
-    --logger_project_name com_debug\
+    --epochs 49\
+    --logger_project_name com_exp\
     --model_type heterogeneous_gnn_c2_com\
     --group_operator_path cfg/solo-c2.yaml\
     --wandb_api_key 9a342aac9d095ea22ea22bfd71b4b56ff4175f9f

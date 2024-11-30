@@ -19,6 +19,9 @@ def main(MorphSym_version: str,
     elif MorphSym_version == 'S4':
         from mi_hgnn.datasets_py.soloDataset import Solo12Dataset
         model_type = 'heterogeneous_gnn_s4_com'
+    elif MorphSym_version == 'C2':
+        from mi_hgnn.datasets_py.soloDataset import Solo12Dataset
+        model_type = 'heterogeneous_gnn_c2_com'
     else:
         raise ValueError("Other MorphSym versions are not supported for this script yet!")
     
@@ -62,12 +65,12 @@ def main(MorphSym_version: str,
                                                 symmetry_operator=symmetry_operator, symmetry_mode=symmetry_mode, group_operator_path=group_operator_path)
         
         # Evaluate with model
-        pred, labels, loss, cos_sim_lin, cos_sim_ang = evaluate_model(path_to_checkpoint, test_dataset, symmetry_mode=symmetry_mode, group_operator_path=group_operator_path, data_path = root)
+        pred, labels, mse_loss, cos_sim_lin, cos_sim_ang = evaluate_model(path_to_checkpoint, test_dataset, symmetry_mode=symmetry_mode, group_operator_path=group_operator_path, data_path = root)
         # Save to DataFrame
-        df = pandas.concat([df, pandas.DataFrame([[symmetry_operator, loss.item(), cos_sim_lin.item(), cos_sim_ang.item()]], columns=columns)], ignore_index=True)
+        df = pandas.concat([df, pandas.DataFrame([[symmetry_operator, mse_loss.item(), cos_sim_lin.item(), cos_sim_ang.item()]], columns=columns)], ignore_index=True)
 
         # Print the results
-        print_results(loss, cos_sim_lin, cos_sim_ang)
+        print_results(mse_loss, cos_sim_lin, cos_sim_ang)
 
     # Save to csv
     df.to_csv(path_to_save_csv, index=False)
@@ -92,9 +95,9 @@ def print_results(loss, cos_sim_lin, cos_sim_ang):
 
 if __name__ == "__main__":
     # K4
-    MorphSym_version = 'K4'
-    path_to_checkpoint = "Your Checkpoint File Path"
-    group_operator_path = "Your Config File Path"
+    MorphSym_version = 'C2'
+    path_to_checkpoint = "models/com_exp/autumn-cloud-2/"
+    group_operator_path = "cfg/a1-c2.yaml"
     symmetry_operator_list = [None]  # Can be 'gs' or 'gt' or 'gr' or None
     symmetry_mode = 'MorphSym' # Can be 'Euclidean' or 'MorphSym' or None
 

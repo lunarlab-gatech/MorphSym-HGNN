@@ -915,8 +915,17 @@ def evaluate_model(path_to_checkpoint: Path, predict_dataset: Subset,
             grf_dimension=grf_dimension,
             strict=False
         )
-    elif model_type == 'heterogeneous_gnn_k4_com' or model_type == 'heterogeneous_gnn_s4_com':
-        model = COM_HGNN_Lightning.load_from_checkpoint(
+    # elif model_type == 'heterogeneous_gnn_k4_com' or model_type == 'heterogeneous_gnn_s4_com':
+    #     model = COM_HGNN_Lightning.load_from_checkpoint(
+    #         str(path_to_checkpoint),
+    #         symmetry_mode=symmetry_mode,
+    #         group_operator_path=group_operator_path,
+    #         strict=False, 
+    #         model_type=model_type,
+    #         data_path=data_path
+    #     )
+    elif model_type == 'heterogeneous_gnn_k4_com' or model_type == 'heterogeneous_gnn_c2_com' or model_type == 'heterogeneous_gnn_s4_com':
+        model = COM_HGNN_SYM_Lightning.load_from_checkpoint(
             str(path_to_checkpoint),
             symmetry_mode=symmetry_mode,
             group_operator_path=group_operator_path,
@@ -924,6 +933,8 @@ def evaluate_model(path_to_checkpoint: Path, predict_dataset: Subset,
             model_type=model_type,
             data_path=data_path
         )
+        model_parameters = count_parameters(model.model)
+        print(model_parameters)
     elif model_type == 'dynamics':
         urdf_path = None
         try:
@@ -932,8 +943,7 @@ def evaluate_model(path_to_checkpoint: Path, predict_dataset: Subset,
             raise ValueError("urdf_path_dynamics needs to be passed to FlexibleDataset in order to use Dynamics model.")
         joint_mapping, foot_mapping = dataset_raw.pin_to_urdf_order_mapping()
         model = Full_Dynamics_Model_Lightning(str(urdf_path), urdf_path.parent.parent,
-                                            joint_mapping, foot_mapping)
-                                                
+                                            joint_mapping, foot_mapping)                                                
     else:
         raise ValueError("model_type must be mlp, heterogeneous_gnn, heterogeneous_gnn_k4, heterogeneous_gnn_c2, heterogeneous_gnn_k4_com, heterogeneous_gnn_s4_com, or dynamics.")
     model.eval()
@@ -955,7 +965,7 @@ def evaluate_model(path_to_checkpoint: Path, predict_dataset: Subset,
         # Return the results
         return pred, labels, model.mse_loss, model.rmse_loss, model.l1_loss
 
-    elif model_type == 'heterogeneous_gnn' or model_type == 'heterogeneous_gnn_k4' or model_type == 'heterogeneous_gnn_c2' or model_type == 'heterogeneous_gnn_k4_com' or model_type == 'heterogeneous_gnn_s4_com':
+    elif model_type == 'heterogeneous_gnn' or model_type == 'heterogeneous_gnn_k4' or model_type == 'heterogeneous_gnn_c2' or model_type == 'heterogeneous_gnn_k4_com' or model_type == 'heterogeneous_gnn_c2_com' or model_type == 'heterogeneous_gnn_s4_com':
         pred = torch.zeros((0))
         labels = torch.zeros((0))
         device = 'cpu' # 'cuda' if torch.cuda.is_available() else 'cpu' # TODO: Fix this
@@ -969,11 +979,14 @@ def evaluate_model(path_to_checkpoint: Path, predict_dataset: Subset,
             # Predict with the model
             for batch in valLoader:
                 labels_batch, y_pred = model.step_helper_function(batch)
-                if model.body_to_world_frame:
-                    batch_r_quat = batch.r_o.view(batch.batch_size, 4)
-                    model.calculate_losses_step_worldframe(labels_batch, y_pred, batch_r_quat)
+                if 'com' in model_type:
+                    model.calculate_losses_step(labels_batch, y_pred)
                 else:
-                    model.calculate_losses_step_original(labels_batch, y_pred)
+                    if model.body_to_world_frame:
+                        batch_r_quat = batch.r_o.view(batch.batch_size, 4)
+                        model.calculate_losses_step_worldframe(labels_batch, y_pred, batch_r_quat)
+                    else:
+                        model.calculate_losses_step_original(labels_batch, y_pred)
 
                 # If classification, convert to 16 class predictions and labels
                 if not model.regression:
@@ -994,17 +1007,20 @@ def evaluate_model(path_to_checkpoint: Path, predict_dataset: Subset,
                 batch_num += 1
                 print("Prediction: ", batch_num, "/", total_batches, "\r", end="")
             
-            if model.body_to_world_frame:
-                model.calculate_losses_epoch_worldframe()
-            else:
+            if 'com' in model_type:
                 model.calculate_losses_epoch()
+            else:
+                if model.body_to_world_frame:
+                    model.calculate_losses_epoch_worldframe()
+                else:
+                    model.calculate_losses_epoch()
         
         # Return the results
         if not model.regression:
             legs_avg_f1 = (model.f1_leg0 + model.f1_leg1 + model.f1_leg2 + model.f1_leg3) / 4.0
             return pred, labels, model.acc, model.f1_leg0, model.f1_leg1, model.f1_leg2, model.f1_leg3, legs_avg_f1
-        elif model_type == 'heterogeneous_gnn_k4_com' or model_type == 'heterogeneous_gnn_s4_com':
-            return pred, labels, model.rmse_loss, model.cos_sim_lin, model.cos_sim_ang
+        elif model_type == 'heterogeneous_gnn_k4_com' or model_type == 'heterogeneous_gnn_c2_com' or model_type == 'heterogeneous_gnn_s4_com':
+            return pred, labels, model.mse_loss, model.cos_sim_lin, model.cos_sim_ang
         else:
             if model.body_to_world_frame:
                 return pred, labels, model.mse_loss_worldframe, model.rmse_loss_worldframe, model.l1_loss_worldframe
