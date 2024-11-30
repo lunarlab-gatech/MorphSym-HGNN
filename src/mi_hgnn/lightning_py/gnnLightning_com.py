@@ -72,6 +72,7 @@ class COM_Base_Lightning(L.LightningModule):
         self.mse_loss_ang = None
         self.cos_sim_lin = None
         self.cos_sim_ang = None
+        self.avg_cos_sim = None
         self.loss = None
         # self.l1_loss = None
 
@@ -87,6 +88,7 @@ class COM_Base_Lightning(L.LightningModule):
         self.log(step_name + "_MSE_loss_ang", self.mse_loss_ang, on_step=on_step, on_epoch=on_epoch)
         self.log(step_name + "_cos_sim_lin", self.cos_sim_lin, on_step=on_step, on_epoch=on_epoch)
         self.log(step_name + "_cos_sim_ang", self.cos_sim_ang, on_step=on_step, on_epoch=on_epoch)
+        self.log(step_name + '_avg_cos_sim', self.avg_cos_sim, on_step=on_step, on_epoch=on_epoch)
         self.log(step_name + "_loss", self.loss, on_step=on_step, on_epoch=on_epoch)
         # self.log(step_name + "_L1_loss", self.l1_loss, on_step=on_step, on_epoch=on_epoch)
 
@@ -114,6 +116,7 @@ class COM_Base_Lightning(L.LightningModule):
 
         self.cos_sim_lin = self.metric_cos_sim_lin(y_pred_lin_vel, y_lin_vel)
         self.cos_sim_ang = self.metric_cos_sim_ang(y_pred_ang_vel, y_ang_vel)
+        self.avg_cos_sim = (self.cos_sim_lin + self.cos_sim_ang) / 2
 
         self.loss = self.mse_loss
 
@@ -125,6 +128,7 @@ class COM_Base_Lightning(L.LightningModule):
         self.mse_loss_ang = self.metric_mse_ang.compute()
         self.cos_sim_lin = self.metric_cos_sim_lin.compute()
         self.cos_sim_ang = self.metric_cos_sim_ang.compute()
+        self.avg_cos_sim = (self.cos_sim_lin + self.cos_sim_ang) / 2
         self.loss = self.metric_mse.compute()
         # self.l1_loss = self.metric_l1.compute()
 
