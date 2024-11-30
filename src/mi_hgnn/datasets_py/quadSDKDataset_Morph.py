@@ -472,10 +472,11 @@ class QuadSDKDataset_A1(QuadSDKDataset_NewGraph):
         r_quat = np.array(self.mat_data['r_o'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 4)
         timestamps = np.array(self.mat_data['timestamps'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 3)
 
-        world_to_body_R = Rotation.from_quat(r_quat[-1])
-        grfs_T = np.array(grfs.reshape(4, 3), dtype=np.double).T
-        grfs_body = (world_to_body_R.as_matrix() @ grfs_T).T
-        grfs = grfs_body.flatten()
+        if self.grf_body_to_world_frame:
+            world_to_body_R = Rotation.from_quat(r_quat[-1])
+            grfs_T = np.array(grfs.reshape(4, 3), dtype=np.double).T
+            grfs_body = (world_to_body_R.as_matrix() @ grfs_T).T
+            grfs = grfs_body.flatten()
 
         return lin_acc, ang_vel, j_p, j_v, j_T, None, None, grfs, r_p, r_quat, timestamps
 
