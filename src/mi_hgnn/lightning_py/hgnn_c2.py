@@ -203,7 +203,7 @@ class GRF_HGNN_C2(torch.nn.Module):
         # Reshape back to the original shape [batch_size, num_joints, num_timesteps, num_variables] -> [batch_size, num_timesteps * num_variables]
         x_dict['joint'] = joint_x.reshape(-1, self.num_timesteps * self.num_variables_per_joint)
 
-        if not self.regression:
+        if not self.regression: # For GRF_HGNN, we do not use foot inputs, instead, we use all ones for foot init.
             batch_size = x_dict['foot'].shape[0] // self.num_legs
             # Apply morphological symmetry to the foot features
             foot_x = x_dict['foot']  # shape: [batch_size * num_legs, num_timesteps * num_variables]

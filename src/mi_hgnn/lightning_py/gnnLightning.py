@@ -716,7 +716,7 @@ class HGNN_C2_Lightning_Reg(Base_Lightning):
             self.log_losses_worldframe("train", on_step=True)
             return self.mse_loss
         else:
-            self.calculate_losses_step(y, y_pred)
+            self.calculate_losses_step_original(y, y_pred)
             self.log_losses("train", on_step=True)
             if self.regression:
                 return self.mse_loss
@@ -737,7 +737,7 @@ class HGNN_C2_Lightning_Reg(Base_Lightning):
             self.calculate_losses_step_worldframe(y, y_pred, batch_r_quat)
             return self.mse_loss
         else:
-            self.calculate_losses_step(y, y_pred)
+            self.calculate_losses_step_original(y, y_pred)
             if self.regression:
                 return self.mse_loss
             else:
@@ -765,7 +765,7 @@ class HGNN_C2_Lightning_Reg(Base_Lightning):
             self.calculate_losses_step_worldframe(y, y_pred, batch_r_quat)
             return self.mse_loss
         else:
-            self.calculate_losses_step(y, y_pred)
+            self.calculate_losses_step_original(y, y_pred)
             if self.regression:
                 return self.mse_loss
             else:

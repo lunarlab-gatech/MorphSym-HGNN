@@ -15,8 +15,8 @@ def main(seed,
          symmetry_operator=None,
          symmetry_mode='MorphSym',
          group_operator_path='cfg/a1-c2.yaml',
-         grf_body_to_world_frame=True,
-         grf_dimension=3):
+         grf_body_to_world_frame=False,
+         grf_dimension=1):
     # ================================= CHANGE THESE ===================================
     wandb_api_key = "eed5fa86674230b63649180cc343f14e1f1ace78"
     # ==================================================================================
@@ -97,7 +97,7 @@ if __name__ == '__main__':
     parser.add_argument('--logger_project_name', type=str, default='grf_c2_debug', help='Logger project name') # TODO: change
     # Model parameters
     parser.add_argument('--model_type', type=str, default='heterogeneous_gnn_c2', help='Model type, options: heterogeneous_gnn_c2')
-    parser.add_argument('--grf_body_to_world_frame', type=bool, default=True, help='Whether to convert GRF to world frame') # TODO: change
+    parser.add_argument('--grf_body_to_world_frame', type=bool, default=False, help='Whether to convert GRF to world frame') # TODO: change
     parser.add_argument('--grf_dimension', type=int, default=3, help='Dimension of GRF') # TODO: change
     args = parser.parse_args()
 
