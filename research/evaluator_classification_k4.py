@@ -139,6 +139,9 @@ def print_results(acc, f1_leg_0, f1_leg_1, f1_leg_2, f1_leg_3, f1_avg_legs):
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
+    parser.add_argument('--MorphSym_version', type=str, help='MorphSym version')
+    parser.add_argument('--group_operator_path', type=str, help='Path to group operator, e.g. cfg/mini_cheetah-k4.yaml, cfg/mini_cheetah-c2.yaml')
+    parser.add_argument('--symmetry_mode', type=str, default='MorphSym', help='Symmetry mode, e.g. Euclidean, MorphSym')
     parser.add_argument('--path_to_checkpoint', type=str, default=None, help='Path to checkpoint')
     args = parser.parse_args()
 
@@ -150,11 +153,11 @@ if __name__ == "__main__":
     # symmetry_mode = 'Euclidean' # Can be 'Euclidean' or 'MorphSym' or None
 
     # C2
-    MorphSym_version = 'C2'
+    MorphSym_version = args.MorphSym_version
     path_to_checkpoint = args.path_to_checkpoint
-    group_operator_path = 'cfg/mini_cheetah-c2.yaml'
+    group_operator_path = args.group_operator_path
     symmetry_operator_list = [None]  # Can be 'gs' or 'gt' or 'gr' or None
-    symmetry_mode = 'MorphSym' # Can be 'Euclidean' or 'MorphSym' or None
+    symmetry_mode = args.symmetry_mode # Can be 'Euclidean' or 'MorphSym' or None
 
     # K4
     # MorphSym_version = 'K4'
