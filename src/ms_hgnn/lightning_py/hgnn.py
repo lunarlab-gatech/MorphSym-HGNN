@@ -8,7 +8,8 @@ class GRF_HGNN(torch.nn.Module):
     """
 
     def __init__(self, hidden_channels: int, num_layers: int, data_metadata, 
-                 regression: bool = True, activation_fn = nn.ReLU()):
+                 regression: bool = True, activation_fn = nn.ReLU(),
+                 grf_dimension: int = 1):
         """
         Implementation of the MI-HGNN model. 
 
@@ -42,12 +43,15 @@ class GRF_HGNN(torch.nn.Module):
                                                     aggr='add')
             conv = HeteroConv(conv_dict, aggr='sum')
             self.convs.append(conv)
-
+        
+        self.grf_dimension = grf_dimension
         # Create the final linear layer (Decoder) -> Just for nodes of type "foot"
-        if self.regression: # For GRF values
+        if self.regression and self.grf_dimension == 1: # For GRF values
             self.out_channels_per_foot = 1
+        elif self.regression and self.grf_dimension == 3: # For GRF values
+            self.out_channels_per_foot = 3
         else: # For contact probability logits
-             self.out_channels_per_foot = 2
+            self.out_channels_per_foot = 2
         self.decoder = Linear(hidden_channels, self.out_channels_per_foot)
 
     def forward(self, x_dict, edge_index_dict):

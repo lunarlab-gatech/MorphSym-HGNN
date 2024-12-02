@@ -93,6 +93,7 @@ class COM_HGNN_K4(torch.nn.Module):
         print(f'===> self.base_coefficients_lin: {self.base_coefficients_lin}')
         print(f'===> self.base_coefficients_ang: {self.base_coefficients_ang}')
 
+
         # Create the first layer encoder to convert features into embeddings
         self.encoder = HeteroDictLinear(-1, hidden_channels, data_metadata[0])
 
@@ -182,6 +183,18 @@ class COM_HGNN_K4(torch.nn.Module):
         
         # Decode to get velocities (batch_size, 4*6) where each base has 3D linear + 3D angular velocity
         out = self.decoder(base_features)
+        return self.morphological_symmetry_decoder(out)
+    
+    def morphological_symmetry_decoder(self, x):
+        # shape [batch_size, num_bases, 6]
+        batch_size = x.shape[0]
+        x = x.reshape(batch_size, self.num_bases, self.num_dimensions_per_base)
+        x_lin = x[:, :, :3].flatten(start_dim=1) * self.base_coefficients_lin.to(x.device).view(1, -1)
+        x_lin = x_lin.reshape(batch_size, self.num_bases, 3)
+        x_ang = x[:, :, 3:].flatten(start_dim=1) * self.base_coefficients_ang.to(x.device).view(1, -1)
+        x_ang = x_ang.reshape(batch_size, self.num_bases, 3)
+        x = torch.cat((x_lin, x_ang), dim=-1)
+        out = x.reshape(batch_size, -1)
         return out
     
     def apply_symmetry(self, x_dict):

@@ -1,28 +1,21 @@
 from pathlib import Path
-from mi_hgnn.lightning_py.gnnLightning import train_model, evaluate_model
+from ms_hgnn.lightning_py.gnnLightning import train_model, evaluate_model
 import torch
-from mi_hgnn.datasets_py.quadSDKDataset import *
-from mi_hgnn.visualization import visualize_model_outputs_regression
+from ms_hgnn.datasets_py.quadSDKDataset import *
+from ms_hgnn.visualization import visualize_model_outputs_regression
 import pandas
-import os
 
 def main():
     # ================================= CHANGE THESE ===================================
-    path_to_save_csv = '/home/swei303/Documents/proj/MorphSym-HGNN/paper/regression_results_hgnns_swei.csv' # csv save location and file name
-    path_to_models = '/home/swei303/Documents/proj/MorphSym-HGNN/ckpts/Regression Experiment/hgnns/' # Folder with all models of same type (like the hgnns folder on Dropbox)
-    model_type = 'heterogeneous_gnn' # 'heterogeneous_gnn' or 'mlp'
+    path_to_save_csv = None # csv save location and file name
     # ==================================================================================
 
-    # Check that the user filled in the necessary parameters
-    if path_to_models is None or model_type is None:
-        raise ValueError("Please provide necessary parameters by editing this file!")
-
-    # Set up the urdf paths
     path_to_urdf = Path('urdf_files', 'A1-Quad', 'a1_pruned.urdf').absolute()
     path_to_urdf_dynamics = Path('urdf_files', 'A1-Quad', 'a1.urdf').absolute()
 
     # Define model type
-    history_length = 150
+    model_type = 'dynamics'
+    history_length = 1
     normalize = False
 
     # ======================= Initalize the test datasets =======================
@@ -36,8 +29,8 @@ def main():
     lima = QuadSDKDataset_A1_Lima(Path(Path('.').parent, 'datasets', 'QuadSDK-A1-Lima').absolute(), path_to_urdf, 
                 'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics)
     unseen_friction_dataset = [alpha, delta, india, lima]
-    for i, dataset in enumerate(unseen_friction_dataset): # Remove last entry, as dynamics can't use it.
-        unseen_friction_dataset[i] = torch.utils.data.Subset(dataset, np.arange(0, dataset.__len__() - 1))
+    for i, dataset in enumerate(unseen_friction_dataset): # Remove first 148 entries, that learning models can't use
+        unseen_friction_dataset[i] = torch.utils.data.Subset(dataset, np.arange(148, dataset.__len__()))
     unseen_friction_dataset = torch.utils.data.ConcatDataset(unseen_friction_dataset)
     
     # Unseen Speed
@@ -51,7 +44,7 @@ def main():
                 'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics)
     unseen_speed_dataset = [quebec, romeo, sierra, tango]
     for i, dataset in enumerate(unseen_speed_dataset):
-        unseen_speed_dataset[i] = torch.utils.data.Subset(dataset, np.arange(0, dataset.__len__() - 1))
+        unseen_speed_dataset[i] = torch.utils.data.Subset(dataset, np.arange(148, dataset.__len__()))
     unseen_speed_dataset = torch.utils.data.ConcatDataset(unseen_speed_dataset)
     
     # Unseen Terrain
@@ -65,57 +58,31 @@ def main():
                 'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics)
     unseen_terrain_dataset = [golf, hotel, oscar, papa]
     for i, dataset in enumerate(unseen_terrain_dataset):
-        unseen_terrain_dataset[i] = torch.utils.data.Subset(dataset, np.arange(0, dataset.__len__() - 1))
+        unseen_terrain_dataset[i] = torch.utils.data.Subset(dataset, np.arange(148, dataset.__len__()))
     unseen_terrain_dataset = torch.utils.data.ConcatDataset(unseen_terrain_dataset)
 
     # Unseen All (Friction, Speed, and Terrain)
     uniform = QuadSDKDataset_A1_Uniform(Path(Path('.').parent, 'datasets', 'QuadSDK-A1-Uniform').absolute(), path_to_urdf, 
                 'package://a1_description/', '', model_type, history_length, normalize, path_to_urdf_dynamics)
-    unseen_all_dataset = torch.utils.data.ConcatDataset([torch.utils.data.Subset(uniform, np.arange(0, uniform.__len__() - 1))])
+    unseen_all_dataset = torch.utils.data.ConcatDataset([torch.utils.data.Subset(uniform, np.arange(148, uniform.__len__()))])
+
 
     # Combine into one test set
     test_dataset = [alpha, delta, golf, hotel,
                     india, lima, oscar, papa,
                     quebec, romeo, sierra, tango, uniform]
     for i, dataset in enumerate(test_dataset):
-        test_dataset[i] = torch.utils.data.Subset(dataset, np.arange(0, dataset.__len__() - 1))
+        test_dataset[i] = torch.utils.data.Subset(dataset, np.arange(148, dataset.__len__()))
     test_dataset = torch.utils.data.ConcatDataset(test_dataset)
+
+    # Make sure the length matches the learning models, meaning we got cut out not used entries correctly.
+    np.testing.assert_equal(test_dataset.__len__(), 343463)
 
     # Keep track of all to evaluate
     to_evaluate = [unseen_friction_dataset, unseen_speed_dataset, unseen_terrain_dataset, unseen_all_dataset, test_dataset]
     dataset_names = ["F", "S", "T", "A", "Full"]
 
-    # ======================= Find Models =======================
-    all_model_dirs = os.listdir(path_to_models)
-    final_models_to_test = []
-    final_model_names = []
-
-    # For each model
-    for model_dir in all_model_dirs:
-
-        # Get all checkpoints
-        model_ckpts = os.listdir(path_to_models + model_dir + "/")
-
-        # Search for the correct checkpoint
-        ckpt_to_use = None
-        curr_max = -1
-        for model_ckpt in model_ckpts:
-            # If v1, is the last checkpoint
-            if "-v1.ckpt" in model_ckpt:
-                ckpt_to_use = model_ckpt
-                break
-            
-            # Else, use checkpoint with highest epoch num
-            model_epoch_num = int(model_ckpt[6:model_ckpt.find("-")])
-            if model_epoch_num > curr_max:
-                curr_max = model_epoch_num
-                ckpt_to_use = model_ckpt
-        
-        # Save the checkpoint at the end of training
-        final_models_to_test.append(path_to_models + model_dir + "/" + ckpt_to_use)
-        final_model_names.append(model_dir)
-
-    # ======================= Evaluation =======================
+    # =========================== Evaluate the model ===========================
     # Create new Dataframe
     columns = ["Model"]
     for name in dataset_names:
@@ -124,18 +91,16 @@ def main():
         columns.append(name + "-L1")
     df = pandas.DataFrame(None, columns=columns)
 
-    # Evaluate each model
-    for i, model in enumerate(final_models_to_test):
-        # Evaluate and save to Dataframe
-        results = [final_model_names[i]]
-        for dataset in to_evaluate:
-            pred, labels, mse, rmse, l1 = evaluate_model(model, torch.utils.data.Subset(dataset, np.arange(0, dataset.__len__())))
-            results.append(mse.item())
-            results.append(rmse.item())
-            results.append(l1.item())
-        df = pandas.concat([df, pandas.DataFrame([results], columns=df.columns)], ignore_index=True)
-        print("Finished Evaluating ", final_model_names[i])
-
+    # Evaluate and save to Dataframe
+    results = ["Dynamics"]
+    for dataset in to_evaluate:
+        pred, labels, mse, rmse, l1 = evaluate_model(None, torch.utils.data.Subset(dataset, np.arange(0, dataset.__len__())))
+        results.append(mse.item())
+        results.append(rmse.item())
+        results.append(l1.item())
+    df = pandas.concat([df, pandas.DataFrame([results], columns=df.columns)], ignore_index=True)
+    print("Finished Evaluating Dynamics")
+    
     # Save csv
     if path_to_save_csv is not None:
         df.to_csv(path_to_save_csv, index=False)

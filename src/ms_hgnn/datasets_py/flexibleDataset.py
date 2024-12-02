@@ -63,9 +63,10 @@ class FlexibleDataset(Dataset):
         """
         # Check for valid data format
         self.data_format = data_format
-        if self.data_format != 'dynamics' and self.data_format != 'mlp' and self.data_format != 'heterogeneous_gnn' and self.data_format != 'heterogeneous_gnn_k4' and self.data_format != 'heterogeneous_gnn_c2' and self.data_format != 'heterogeneous_gnn_k4_com' and self.data_format != 'heterogeneous_gnn_s4_com':
+        if self.data_format != 'dynamics' and self.data_format != 'mlp' and self.data_format != 'heterogeneous_gnn' and self.data_format != 'heterogeneous_gnn_k4' and self.data_format != 'heterogeneous_gnn_c2' \
+            and self.data_format != 'heterogeneous_gnn_k4_com' and self.data_format != 'heterogeneous_gnn_s4_com' and self.data_format != 'mlp_com':
             raise ValueError(
-                "Parameter 'data_format' must be 'dynamics', 'mlp', 'heterogeneous_gnn', or 'heterogeneous_gnn_k4' or 'heterogeneous_gnn_c2' or 'heterogeneous_gnn_k4_com' or 'heterogeneous_gnn_s4_com'."
+                "Parameter 'data_format' must be 'dynamics', 'mlp', 'heterogeneous_gnn', or 'heterogeneous_gnn_k4' or 'heterogeneous_gnn_c2' or 'heterogeneous_gnn_k4_com' or 'heterogeneous_gnn_s4_com' or 'mlp_com'."
             )
 
         # Setup the directories for raw and processed data, download it, 
@@ -448,7 +449,7 @@ class FlexibleDataset(Dataset):
         # Return data in the proper format
         if self.data_format == 'dynamics':
             return self.get_helper_dynamics(idx)
-        elif self.data_format == 'mlp':
+        elif self.data_format == 'mlp' or self.data_format == 'mlp_com':
             return self.get_helper_mlp(idx)
         elif self.data_format == 'heterogeneous_gnn' or self.data_format == 'heterogeneous_gnn_k4':
             return self.get_helper_heterogeneous_gnn(idx)
@@ -604,6 +605,7 @@ class FlexibleDataset(Dataset):
         data['base'].x = base_x
         data['joint'].x = joint_x
         data['foot'].x = foot_x
+
         return data
 
     def find_variables_to_use(self, variables_to_check: list[list]) -> np.array:

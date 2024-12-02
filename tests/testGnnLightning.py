@@ -1,12 +1,12 @@
 import unittest
 from pathlib import Path
 import torchmetrics.classification
-from mi_hgnn import QuadSDKDataset_A1Speed1_0_DEPRECATED
-import mi_hgnn.datasets_py.LinTzuYaunDataset as linData
-from mi_hgnn.datasets_py.LinTzuYaunDataset import LinTzuYaunDataset_asphalt_road
-from mi_hgnn.lightning_py.gnnLightning import train_model, evaluate_model, Heterogeneous_GNN_Lightning, Base_Lightning
-from mi_hgnn.visualization import visualize_model_outputs_regression
-from mi_hgnn.datasets_py.quadSDKDataset import *
+from ms_hgnn import QuadSDKDataset_A1Speed1_0_DEPRECATED
+import ms_hgnn.datasets_py.LinTzuYaunDataset as linData
+from ms_hgnn.datasets_py.LinTzuYaunDataset import LinTzuYaunDataset_asphalt_road
+from ms_hgnn.lightning_py.gnnLightning import train_model, evaluate_model, Heterogeneous_GNN_Lightning, Base_Lightning
+from ms_hgnn.visualization import visualize_model_outputs_regression
+from ms_hgnn.datasets_py.quadSDKDataset import *
 import torch
 import lightning as L
 from torch.utils.data import random_split

@@ -1,7 +1,7 @@
 import os
 import glob
 from pathlib import Path
-from mi_hgnn.lightning_py.gnnLightning import evaluate_model
+from ms_hgnn.lightning_py.gnnLightning import evaluate_model
 import torch
 import numpy as np
 import pandas
@@ -14,10 +14,10 @@ def main(MorphSym_version: str,
          group_operator_path=None):
     # ================================= CHANGE THIS ====================================
     if MorphSym_version == 'K4':
-        from mi_hgnn.datasets_py.soloDataset import Solo12Dataset
+        from ms_hgnn.datasets_py.soloDataset import Solo12Dataset
         model_type = 'heterogeneous_gnn_k4_com'
     elif MorphSym_version == 'S4':
-        from mi_hgnn.datasets_py.soloDataset import Solo12Dataset
+        from ms_hgnn.datasets_py.soloDataset import Solo12Dataset
         model_type = 'heterogeneous_gnn_s4_com'
     else:
         raise ValueError("Other MorphSym versions are not supported for this script yet!")

@@ -1,11 +1,30 @@
-import ms_hgnn.datasets_py.LinTzuYaunDataset as linData
 from pathlib import Path
 from torch_geometric.loader import DataLoader
 import numpy as np
 import torch
 from ms_hgnn.lightning_py.gnnLightning import train_model
+import glob
+import os
 
-def main():
+def find_latest_ckpt(ckpt_dir):
+    ckpt_files = glob.glob(os.path.join(ckpt_dir, '*.ckpt'))
+    if len(ckpt_files) == 0:
+        return None
+    return sorted(ckpt_files, key=lambda x: os.path.getmtime(x))[-1]
+
+def main(train_percentage: float,
+         val_percentage: float,
+         seed: int = 42,
+         batch_size: int = 64,
+         num_layers: int = 8,
+         hidden_size: int = 128,
+         lr: float = 0.0001,
+         epochs: int = 49,
+         logger_project_name: str = 'main_cls_k4',
+         model_type: str = 'heterogeneous_gnn_k4',
+         symmetry_mode: str = 'MorphSym',
+         group_operator_path: str = 'cfg/mini_cheetah-k4.yaml',
+         ckpt_dir: str = None):
     """
     Duplicate the experiment found in Section VI-B of "On discrete symmetries 
     of robotics systems: A group-theoretic and data-driven analysis", but training
@@ -13,19 +32,18 @@ def main():
     
     Here, we can vary the train and validation percentages to test sample efficiency.
     """
-
-    # ================================= CHANGE THESE ===================================
-    model_type = 'heterogeneous_gnn' # `mlp`
-    num_layers = 8
-    hidden_size = 128
-    train_percentage = 0.85
-    val_percentage = 0.15
-    seed = 0
-    # ==================================================================================
+    
+    print(f"model_type: {model_type}")
+    wandb_api_key = "eed5fa86674230b63649180cc343f14e1f1ace78"
 
     # Set model parameters (so they all match)
     history_length = 150
     normalize = True
+
+    if model_type == 'heterogeneous_gnn_k4' or model_type == 'heterogeneous_gnn_c2':
+        import ms_hgnn.datasets_py.LinTzuYaunDataset_Morph as linData
+    else:
+        import ms_hgnn.datasets_py.LinTzuYaunDataset as linData
 
     # Initialize the Training/Validation datasets
     path_to_urdf = Path('urdf_files', 'MiniCheetah', 'miniCheetah.urdf').absolute()
@@ -82,10 +100,52 @@ def main():
 	# Test cases to make sure this matches MorphoSymm-Replication can be found in the corresponding 
     # MorphoSymm-Replication release for this sample efficiency experiment.
 
+    # Find the latest checkpoint
+    if ckpt_dir is not None:
+        ckpt_path = find_latest_ckpt(ckpt_dir)
+    else:
+        ckpt_path = None
+
     # Train the model
     train_model(train_dataset, val_dataset, test_dataset, normalize, num_layers=num_layers, hidden_size=hidden_size, 
-                logger_project_name="class_sample_eff", batch_size=30, regression=False, lr=0.0001, epochs=49, 
-                seed=seed, devices=1, early_stopping=True, train_percentage_to_log=train_percentage)
+                logger_project_name=logger_project_name, batch_size=batch_size, regression=False, lr=lr, epochs=epochs, 
+                seed=seed, devices=1, early_stopping=True, train_percentage_to_log=train_percentage, symmetry_mode=symmetry_mode, group_operator_path=group_operator_path, subfoler_name=logger_project_name, wandb_api_key=wandb_api_key, ckpt_path=ckpt_path)
     
 if __name__ == "__main__":
-    main()
+    import argparse
+    parser = argparse.ArgumentParser()
+    # Sample efficiency parameters
+    parser.add_argument('--train_percentage', type=float, default=0.15, help='Train percentage')
+    parser.add_argument('--val_percentage', type=float, default=0.15, help='Validation percentage')
+    # Model parameters
+    parser.add_argument('--seed', type=int, default=0, help='Random seed for reproducibility')
+    parser.add_argument('--batch_size', type=int, default=64, help='Batch size')
+    parser.add_argument('--num_layers', type=int, default=8, help='Number of layers')
+    parser.add_argument('--hidden_size', type=int, default=128, help='Hidden size')
+    parser.add_argument('--lr', type=float, default=0.0001, help='Learning rate')
+    parser.add_argument('--epochs', type=int, default=49, help='Number of epochs')
+    # Logging parameters
+    parser.add_argument('--logger_project_name', type=str, default='main_cls_k4_sample_eff', help='Logger project name')
+	# Symmetry parameters
+    parser.add_argument('--model_type', type=str, default='heterogeneous_gnn_k4', help='Model type, options: heterogeneous_gnn_k4, mlp, heterogeneous_gnn, heterogeneous_gnn_k4, heterogeneous_gnn_c2')
+    parser.add_argument('--symmetry_mode', type=str, default='MorphSym', help='Symmetry mode, options: Euclidean, MorphSym, None')
+    parser.add_argument('--group_operator_path', type=str, default='cfg/mini_cheetah-k4.yaml', help='Group operator path')
+    parser.add_argument('--ckpt_dir', type=str, default=None, help='Checkpoint directory')
+    args = parser.parse_args()
+    
+    print(f"args: {args}")
+    
+    main(
+        train_percentage=args.train_percentage,
+        val_percentage=args.val_percentage,
+        seed=args.seed, 
+        batch_size=args.batch_size, 
+        num_layers=args.num_layers, 
+        hidden_size=args.hidden_size, 
+        lr=args.lr, 
+        epochs=args.epochs, 
+        logger_project_name=args.logger_project_name, 
+        model_type=args.model_type, 
+        symmetry_mode=args.symmetry_mode, 
+        group_operator_path=args.group_operator_path, 
+        ckpt_dir=args.ckpt_dir)

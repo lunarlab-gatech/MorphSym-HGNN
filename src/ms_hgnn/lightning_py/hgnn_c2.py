@@ -8,7 +8,8 @@ class GRF_HGNN_C2(torch.nn.Module):
     Modified GRF_HGNN for the C2 graph structure with 2 base nodes and new edge types
     """
     def __init__(self, hidden_channels: int, num_layers: int, data_metadata, 
-                 regression: bool = True, activation_fn = nn.ReLU(), symmetry_mode: str = None, group_operator_path: str = None):
+                 regression: bool = True, activation_fn = nn.ReLU(), symmetry_mode: str = None, group_operator_path: str = None,
+                 grf_dimension: int = 3):
         """
         Implementation of the modified MI-HGNN model for C2 structure.
 
@@ -33,6 +34,12 @@ class GRF_HGNN_C2(torch.nn.Module):
         self.num_joints = self.num_legs * num_joints_per_leg
         self.num_dimensions_per_foot = 3
         self.num_dimensions_per_base = 3
+        if self.regression:
+            self.num_variables_per_joint = 3
+        else:
+            self.num_variables_per_joint = 2
+        self.grf_dimension = grf_dimension
+        
         # Initialize the joint coefficients based on the symmetry mode and group operator path
         if symmetry_mode and group_operator_path:
             with open(group_operator_path, 'r') as file:
@@ -62,7 +69,7 @@ class GRF_HGNN_C2(torch.nn.Module):
             b_e_coeffs_lin = torch.ones(self.num_dimensions_per_base, dtype=torch.float64)
             b_gs_coeffs_ang = torch.ones(self.num_dimensions_per_base, dtype=torch.float64)
             b_e_coeffs_ang = torch.ones(self.num_dimensions_per_base, dtype=torch.float64)
-        # joints = [Back_Left, Frong_Left, Back_Right, Front_Right]
+        # joints = [Frong_Left, Back_Left, Front_Right, Back_Right]
         joint_weights_array = torch.cat((j_e_coeffs, j_e_coeffs, j_gs_coeffs, j_gs_coeffs), dim=0)
         self.joints_linear_weights = joint_weights_array
         print(f'===> self.joints_linear_weights: {self.joints_linear_weights}')
@@ -114,10 +121,13 @@ class GRF_HGNN_C2(torch.nn.Module):
         )
 
         # Output layer remains the same
-        if self.regression:
+        if self.regression and self.grf_dimension == 1:
             self.out_channels_per_foot = 1
+        elif self.regression and self.grf_dimension == 3:
+            self.out_channels_per_foot = 3
         else:
             self.out_channels_per_foot = 2
+        
         self.decoder = Linear(hidden_channels, self.out_channels_per_foot)
         
     def forward(self, x_dict, edge_index_dict):
@@ -163,8 +173,21 @@ class GRF_HGNN_C2(torch.nn.Module):
         # self.check_parameter_sharing()
 
         # Final prediction for foot nodes
-        return self.decoder(x_dict['foot'])
+        final_output = self.decoder(x_dict['foot']) # shape: [batch_size * num_feet, out_channels_per_foot]
+
+        # Apply morphological symmetry to the final output
+        if self.regression and self.grf_dimension == 3:
+            final_output = self.ms_foot_decoder(final_output)
+        
+        return final_output
     
+    def ms_foot_decoder(self, x):
+        """
+        Apply morphological symmetry to the final output for the foot nodes
+        """
+        x = x.view(-1, self.num_legs, self.out_channels_per_foot).flatten(start_dim=1)
+        return self.feet_linear_weights.to(x.device) * x
+
     def apply_symmetry(self, x_dict):
         """
         Apply the symmetry to the node features
@@ -173,25 +196,26 @@ class GRF_HGNN_C2(torch.nn.Module):
         joint_x = x_dict['joint']  # shape: [batch_size * num_joints, num_timesteps * num_variables]
         # Reshape the joint data to separate different joints and variables
         # [batch_size * num_joints, num_timesteps * num_variables] -> [batch_size, num_joints, num_timesteps, num_variables]
-        joint_x = joint_x.view(-1, self.num_joints, self.num_timesteps, 2)
+        joint_x = joint_x.view(-1, self.num_joints, self.num_timesteps, self.num_variables_per_joint)
         # Apply the coefficients to each variable separately, ensuring same device
         weights_j = self.joints_linear_weights.to(joint_x.device).view(1, -1, 1, 1)
         joint_x = joint_x * weights_j
         # Reshape back to the original shape [batch_size, num_joints, num_timesteps, num_variables] -> [batch_size, num_timesteps * num_variables]
-        x_dict['joint'] = joint_x.reshape(-1, self.num_timesteps * 2)
+        x_dict['joint'] = joint_x.reshape(-1, self.num_timesteps * self.num_variables_per_joint)
 
-        batch_size = x_dict['foot'].shape[0] // self.num_legs
-        # Apply morphological symmetry to the foot features
-        foot_x = x_dict['foot']  # shape: [batch_size * num_legs, num_timesteps * num_variables]
-        # f_p, f_v: shape [batch_size, num_timesteps, num_legs*num_dimensions]
-        f_p, f_v = self.unpack_data(foot_x, batch_size, self.num_legs)
-        # Apply the coefficients to each variable separately, ensuring same device
-        weights_f = self.feet_linear_weights.to(f_p.device).view(1, 1, -1)
-        f_p = f_p * weights_f
-        f_v = f_v * weights_f
-        # Pack f_p and f_v back into foot_x
-        foot_x = self.pack_data(f_p, f_v, batch_size, self.num_legs)
-        x_dict['foot'] = foot_x
+        if not self.regression: # For GRF_HGNN, we do not use foot inputs, instead, we use all ones for foot init.
+            batch_size = x_dict['foot'].shape[0] // self.num_legs
+            # Apply morphological symmetry to the foot features
+            foot_x = x_dict['foot']  # shape: [batch_size * num_legs, num_timesteps * num_variables]
+            # f_p, f_v: shape [batch_size, num_timesteps, num_legs*num_dimensions]
+            f_p, f_v = self.unpack_data(foot_x, batch_size, self.num_legs)
+            # Apply the coefficients to each variable separately, ensuring same device
+            weights_f = self.feet_linear_weights.to(f_p.device).view(1, 1, -1)
+            f_p = f_p * weights_f
+            f_v = f_v * weights_f
+            # Pack f_p and f_v back into foot_x
+            foot_x = self.pack_data(f_p, f_v, batch_size, self.num_legs)
+            x_dict['foot'] = foot_x
 
         # Apply morphological symmetry to the base features
         batch_size = x_dict['base'].shape[0] // self.num_bases

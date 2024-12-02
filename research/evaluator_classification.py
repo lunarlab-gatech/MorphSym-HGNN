@@ -1,7 +1,7 @@
 from pathlib import Path
-from mi_hgnn.lightning_py.gnnLightning import evaluate_model
+from ms_hgnn.lightning_py.gnnLightning import evaluate_model
 import torch
-import mi_hgnn.datasets_py.LinTzuYaunDataset as linData
+import ms_hgnn.datasets_py.LinTzuYaunDataset as linData
 import numpy as np
 
 
@@ -36,7 +36,7 @@ def main():
     test_dataset = torch.utils.data.Subset(test_dataset, np.arange(0, test_dataset.__len__()))
 
     # Evaluate with model
-    pred, labels, acc, f1_leg_0, f1_leg_1, f1_leg_2, f1_leg_3, f1_avg_legs = evaluate_model(path_to_checkpoint, test_dataset)
+    pred, labels, acc, f1_leg_0, f1_leg_1, f1_leg_2, f1_leg_3, f1_avg_legs = evaluate_model(path_to_checkpoint, test_dataset, task_type='classification')
 
     # Print the results
     print("Model Accuracy: ", acc)

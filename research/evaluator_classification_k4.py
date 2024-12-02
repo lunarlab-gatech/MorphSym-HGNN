@@ -1,7 +1,7 @@
 import os
 import glob
 from pathlib import Path
-from mi_hgnn.lightning_py.gnnLightning import evaluate_model
+from ms_hgnn.lightning_py.gnnLightning import evaluate_model
 import torch
 import numpy as np
 import pandas
@@ -14,13 +14,13 @@ def main(MorphSym_version: str,
          group_operator_path=None):
     # ================================= CHANGE THIS ====================================
     if MorphSym_version == 'K4':
-        import mi_hgnn.datasets_py.LinTzuYaunDataset_Morph as linData
+        import ms_hgnn.datasets_py.LinTzuYaunDataset_Morph as linData
         model_type = 'heterogeneous_gnn_k4'
     elif MorphSym_version == 'C2':
-        import mi_hgnn.datasets_py.LinTzuYaunDataset_Morph as linData
+        import ms_hgnn.datasets_py.LinTzuYaunDataset_Morph as linData
         model_type = 'heterogeneous_gnn_c2'
     else:
-        import mi_hgnn.datasets_py.LinTzuYaunDataset as linData
+        import ms_hgnn.datasets_py.LinTzuYaunDataset as linData
         model_type = 'heterogeneous_gnn'
 
     # Swap legs to evaluate the model on the opposite leg
@@ -78,7 +78,7 @@ def main(MorphSym_version: str,
         test_dataset = prepare_test_dataset(linData, path_to_urdf, model_type, history_length, normalize=True, swap_legs=swap_legs, symmetry_operator=symmetry_operator, symmetry_mode=symmetry_mode, group_operator_path=group_operator_path)
 
         # Evaluate with model
-        pred, labels, acc, f1_leg_0, f1_leg_1, f1_leg_2, f1_leg_3, f1_avg_legs = evaluate_model(path_to_checkpoint, test_dataset, symmetry_mode=symmetry_mode, group_operator_path=group_operator_path)
+        pred, labels, acc, f1_leg_0, f1_leg_1, f1_leg_2, f1_leg_3, f1_avg_legs = evaluate_model(path_to_checkpoint, test_dataset, symmetry_mode=symmetry_mode, group_operator_path=group_operator_path, task_type='classification')
         # Save to DataFrame
         df = pandas.concat([df, pandas.DataFrame([[symmetry_operator, acc.item(), f1_leg_0.item(), f1_leg_1.item(), f1_leg_2.item(), f1_leg_3.item(), f1_avg_legs.item()]], columns=columns)], ignore_index=True)
 
@@ -137,6 +137,14 @@ def print_results(acc, f1_leg_0, f1_leg_1, f1_leg_2, f1_leg_3, f1_avg_legs):
     print("F1-Score Legs Avg: ", f1_avg_legs.item())
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--MorphSym_version', type=str, help='MorphSym version')
+    parser.add_argument('--group_operator_path', type=str, help='Path to group operator, e.g. cfg/mini_cheetah-k4.yaml, cfg/mini_cheetah-c2.yaml')
+    parser.add_argument('--symmetry_mode', type=str, default='MorphSym', help='Symmetry mode, e.g. Euclidean, MorphSym')
+    parser.add_argument('--path_to_checkpoint', type=str, default=None, help='Path to checkpoint')
+    args = parser.parse_args()
+
     # S4
     # MorphSym_version = 'S4'
     # path_to_checkpoint = "ckpts/Classification Experiment/Main Experiment/leafy-totem-5/epoch=10-val_CE_loss=0.30258.ckpt"
@@ -145,16 +153,18 @@ if __name__ == "__main__":
     # symmetry_mode = 'Euclidean' # Can be 'Euclidean' or 'MorphSym' or None
 
     # C2
-    # MorphSym_version = 'C2'
-    # path_to_checkpoint = "models/autumn-brook-16"
-    # group_operator_path = 'cfg/mini_cheetah-c2.yaml'
+    MorphSym_version = args.MorphSym_version
+    path_to_checkpoint = args.path_to_checkpoint
+    group_operator_path = args.group_operator_path
+    symmetry_operator_list = [None]  # Can be 'gs' or 'gt' or 'gr' or None
+    symmetry_mode = args.symmetry_mode # Can be 'Euclidean' or 'MorphSym' or None
 
     # K4
-    MorphSym_version = 'K4'
-    path_to_checkpoint = "models/comfy-shape-20"
-    group_operator_path = 'cfg/mini_cheetah-k4.yaml'
-    symmetry_operator_list = [None]  # Can be 'gs' or 'gt' or 'gr' or None
-    symmetry_mode = 'MorphSym' # Can be 'Euclidean' or 'MorphSym' or None
+    # MorphSym_version = 'K4'
+    # path_to_checkpoint = "models/main_cls_c2/jolly-tree-2"
+    # group_operator_path = 'cfg/mini_cheetah-k4.yaml'
+    # symmetry_operator_list = [None]  # Can be 'gs' or 'gt' or 'gr' or None
+    # symmetry_mode = 'MorphSym' # Can be 'Euclidean' or 'MorphSym' or None
 
     if os.path.isdir(path_to_checkpoint):
         checkpoint_files = glob.glob(os.path.join(path_to_checkpoint, "*.ckpt"))

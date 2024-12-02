@@ -2,7 +2,9 @@ from pathlib import Path
 from torch_geometric.loader import DataLoader
 import numpy as np
 import torch
-from mi_hgnn.lightning_py.gnnLightning import train_model
+from ms_hgnn.lightning_py.gnnLightning import train_model
+import glob
+import os
 
 def ensure_dataset_splits_match_morphoSymm(train_dataset, val_dataset, test_dataset):
     """
@@ -638,6 +640,12 @@ def ensure_dataset_splits_match_morphoSymm(train_dataset, val_dataset, test_data
     reorder_and_assert_match(test_dataset.__getitem__(304667)['joint'].x, des_values_forest_side)
     np.testing.assert_equal(test_dataset.__len__(), 376662)
 
+def find_latest_ckpt(ckpt_dir):
+    ckpt_files = glob.glob(os.path.join(ckpt_dir, '*.ckpt'))
+    if len(ckpt_files) == 0:
+        return None
+    return sorted(ckpt_files, key=lambda x: os.path.getmtime(x))[-1]
+
 def main(
         seed=42,
         batch_size=64,
@@ -649,7 +657,8 @@ def main(
         model_type='heterogeneous_gnn_k4',
         symmetry_mode='MorphSym',
         group_operator_path='cfg/mini_cheetah-k4.yaml',
-        sample_ratio=0.85
+        sample_ratio=0.85,
+        ckpt_dir=None
     ):
     """
     Duplicate the experiment found in Section VI-B of "On discrete symmetries 
@@ -664,9 +673,9 @@ def main(
     normalize = True
 
     if model_type == 'heterogeneous_gnn_k4' or model_type == 'heterogeneous_gnn_c2':
-        import mi_hgnn.datasets_py.LinTzuYaunDataset_Morph as linData
+        import ms_hgnn.datasets_py.LinTzuYaunDataset_Morph as linData
     else:
-        import mi_hgnn.datasets_py.LinTzuYaunDataset as linData
+        import ms_hgnn.datasets_py.LinTzuYaunDataset as linData
 
     # Initialize the Training/Validation datasets
     path_to_urdf = Path('urdf_files', 'MiniCheetah', 'miniCheetah.urdf').absolute()
@@ -722,10 +731,16 @@ def main(
     # Ensure we match MorphoSymm exactly in the way that they split the datasets 
     # ensure_dataset_splits_match_morphoSymm(train_dataset, val_dataset, test_dataset)
 
+    # Find the latest checkpoint
+    if ckpt_dir is not None:
+        ckpt_path = find_latest_ckpt(ckpt_dir)
+    else:
+        ckpt_path = None
+
     # Train the model
     train_model(train_dataset, val_dataset, test_dataset, normalize, num_layers=num_layers, hidden_size=hidden_size, 
                 logger_project_name=logger_project_name, batch_size=batch_size, regression=False, lr=lr, epochs=epochs, 
-                seed=seed, devices=1, early_stopping=True, symmetry_mode=symmetry_mode, group_operator_path=group_operator_path, subfoler_name=logger_project_name, wandb_api_key=wandb_api_key)
+                seed=seed, devices=1, early_stopping=True, symmetry_mode=symmetry_mode, group_operator_path=group_operator_path, subfoler_name=logger_project_name, wandb_api_key=wandb_api_key, ckpt_path=ckpt_path)
     
 if __name__ == "__main__":
     import argparse
@@ -744,8 +759,9 @@ if __name__ == "__main__":
     parser.add_argument('--model_type', type=str, default='heterogeneous_gnn_c2', help='Model type, options: heterogeneous_gnn_k4, mlp, heterogeneous_gnn, heterogeneous_gnn_k4, heterogeneous_gnn_c2')
     parser.add_argument('--symmetry_mode', type=str, default='MorphSym', help='Symmetry mode, options: Euclidean, MorphSym, None')
     parser.add_argument('--group_operator_path', type=str, default='cfg/mini_cheetah-k4.yaml', help='Group operator path')
+    parser.add_argument('--ckpt_dir', type=str, default=None, help='Checkpoint directory')
     args = parser.parse_args()
     
     print(f"args: {args}")
     
-    main(seed=args.seed, batch_size=args.batch_size, num_layers=args.num_layers, hidden_size=args.hidden_size, lr=args.lr, epochs=args.epochs, logger_project_name=args.logger_project_name, model_type=args.model_type, symmetry_mode=args.symmetry_mode, group_operator_path=args.group_operator_path)
+    main(seed=args.seed, batch_size=args.batch_size, num_layers=args.num_layers, hidden_size=args.hidden_size, lr=args.lr, epochs=args.epochs, logger_project_name=args.logger_project_name, model_type=args.model_type, symmetry_mode=args.symmetry_mode, group_operator_path=args.group_operator_path, ckpt_dir=args.ckpt_dir)
