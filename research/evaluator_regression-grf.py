@@ -117,8 +117,13 @@ def main(path_to_checkpoint: str,
         df.to_csv("regression_results.csv", index=False)
 
 if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--path_to_checkpoint', type=str, default=None, help='Path to checkpoint')
+    args = parser.parse_args()
+    
     batch_size = 100
-    path_to_checkpoint = "models/grf_baseline_mihgnn_d3/rose-firefly-1/"
+    path_to_checkpoint = args.path_to_checkpoint
     grf_body_to_world_frame = True
     grf_dimension = 3
 

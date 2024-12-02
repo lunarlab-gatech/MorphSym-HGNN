@@ -228,7 +228,7 @@ if __name__ == '__main__':
     parser.add_argument('--group_operator_path', type=str, default='cfg/a1-c2.yaml', help='Path to group operator')
     parser.add_argument('--symmetry_mode', type=str, default='MorphSym', help='Symmetry mode')
     parser.add_argument('--grf_body_to_world_frame', type=bool, default=False, help='GRF body to world frame')
-    parser.add_argument('--test_only_on_z', type=bool, default=True, help='Test only on z')
+    parser.add_argument('--test_only_on_z', type=bool, default=False, help='Test only on z')
     parser.add_argument('--grf_dimension', type=int, default=1, help='Dimension of GRF')
 
     args = parser.parse_args()
