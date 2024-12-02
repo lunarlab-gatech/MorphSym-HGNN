@@ -1,7 +1,7 @@
 from pathlib import Path
-from mi_hgnn.lightning_py.gnnLightning import evaluate_model
+from ms_hgnn.lightning_py.gnnLightning import evaluate_model
 import torch
-import mi_hgnn.datasets_py.LinTzuYaunDataset as linData
+import ms_hgnn.datasets_py.LinTzuYaunDataset as linData
 import numpy as np
 
 

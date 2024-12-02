@@ -1,9 +1,9 @@
-import mi_hgnn.datasets_py.LinTzuYaunDataset as linData
+import ms_hgnn.datasets_py.LinTzuYaunDataset as linData
 from pathlib import Path
 from torch_geometric.loader import DataLoader
 import numpy as np
 import torch
-from mi_hgnn.lightning_py.gnnLightning import train_model
+from ms_hgnn.lightning_py.gnnLightning import train_model
 
 def ensure_dataset_splits_match_morphoSymm(train_dataset, val_dataset, test_dataset):
     """

@@ -1,8 +1,8 @@
 from pathlib import Path
-from mi_hgnn.lightning_py.gnnLightning import train_model, evaluate_model
+from ms_hgnn.lightning_py.gnnLightning import train_model, evaluate_model
 import torch
-from mi_hgnn.datasets_py.quadSDKDataset import *
-from mi_hgnn.visualization import visualize_model_outputs_regression
+from ms_hgnn.datasets_py.quadSDKDataset import *
+from ms_hgnn.visualization import visualize_model_outputs_regression
 import pandas
 
 def main():

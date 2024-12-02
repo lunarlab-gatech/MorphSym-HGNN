@@ -1,5 +1,5 @@
 from pathlib import Path
-from mi_hgnn.lightning_py.gnnLightning import evaluate_model
+from ms_hgnn.lightning_py.gnnLightning import evaluate_model
 import torch
 import numpy as np
 import pandas
@@ -10,11 +10,11 @@ def main():
     K4_version = True
 
     if K4_version:
-        import mi_hgnn.datasets_py.LinTzuYaunDataset_Morph as linData
+        import ms_hgnn.datasets_py.LinTzuYaunDataset_Morph as linData
         model_type = 'heterogeneous_gnn_k4'
         path_to_checkpoint = "/home/swei303/Documents/proj/MorphSym-HGNN/models/splendid-armadillo-4/epoch=10-val_CE_loss=0.33491.ckpt" # Path to specific checkpoint file
     else:
-        import mi_hgnn.datasets_py.LinTzuYaunDataset as linData
+        import ms_hgnn.datasets_py.LinTzuYaunDataset as linData
         model_type = 'heterogeneous_gnn' # 'heterogeneous_gnn_k4'
         path_to_checkpoint = "ckpts/Classification Experiment/Main Experiment/leafy-totem-5/epoch=10-val_CE_loss=0.30258.ckpt" # Path to specific checkpoint file
 

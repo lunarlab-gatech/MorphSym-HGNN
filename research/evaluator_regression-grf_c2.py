@@ -1,7 +1,7 @@
 from pathlib import Path
-from mi_hgnn.lightning_py.gnnLightning import train_model, evaluate_model
+from ms_hgnn.lightning_py.gnnLightning import train_model, evaluate_model
 import torch
-from mi_hgnn.visualization import visualize_model_outputs_regression
+from ms_hgnn.visualization import visualize_model_outputs_regression
 import pandas
 import os
 import numpy as np
@@ -139,12 +139,12 @@ def main(MorphSym_version: str,
          batch_size: int = 100):
 
     if MorphSym_version == 'S4':
-        import mi_hgnn.datasets_py.quadSDKDataset as a1Dataset
+        import ms_hgnn.datasets_py.quadSDKDataset as a1Dataset
         model_type = 'heterogeneous_gnn'
         symmetry_mode = 'Euclidean'
         legs_dict = {0: 'RL', 1: 'FL', 2: 'RR', 3: 'FR'}
     elif MorphSym_version == 'C2':
-        import mi_hgnn.datasets_py.quadSDKDataset_Morph as a1Dataset
+        import ms_hgnn.datasets_py.quadSDKDataset_Morph as a1Dataset
         model_type = 'heterogeneous_gnn_c2'
         symmetry_mode = 'MorphSym'
     else:

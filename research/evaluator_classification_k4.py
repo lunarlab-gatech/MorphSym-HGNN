@@ -1,7 +1,7 @@
 import os
 import glob
 from pathlib import Path
-from mi_hgnn.lightning_py.gnnLightning import evaluate_model
+from ms_hgnn.lightning_py.gnnLightning import evaluate_model
 import torch
 import numpy as np
 import pandas
@@ -14,13 +14,13 @@ def main(MorphSym_version: str,
          group_operator_path=None):
     # ================================= CHANGE THIS ====================================
     if MorphSym_version == 'K4':
-        import mi_hgnn.datasets_py.LinTzuYaunDataset_Morph as linData
+        import ms_hgnn.datasets_py.LinTzuYaunDataset_Morph as linData
         model_type = 'heterogeneous_gnn_k4'
     elif MorphSym_version == 'C2':
-        import mi_hgnn.datasets_py.LinTzuYaunDataset_Morph as linData
+        import ms_hgnn.datasets_py.LinTzuYaunDataset_Morph as linData
         model_type = 'heterogeneous_gnn_c2'
     else:
-        import mi_hgnn.datasets_py.LinTzuYaunDataset as linData
+        import ms_hgnn.datasets_py.LinTzuYaunDataset as linData
         model_type = 'heterogeneous_gnn'
 
     # Swap legs to evaluate the model on the opposite leg

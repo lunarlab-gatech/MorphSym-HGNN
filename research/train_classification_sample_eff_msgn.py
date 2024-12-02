@@ -2,7 +2,7 @@ from pathlib import Path
 from torch_geometric.loader import DataLoader
 import numpy as np
 import torch
-from mi_hgnn.lightning_py.gnnLightning import train_model
+from ms_hgnn.lightning_py.gnnLightning import train_model
 import glob
 import os
 
@@ -41,9 +41,9 @@ def main(train_percentage: float,
     normalize = True
 
     if model_type == 'heterogeneous_gnn_k4' or model_type == 'heterogeneous_gnn_c2':
-        import mi_hgnn.datasets_py.LinTzuYaunDataset_Morph as linData
+        import ms_hgnn.datasets_py.LinTzuYaunDataset_Morph as linData
     else:
-        import mi_hgnn.datasets_py.LinTzuYaunDataset as linData
+        import ms_hgnn.datasets_py.LinTzuYaunDataset as linData
 
     # Initialize the Training/Validation datasets
     path_to_urdf = Path('urdf_files', 'MiniCheetah', 'miniCheetah.urdf').absolute()

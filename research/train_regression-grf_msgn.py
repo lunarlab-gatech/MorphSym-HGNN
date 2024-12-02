@@ -1,7 +1,7 @@
 from pathlib import Path
-from mi_hgnn.lightning_py.gnnLightning import train_model, evaluate_model
+from ms_hgnn.lightning_py.gnnLightning import train_model, evaluate_model
 import torch
-from mi_hgnn.visualization import visualize_model_outputs_regression
+from ms_hgnn.visualization import visualize_model_outputs_regression
 import numpy as np
 
 def main(seed,
@@ -27,7 +27,7 @@ def main(seed,
     normalize = False
 
     if model_type == 'heterogeneous_gnn_c2':
-        import mi_hgnn.datasets_py.quadSDKDataset_Morph as QuadSDKDataset
+        import ms_hgnn.datasets_py.quadSDKDataset_Morph as QuadSDKDataset
     else:
         raise ValueError(f"model_type {model_type} not supported.")
 
