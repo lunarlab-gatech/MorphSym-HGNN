@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "mi_hgnn"
+name = "ms_hgnn"
 version = "0.1.0"
 dependencies = [
   "numpy==1.26.4",
@@ -25,10 +25,11 @@ dependencies = [
   "gdown==5.2.0"
 ]
 authors = [
+  { name="Fengze Xie", email="fxxie@caltech.edu"}
   { name="Sizhe Wei", email="swei@gatech.edu" },
   { name="Lu Gan", email="lgan@gatech.edu" },
 ]
-description = "Morphological Symmetry-Equivariant Graph Neural Network."
+description = "Morphological-Symmetry-Equivariant Heterogeneous Graph Neural Network for Robotic Dynamics Learning (MS-HGNN) for robotic dynamics learning."
 readme = "README.md"
 requires-python = ">=3.11"
 classifiers = [
@@ -39,5 +40,5 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = ""
+Homepage = "https://lunarlab-gatech.github.io/MorphSym-HGNN/"
 Issues = ""
