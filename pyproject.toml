@@ -25,7 +25,7 @@ dependencies = [
   "gdown==5.2.0"
 ]
 authors = [
-  { name="Fengze Xie", email="fxxie@caltech.edu"}
+  { name="Fengze Xie", email="fxxie@caltech.edu"},
   { name="Sizhe Wei", email="swei@gatech.edu" },
   { name="Lu Gan", email="lgan@gatech.edu" },
 ]
