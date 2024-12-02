@@ -580,8 +580,8 @@ class Solo12Dataset(FlexibleDataset):
         ang_vel = np.tile(ang_vel, (1, 4))
         sorted_base_list = [lin_vel, ang_vel]
 
-        # if self.symmetry_operator is not None:
-        #     sorted_base_list = self.apply_symmetry(sorted_base_list, part='base')
+        if self.symmetry_operator is not None:
+            sorted_base_list = self.apply_symmetry(sorted_base_list, part='base')
         
         # Sort the joint information
         unsorted_joint_list = [j_p, j_v, j_T]
