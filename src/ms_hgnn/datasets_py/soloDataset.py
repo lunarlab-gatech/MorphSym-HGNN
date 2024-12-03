@@ -7,43 +7,7 @@ import yaml
 from scipy.spatial.transform import Rotation
 from torch_geometric.data import HeteroData
 
-# class Standarizer_Seperate:
-#     """
-#     Class to standardize the data.
-#     """
-#     def __init__(self, q_mean, q_std, qd_mean, qd_std, lin_mean, lin_std, ang_mean, ang_std, device):
-#         self.q_mean, self.q_std = torch.tensor(q_mean).to(device), torch.tensor(q_std).to(device)
-#         self.qd_mean, self.qd_std = torch.tensor(qd_mean).to(device), torch.tensor(qd_std).to(device)
-#         self.lin_mean, self.lin_std = torch.tensor(lin_mean).to(device), torch.tensor(lin_std).to(device)
-#         self.ang_mean, self.ang_std = torch.tensor(ang_mean).to(device), torch.tensor(ang_std).to(device)
 
-#     def transform(self, q=None, qd=None, lin=None, ang=None):
-#         if isinstance(q, np.ndarray):
-#             q_mean, q_std = self.q_mean.cpu().numpy(), self.q_std.cpu().numpy()
-#             qd_mean, qd_std = self.qd_mean.cpu().numpy(), self.qd_std.cpu().numpy()
-#             lin_mean, lin_std = self.lin_mean.cpu().numpy(), self.lin_std.cpu().numpy()
-#             ang_mean, ang_std = self.ang_mean.cpu().numpy(), self.ang_std.cpu().numpy()
-#         else:
-#             q_mean, q_std = self.q_mean, self.q_std
-#             qd_mean, qd_std = self.qd_mean, self.qd_std
-#             lin_mean, lin_std = self.lin_mean, self.lin_std
-#             ang_mean, ang_std = self.ang_mean, self.ang_std
-
-#         return (q - q_mean) / q_std, (qd - qd_mean) / qd_std, (lin - lin_mean) / lin_std, (ang - ang_mean) / ang_std
-
-#     def unstandarize(self, qn=None, qdn=None, linn=None, angn=None):
-#         if isinstance(qn, np.ndarray):
-#             q_mean, q_std = self.q_mean.cpu().numpy(), self.q_std.cpu().numpy()
-#             qd_mean, qd_std = self.qd_mean.cpu().numpy(), self.qd_std.cpu().numpy()
-#             lin_mean, lin_std = self.lin_mean.cpu().numpy(), self.lin_std.cpu().numpy()
-#             ang_mean, ang_std = self.ang_mean.cpu().numpy(), self.ang_std.cpu().numpy()
-#         else:
-#             q_mean, q_std = self.q_mean, self.q_std
-#             qd_mean, qd_std = self.qd_mean, self.qd_std
-#             lin_mean, lin_std = self.lin_mean, self.lin_std
-#             ang_mean, ang_std = self.ang_mean, self.ang_std
-
-#         return qn * q_std + q_mean, qdn * qd_std + qd_mean, linn * lin_std + lin_mean, angn * ang_std + ang_mean
 
 class Standarizer:
 
@@ -157,6 +121,8 @@ class Solo12Dataset(FlexibleDataset):
         
         if model_type == 'heterogeneous_gnn_k4_com':
             self.load_data_sorted = self.load_data_sorted_k4
+        elif model_type == 'heterogeneous_gnn_c2_com':
+            self.load_data_sorted = self.load_data_sorted_c2
         elif model_type == 'heterogeneous_gnn_s4_com' or 'mlp_com':
             self.load_data_sorted = self.load_data_sorted
         else:
@@ -186,6 +152,11 @@ class Solo12Dataset(FlexibleDataset):
             self.hgnn_number_nodes = (4, self.hgnn_number_nodes[1], self.hgnn_number_nodes[2])
             # initialize new edges
             self._init_new_edges_k4()
+        elif self.model_type == 'heterogeneous_gnn_c2_com':
+            # modify the number of base nodes
+            self.hgnn_number_nodes = (2, self.hgnn_number_nodes[1], self.hgnn_number_nodes[2])
+            # initialize new edges
+            self._init_new_edges_c2()
         elif self.model_type == 'heterogeneous_gnn_s4_com' or 'mlp_com':
             # initialize new edges
             print(f"Model type: {self.model_type} is initialized.")
@@ -210,24 +181,7 @@ class Solo12Dataset(FlexibleDataset):
 
         self.length = self.Y.shape[0]
         print(f"{stage} Dataset length: {self.length}")
-    # def compute_normalization(self, q, qd, lin, ang):
-    #     """
-    #     Compute the mean and standard deviation for the joint and base data.
-    #     Adapted from MorphSymm's repo: datasets/com_momentum/com_momentum.py
-    #     """
-    #     q_mean, qd_mean, lin_mean, ang_mean = 0., 0., 0., 0.
-    #     q_std, qd_std, lin_std, ang_std = 1., 1., 1., 1.
-        
-    #     q_mean = np.mean(q, axis=0)
-    #     qd_mean = np.mean(qd, axis=0)
-    #     lin_mean = np.mean(lin, axis=0)
-    #     ang_mean = np.mean(ang, axis=0)
-    #     q_std = np.std(q, axis=0)
-    #     qd_std = np.std(qd, axis=0)
-    #     lin_std = np.std(lin, axis=0)
-    #     ang_std = np.std(ang, axis=0)
 
-    #     return q_mean, q_std, qd_mean, qd_std, lin_mean, lin_std, ang_mean, ang_std
 
     def compute_normalization(self, X, Y):
         """
@@ -264,6 +218,15 @@ class Solo12Dataset(FlexibleDataset):
                 ('joint', 'connect', 'base'),
                 ('joint', 'connect', 'joint')
             ]
+        elif self.model_type == 'heterogeneous_gnn_c2_com':
+             edge_types = [
+                ('base', 'front_bj', 'joint'),
+                ('joint', 'front_bj', 'base'),
+                ('base', 'back_bj', 'joint'),
+                ('joint', 'back_bj', 'base'),
+                ('joint', 'connect', 'joint'),
+                ('base', 'center_bb', 'base')
+            ]
         else:
             raise ValueError(f"Model type: {self.model_type} is not implemented for Solo12 dataset.")
         
@@ -276,12 +239,21 @@ class Solo12Dataset(FlexibleDataset):
         data = HeteroData()
 
         # set edge connections
-        data['base', 'connect', 'joint'].edge_index = self.bj
-        data['joint', 'connect', 'base'].edge_index = self.jb
-        data['joint', 'connect', 'joint'].edge_index = self.jj
+        if self.model_type == 'heterogeneous_gnn_k4_com' or self.model_type == 'heterogeneous_gnn_s4_com':
+            data['base', 'connect', 'joint'].edge_index = self.bj
+            data['joint', 'connect', 'base'].edge_index = self.jb
+            data['joint', 'connect', 'joint'].edge_index = self.jj
+        elif self.model_type == 'heterogeneous_gnn_c2_com':
+            data['base', 'front_bj', 'joint'].edge_index = self.bj_front
+            data['joint', 'front_bj', 'base'].edge_index = self.jb_front
+            data['base', 'back_bj', 'joint'].edge_index = self.bj_back
+            data['joint', 'back_bj', 'base'].edge_index = self.jb_back
+            data['joint', 'connect', 'joint'].edge_index = self.jj
+            data['base', 'center_bb', 'base'].edge_index = self.bb
         if self.model_type == 'heterogeneous_gnn_k4_com':
             data['base', 'gt', 'base'].edge_index = self.gt
             data['base', 'gs', 'base'].edge_index = self.gs
+
 
         # create node feature matrices
         base_x = torch.ones((self.hgnn_number_nodes[0], self.base_width), dtype=torch.float64)
@@ -292,6 +264,8 @@ class Solo12Dataset(FlexibleDataset):
             lin_acc, ang_vel, j_p, j_v, j_T, f_p, f_v, labels, r_p, r_o, timestamps = self.load_data_sorted_k4(idx)
         elif self.model_type == 'heterogeneous_gnn_s4_com':
             lin_acc, ang_vel, j_p, j_v, j_T, f_p, f_v, labels, r_p, r_o, timestamps = self.load_data_sorted(idx)
+        elif self.model_type == 'heterogeneous_gnn_c2_com':
+            lin_acc, ang_vel, j_p, j_v, j_T, f_p, f_v, labels, r_p, r_o, timestamps = self.load_data_sorted_c2(idx)
 
         self.variables_to_use_base = self.find_variables_to_use([lin_acc, ang_vel])
         self.variables_to_use_joint = self.find_variables_to_use([j_p, j_v])
@@ -308,7 +282,7 @@ class Solo12Dataset(FlexibleDataset):
         # process joint and foot features (same as original implementation)
         # refer to the joint and foot feature processing part in the FlexibleDataset.get_helper_heterogeneous_gnn method L570-L596
         # For each joint specified
-        joint_data = [j_p, j_v, j_T]
+        joint_data = [j_p, j_v]
         for i, urdf_node_name in enumerate(self.urdf_name_to_graph_index_joint.keys()):
             # For each variable to use
             final_input = torch.ones((0), dtype=torch.float64)
@@ -408,14 +382,10 @@ class Solo12Dataset(FlexibleDataset):
     def load_data_at_dataset_seq(self, seq_num: int):
         """Load data for a specified sequence"""
         # Load joint data
-        # j_p = np.array(self.mat_data['q'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)
-        # j_v = np.array(self.mat_data['qd'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 12)
         j_p = self.X[:, :12][seq_num:seq_num+self.history_length].reshape(self.history_length, 12)
         j_v = self.X[:, 12:][seq_num:seq_num+self.history_length].reshape(self.history_length, 12)
         
         # Load base velocity data (as labels)
-        # base_lin_vel = np.array(self.mat_data['base_lin_vel'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 3)
-        # base_ang_vel = np.array(self.mat_data['base_ang_vel'][seq_num:seq_num+self.history_length]).reshape(self.history_length, 3)
         base_lin_vel = self.Y[:, :3][seq_num:seq_num+self.history_length].reshape(self.history_length, 3)
         base_ang_vel = self.Y[:, 3:][seq_num:seq_num+self.history_length].reshape(self.history_length, 3)
         
@@ -516,6 +486,39 @@ class Solo12Dataset(FlexibleDataset):
         self.jf = torch.tensor(jf, dtype=torch.long)
         self.gt = torch.tensor(gt_edges, dtype=torch.long).t()
         self.gs = torch.tensor(gs_edges, dtype=torch.long).t()
+
+    def _init_new_edges_c2(self):
+        """Initialize the new edge structure for C2"""
+        # original edges
+        bj, jb, jj, fj, jf = self.robotGraph.get_edge_index_matrices()
+
+        # create new base-joint connections
+        new_bj_front = []
+        new_jb_front = []
+        new_bj_back = []
+        new_jb_back = []
+        # L base (idx 0) -> RL joints (0)
+        # L base (idx 0) -> RL joints (3)
+        # R base (idx 1) -> RR joints (6)
+        # R base (idx 1) -> RR joints (9)
+        new_bj_front.extend([[0, 3], [1, 9]])
+        new_jb_front.extend([[3, 0], [9, 1]])
+        new_bj_back.extend([[0, 0], [1, 6]])
+        new_jb_back.extend([[0, 0], [6, 1]])
+
+        # create new base-base connections
+        # gt_edge: connections between front bases (0-1) and between back bases (2-3)
+        bb_edges = [[0, 1], [1, 0]]
+
+        # convert to PyTorch tensors
+        self.bb = torch.tensor(bb_edges, dtype=torch.long).t()
+        self.bj_front = torch.tensor(new_bj_front, dtype=torch.long).t()
+        self.jb_front = torch.tensor(new_jb_front, dtype=torch.long).t()
+        self.bj_back = torch.tensor(new_bj_back, dtype=torch.long).t()
+        self.jb_back = torch.tensor(new_jb_back, dtype=torch.long).t()
+        self.jj = torch.tensor(jj, dtype=torch.long)
+        self.fj = torch.tensor(fj, dtype=torch.long)
+        self.jf = torch.tensor(jf, dtype=torch.long)
 
     def create_coefficient_dict(self, reflection_array):
         return {
@@ -619,7 +622,100 @@ class Solo12Dataset(FlexibleDataset):
         if self.symmetry_operator is not None:
             labels_sorted = self.apply_symmetry([labels_sorted], part='label')[0]
 
+        # Reorder the labels
+        labels_sorted = [labels_sorted[0][:3],   labels_sorted[1][:3], \
+                         labels_sorted[0][3:6],  labels_sorted[1][3:6], \
+                         labels_sorted[0][6:9],  labels_sorted[1][6:9], \
+                         labels_sorted[0][9:12], labels_sorted[1][9:12]]
+
         return sorted_base_list[0], sorted_base_list[1], sorted_joint_list[0], sorted_joint_list[1], sorted_joint_list[2], sorted_foot_list[0], sorted_foot_list[1], labels_sorted, r_p, r_o, timestamps
+
+
+    def load_data_sorted_c2(self, seq_num: int):
+        """
+        Loads data from the dataset at the provided sequence number.
+        However, the joint and feet are sorted so that they match 
+        the order in the URDF file. Additionally, the foot labels 
+        are sorted so it matches the order in the URDF file.
+
+        Next, labels are checked to make sure they aren't None. 
+        Finally, normalize the data if self.normalize was set as True.
+        We calculate the standard deviation for this normalization 
+        using Bessel's correction (n-1 used instead of n).
+
+        Parameters:
+            seq_num (int): The sequence number of the txt file
+                whose data should be loaded.
+
+        Returns:
+            Same values as load_data_at_dataset_seq(), but order of
+            values inside arrays have been sorted (and potentially
+            normalized).
+            lin_vel: shape: Zeros(history_length, 4*3) 4 bases linear acceleration
+            ang_vel: shape: Zeros(history_length, 4*3) 4 bases angular velocity
+            j_p: shape: [history_length, 12] 12 joints position
+            j_v: shape: [history_length, 12] 12 joints velocity
+            j_T: None
+            f_p: shape: [history_length, 4*3] 4 feet position
+            f_v: shape: [history_length, 4*3] 4 feet velocity
+            labels: shape: [4 * 6] 4 base nodes * 6 labels (base linear and angular velocity)
+            r_p: None
+            r_o: None
+            timestamps: shape: [history_length]
+        """
+        lin_vel, ang_vel, j_p, j_v, j_T, f_p, f_v, labels, r_p, r_o, timestamps = self.load_data_at_dataset_seq(seq_num)
+
+        # duplicate the base information for each base node, no need to sort
+        # lin_vel, ang_vel shape: [history_length, 3] ==> [history_length, 4*3]
+        lin_vel = np.tile(lin_vel, (1, 2))
+        ang_vel = np.tile(ang_vel, (1, 2))
+        sorted_base_list = [lin_vel, ang_vel]
+
+        # if self.symmetry_operator is not None:
+        #     sorted_base_list = self.apply_symmetry(sorted_base_list, part='base')
+        
+        # Sort the joint information
+        unsorted_joint_list = [j_p, j_v, j_T]
+        sorted_joint_list = []
+        for unsorted_array in unsorted_joint_list:
+            if unsorted_array is not None:
+                sorted_joint_list.append(unsorted_array[:,self.joint_node_indices_sorted])
+            else:
+                sorted_joint_list.append(None)
+
+        if self.symmetry_operator is not None:
+            sorted_joint_list = self.apply_symmetry(sorted_joint_list, part='joint')
+
+        # Sort the foot information
+        unsorted_foot_list = [f_p, f_v]
+        sorted_foot_list = []
+        for unsorted_array in unsorted_foot_list:
+            if unsorted_array is not None:
+                sorted_indices = []
+                for index in self.foot_node_indices_sorted:
+                    for i in range(0, 3):
+                        sorted_indices.append(int(index*3+i))
+                sorted_foot_list.append(unsorted_array[:,sorted_indices])
+            else:
+                sorted_foot_list.append(None)
+        
+        # if self.symmetry_operator is not None:
+        #     sorted_foot_list = self.apply_symmetry(sorted_foot_list, part='foot')
+
+        # Sort the ground truth labels
+        # Duplicate labels for each base node: labels [6] -> [4*6]
+        labels_lin_vel = np.tile(labels[:3], 2)
+        labels_ang_vel = np.tile(labels[3:], 2)
+        labels_sorted = [labels_lin_vel, labels_ang_vel]
+        if self.symmetry_operator is not None:
+            labels_sorted = self.apply_symmetry([labels_sorted], part='label')[0]
+
+        # Reorder the labels
+        labels_sorted = [labels_sorted[0][:3],   labels_sorted[1][:3], \
+                         labels_sorted[0][3:6],  labels_sorted[1][3:6]]
+
+        return sorted_base_list[0], sorted_base_list[1], sorted_joint_list[0], sorted_joint_list[1], sorted_joint_list[2], sorted_foot_list[0], sorted_foot_list[1], labels_sorted, r_p, r_o, timestamps
+    
 
     def apply_symmetry(self, data_list, part='joint'):
         """Apply the symmetry operator to the data"""
@@ -645,9 +741,6 @@ class Solo12Dataset(FlexibleDataset):
             if part == 'joint':
                 permutation_Q = self.permutation_Q_js
                 coefficients = self.joint_coefficients
-            elif part == 'foot':
-                permutation_Q = self.permutation_Q_fs
-                coefficients = self.foot_coefficients
             elif part == 'label': 
                 # for labels, data shape: (4,), for classification task, 
                 # we need to apply Euclidean symmetry to labels

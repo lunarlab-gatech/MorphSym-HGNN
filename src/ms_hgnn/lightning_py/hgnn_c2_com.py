@@ -3,7 +3,7 @@ from torch import nn
 from torch_geometric.nn import Linear, HeteroConv, HeteroDictLinear, GraphConv
 import yaml
 
-class COM_HGNN_K4(torch.nn.Module):
+class COM_HGNN_C2(torch.nn.Module):
     """
     Modified GRF_HGNN for the K4 graph structure with 4 base nodes and new edge types
     """
@@ -29,7 +29,7 @@ class COM_HGNN_K4(torch.nn.Module):
         self.num_timesteps = 1
         num_joints_per_leg = 3
         self.num_legs = 4
-        self.num_bases = 4
+        self.num_bases = 2
         self.num_joints = self.num_legs * num_joints_per_leg
         self.num_dimensions_per_base = 6
 
@@ -40,48 +40,33 @@ class COM_HGNN_K4(torch.nn.Module):
 
             reflection_Q_js = group_data.get('reflection_Q_js', [])
             j_gs_coeffs = torch.tensor(reflection_Q_js[0][:num_joints_per_leg], dtype=torch.float64) # sagittal symmetry, shape [num_joints_per_leg]
-            j_gt_coeffs = torch.tensor(reflection_Q_js[1][:num_joints_per_leg], dtype=torch.float64) # transversal symmetry, shape [num_joints_per_leg]
             j_e_coeffs = torch.ones_like(j_gs_coeffs, dtype=torch.float64) # rotational symmetry, shape [num_joints_per_leg]
-            j_gr_coeffs = j_gs_coeffs * j_gt_coeffs
 
             reflection_Q_bs_lin = group_data.get('reflection_Q_bs_lin', [])
             b_gs_coeffs_lin = torch.tensor(reflection_Q_bs_lin[0][:self.num_dimensions_per_base // 2], dtype=torch.float64) # sagittal symmetry, shape [3]
-            b_gt_coeffs_lin = torch.tensor(reflection_Q_bs_lin[1][:self.num_dimensions_per_base // 2], dtype=torch.float64) # transversal symmetry, shape [3]
             b_e_coeffs_lin = torch.ones_like(b_gs_coeffs_lin, dtype=torch.float64) # rotational symmetry, shape [3]
-            b_gr_coeffs_lin = b_gs_coeffs_lin * b_gt_coeffs_lin
-
             reflection_Q_bs_ang = group_data.get('reflection_Q_bs_ang', [])
             b_gs_coeffs_ang = torch.tensor(reflection_Q_bs_ang[0][:self.num_dimensions_per_base // 2], dtype=torch.float64) # sagittal symmetry, shape [3]
-            b_gt_coeffs_ang = torch.tensor(reflection_Q_bs_ang[1][:self.num_dimensions_per_base // 2], dtype=torch.float64) # transversal symmetry, shape [3]
             b_e_coeffs_ang = torch.ones_like(b_gs_coeffs_ang, dtype=torch.float64) # rotational symmetry, shape [3]
-            b_gr_coeffs_ang = b_gs_coeffs_ang * b_gt_coeffs_ang
         else:
             j_gs_coeffs = torch.ones(num_joints_per_leg, dtype=torch.float64)
-            j_gt_coeffs = torch.ones(num_joints_per_leg, dtype=torch.float64)
-            j_gr_coeffs = torch.ones(num_joints_per_leg, dtype=torch.float64)
             j_e_coeffs = torch.ones(num_joints_per_leg, dtype=torch.float64)
-
             b_gs_coeffs_lin = torch.ones(self.num_dimensions_per_base // 2, dtype=torch.float64)
-            b_gt_coeffs_lin = torch.ones(self.num_dimensions_per_base // 2, dtype=torch.float64)
-            b_gr_coeffs_lin = torch.ones(self.num_dimensions_per_base // 2, dtype=torch.float64)
             b_e_coeffs_lin = torch.ones(self.num_dimensions_per_base // 2, dtype=torch.float64)
-
             b_gs_coeffs_ang = torch.ones(self.num_dimensions_per_base // 2, dtype=torch.float64)
-            b_gt_coeffs_ang = torch.ones(self.num_dimensions_per_base // 2, dtype=torch.float64)
-            b_gr_coeffs_ang = torch.ones(self.num_dimensions_per_base // 2, dtype=torch.float64)
             b_e_coeffs_ang = torch.ones(self.num_dimensions_per_base // 2, dtype=torch.float64)
+        
         # joints = [Back_Left, Frong_Left, Back_Right, Front_Right]
-        joint_weights_array = torch.cat((j_e_coeffs, j_gt_coeffs, j_gs_coeffs, j_gr_coeffs), dim=0)
+        joint_weights_array = torch.cat((j_e_coeffs, j_e_coeffs, j_gs_coeffs, j_gs_coeffs), dim=0)
         self.joints_linear_weights = joint_weights_array
         print(f'===> self.joints_linear_weights: {self.joints_linear_weights}')
 
-        base_weights_lin_array = torch.cat((b_e_coeffs_lin, b_gt_coeffs_lin, b_gs_coeffs_lin, b_gr_coeffs_lin), dim=0)
+        base_weights_lin_array = torch.cat((b_e_coeffs_lin, b_gs_coeffs_lin), dim=0)
         self.base_coefficients_lin = base_weights_lin_array
-        base_weights_ang_array = torch.cat((b_e_coeffs_ang, b_gt_coeffs_ang, b_gs_coeffs_ang, b_gr_coeffs_ang), dim=0)
+        base_weights_ang_array = torch.cat((b_e_coeffs_ang, b_gs_coeffs_ang), dim=0)
         self.base_coefficients_ang = base_weights_ang_array
         print(f'===> self.base_coefficients_lin: {self.base_coefficients_lin}')
         print(f'===> self.base_coefficients_ang: {self.base_coefficients_ang}')
-
 
         # Create the first layer encoder to convert features into embeddings
         self.encoder = HeteroDictLinear(-1, hidden_channels, data_metadata[0])
