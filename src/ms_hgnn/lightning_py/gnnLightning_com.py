@@ -15,8 +15,10 @@ import numpy as np
 import torchmetrics
 import torchmetrics.classification
 from .customMetrics import CrossEntropyLossMetric, BinaryF1Score, CosineSimilarityMetric
+from .hgnn import COM_HGNN
 from .hgnn_s4_com import COM_HGNN_S4
 from .hgnn_k4_com import COM_HGNN_K4
+from .hgnn_c2_com import COM_HGNN_C2
 from torch_geometric.profile import count_parameters
 from ..datasets_py.flexibleDataset import FlexibleDataset
 from ..datasets_py.soloDataset import Standarizer
@@ -70,6 +72,7 @@ class COM_Base_Lightning(L.LightningModule):
         self.mse_loss_ang = None
         self.cos_sim_lin = None
         self.cos_sim_ang = None
+        self.avg_cos_sim = None
         self.loss = None
         # self.l1_loss = None
 
@@ -85,16 +88,18 @@ class COM_Base_Lightning(L.LightningModule):
         self.log(step_name + "_MSE_loss_ang", self.mse_loss_ang, on_step=on_step, on_epoch=on_epoch)
         self.log(step_name + "_cos_sim_lin", self.cos_sim_lin, on_step=on_step, on_epoch=on_epoch)
         self.log(step_name + "_cos_sim_ang", self.cos_sim_ang, on_step=on_step, on_epoch=on_epoch)
+        self.log(step_name + '_avg_cos_sim', self.avg_cos_sim, on_step=on_step, on_epoch=on_epoch)
         self.log(step_name + "_loss", self.loss, on_step=on_step, on_epoch=on_epoch)
         # self.log(step_name + "_L1_loss", self.l1_loss, on_step=on_step, on_epoch=on_epoch)
 
     # ======================= Loss Calculation =======================
     def calculate_losses_step(self, y: torch.Tensor, y_pred: torch.Tensor):
-
         self.mse_loss = self.metric_mse(y_pred.flatten(), y.flatten())
         self.rmse_loss = self.metric_rmse(y_pred.flatten(), y.flatten())
-        self.mse_loss_lin = self.metric_mse_lin(y_pred[:, :3].flatten(), y[:, :3].flatten())
-        self.mse_loss_ang = self.metric_mse_ang(y_pred[:, 3:].flatten(), y[:, 3:].flatten())
+        y = y.view(y.shape[0], self.model.num_bases, self.model.num_dimensions_per_base)
+        y_pred = y_pred.view(y_pred.shape[0], self.model.num_bases, self.model.num_dimensions_per_base)
+        self.mse_loss_lin = self.metric_mse_lin(y_pred[:, :, :3].flatten(), y[:, :, :3].flatten())
+        self.mse_loss_ang = self.metric_mse_ang(y_pred[:, :, 3:].flatten(), y[:, :, 3:].flatten())
         # self.l1_loss = self.metric_l1(y_pred, y)
 
         # Unstandarize the data for cos similarity metrics
@@ -104,13 +109,14 @@ class COM_Base_Lightning(L.LightningModule):
 
         y = y.view(y.shape[0], self.model.num_bases, self.model.num_dimensions_per_base)
         y_pred = y_pred.view(y_pred.shape[0], self.model.num_bases, self.model.num_dimensions_per_base)
-        y_lin_vel = y[:, :, :3].flatten(start_dim=1)
-        y_ang_vel = y[:, :, 3:].flatten(start_dim=1)
-        y_pred_lin_vel = y_pred[:, :, :3].flatten(start_dim=1)
-        y_pred_ang_vel = y_pred[:, :, 3:].flatten(start_dim=1)
+        y_lin_vel = y[:, 0, :3].flatten(start_dim=1)
+        y_ang_vel = y[:, 0, 3:].flatten(start_dim=1)
+        y_pred_lin_vel = y_pred[:, 0, :3].flatten(start_dim=1)
+        y_pred_ang_vel = y_pred[:, 0, 3:].flatten(start_dim=1)
 
         self.cos_sim_lin = self.metric_cos_sim_lin(y_pred_lin_vel, y_lin_vel)
         self.cos_sim_ang = self.metric_cos_sim_ang(y_pred_ang_vel, y_ang_vel)
+        self.avg_cos_sim = (self.cos_sim_lin + self.cos_sim_ang) / 2
 
         self.loss = self.mse_loss
 
@@ -122,6 +128,7 @@ class COM_Base_Lightning(L.LightningModule):
         self.mse_loss_ang = self.metric_mse_ang.compute()
         self.cos_sim_lin = self.metric_cos_sim_lin.compute()
         self.cos_sim_ang = self.metric_cos_sim_ang.compute()
+        self.avg_cos_sim = (self.cos_sim_lin + self.cos_sim_ang) / 2
         self.loss = self.metric_mse.compute()
         # self.l1_loss = self.metric_l1.compute()
 
@@ -277,4 +284,127 @@ class COM_MLP_Lightning(COM_Base_Lightning):
     def step_helper_function(self, batch):
         x, y = batch
         y_pred = self.model(x)
+        return y, y_pred
+
+
+class COM_HGNN_Lightning(COM_Base_Lightning):
+
+    def __init__(self, hidden_channels: int, num_layers: int, data_metadata,
+                 dummy_batch, optimizer: str = "adam", lr: float = 0.003,
+                 regression: bool = True, activation_fn = nn.ReLU(), com_dimension: int = 6,
+                 data_path: Path = None):
+        """
+        Constructor for Heterogeneous GNN.
+
+        Parameters:
+            dummy_batch: Used to initialize the lazy modules.
+            optimizer (str): String name of the optimizer that should
+                be used.
+            lr (float): The learning rate used by the model.
+
+            See hgnn.py for information on remaining parameters.
+        """
+        super().__init__(optimizer, lr, data_path)
+
+        self.model = COM_HGNN(hidden_channels=hidden_channels,
+                              num_layers=num_layers,
+                              data_metadata=data_metadata,
+                              regression=regression,
+                              activation_fn=activation_fn,
+                              com_dimension=com_dimension)
+        self.regression = regression
+
+        # print(dummy_batch)
+        # Initialize lazy modules
+        with torch.no_grad():
+            self.model(x_dict=dummy_batch.x_dict,
+                       edge_index_dict=dummy_batch.edge_index_dict)
+        self.save_hyperparameters()
+
+    def step_helper_function(self, batch):
+        # Get the raw foot output
+        out_raw = self.model(x_dict=batch.x_dict,
+                             edge_index_dict=batch.edge_index_dict)
+
+        # Get the outputs from the foot nodes
+        batch_size = None
+        if hasattr(batch, "batch_size"):
+            batch_size = batch.batch_size
+        else:
+            batch_size = 1
+        y_pred = torch.reshape(out_raw.squeeze(), (batch_size, self.model.num_dimensions_per_base * self.model.num_bases))
+
+        # Get the labels
+        y = torch.reshape(batch.y, (batch_size, self.model.num_dimensions_per_base * self.model.num_bases))
+
+        return y, y_pred
+    
+
+class COM_HGNN_SYM_Lightning(COM_Base_Lightning):
+    def __init__(self, hidden_channels: int, num_layers: int, data_metadata,
+                 dummy_batch, optimizer: str = "adam", lr: float = 0.003,
+                 regression: bool = True, activation_fn = nn.ReLU(),
+                 symmetry_mode: str = None, group_operator_path: str = None, model_type: str = 'heterogeneous_gnn_k4_com',
+                 data_path: Path = None):
+        """
+        Constructor for Heterogeneous GNN with K4 structure.
+
+        Parameters:
+            dummy_batch: Used to initialize the lazy modules.
+            optimizer (str): String name of the optimizer that should
+                be used.
+            lr (float): The learning rate used by the model.
+
+            See hgnn_k4.py for information on remaining parameters.
+        """
+        super().__init__(optimizer, lr, data_path)
+
+        if model_type == 'heterogeneous_gnn_k4_com':
+            self.model = COM_HGNN_K4(hidden_channels=hidden_channels,
+                              num_layers=num_layers,
+                              data_metadata=data_metadata,
+                              regression=regression,
+                              activation_fn=activation_fn,
+                              symmetry_mode=symmetry_mode,
+                              group_operator_path=group_operator_path)
+        elif model_type == 'heterogeneous_gnn_c2_com':
+            self.model = COM_HGNN_C2(hidden_channels=hidden_channels,
+                              num_layers=num_layers,
+                              data_metadata=data_metadata,
+                              regression=regression,
+                              activation_fn=activation_fn,
+                              symmetry_mode=symmetry_mode,
+                              group_operator_path=group_operator_path)
+        elif model_type == 'heterogeneous_gnn_s4_com':
+            self.model = COM_HGNN_S4(hidden_channels=hidden_channels,
+                              num_layers=num_layers,
+                              data_metadata=data_metadata,
+                              regression=regression,
+                              activation_fn=activation_fn)
+        self.regression = regression
+
+        # Initialize lazy modules
+        with torch.no_grad():
+            self.model(x_dict=dummy_batch.x_dict,
+                       edge_index_dict=dummy_batch.edge_index_dict)
+        self.save_hyperparameters()
+
+    # Rewrite the step helper function to match the base class
+    # Same with Heterogeneous_GNN_Lightning()
+    def step_helper_function(self, batch):
+        # Get the raw foot output
+        out_raw = self.model(x_dict=batch.x_dict,
+                             edge_index_dict=batch.edge_index_dict)
+
+        # Get the outputs from the foot nodes
+        batch_size = None
+        if hasattr(batch, "batch_size"):
+            batch_size = batch.batch_size
+        else:
+            batch_size = 1
+        y_pred = torch.reshape(out_raw.squeeze(), (batch_size, self.model.num_bases * self.model.num_dimensions_per_base))
+
+        # Get the labels
+        y = torch.reshape(batch.y, (batch_size, self.model.num_bases * self.model.num_dimensions_per_base))
+
         return y, y_pred
