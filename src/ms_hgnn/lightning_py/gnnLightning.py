@@ -1040,7 +1040,7 @@ def evaluate_model(path_to_checkpoint: Path, predict_dataset: Subset,
                 if 'com' in model_type:
                     model.calculate_losses_step(labels_batch, y_pred)
                 else:
-                    if model.body_to_world_frame:
+                    if hasattr(model, 'body_to_world_frame') and model.body_to_world_frame:
                         batch_r_quat = batch.r_o.view(batch.batch_size, 4)
                         model.calculate_losses_step_worldframe(labels_batch, y_pred, batch_r_quat)
                     elif hasattr(model, 'calculate_losses_step_original'):
