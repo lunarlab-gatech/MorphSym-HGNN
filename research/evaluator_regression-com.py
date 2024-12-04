@@ -20,7 +20,7 @@ def main(MorphSym_version: str,
         from ms_hgnn.datasets_py.soloDataset import Solo12Dataset
         model_type = 'heterogeneous_gnn_s4_com'
     elif MorphSym_version == 'C2':
-        from mi_hgnn.datasets_py.soloDataset import Solo12Dataset
+        from ms_hgnn.datasets_py.soloDataset import Solo12Dataset
         model_type = 'heterogeneous_gnn_c2_com'
     else:
         raise ValueError("Other MorphSym versions are not supported for this script yet!")
