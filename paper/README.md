@@ -2,7 +2,7 @@
 
 This directory provides information on replicating experiments in the [Morphological-Symmetry-Equivariant Heterogeneous Graph Neural Network for Robotic Dynamics Learning](https://arxiv.org/pdf/2412.01297) paper. It includes model weights, links to other necessary repositories, and instructions for generating figures.
 
-Whenever a specific trained model is referenced in this README (for example, `ancient-salad-5`), it will be highlighted as shown, and there will be a folder on Georgia Tech's [Dropbox](https://www.dropbox.com/scl/fo/8p165xcfbdfwlcr3jx7tb/ABoxs5BOEXsQnJgFXF_Mjcc?rlkey=znrs7oyu29qsswpd3a5r55zk8&st=53v30ys3&dl=0) with its name. Unless otherwise specified, the model weights used for the paper were those trained the longest (have highest `epoch=` number in their .ckpt file).
+Whenever a specific trained model is referenced in this README (for example, `ancient-salad-5`), it will be highlighted as shown, and there will be a folder on Georgia Tech's [Dropbox]() with its name. Unless otherwise specified, the model weights used for the paper were those trained the longest (have highest `epoch=` number in their .ckpt file).
 
 ```bash
 mkdir ckpts && cd ckpts
@@ -17,21 +17,116 @@ cd ..
 ```
 
 ## Contact Detection (Classification) Experiment
+### Files for Training and Evaluating MS-HGNN
+For training and evaluating models on this classification task, use the following .py files in the `research` directory of this repository for training and evaluating MS-HGNN:
+- MS-HGNN:
+  - `train_classification_msgn.py`: for training MS-HGNN
+  - `train_classification_sample_eff_msgn.py`: for training MS-HGNN for the sample efficiency experiment
+  - `evaluator_classification_k4.py`: for evaluating MS-HGNN, can be used for both K4 and C2
+- Baseline models:
+  - `train_classification.py`: for training MI-HGNN
+  - `evaluator_classification.py`: for evaluating MI-HGNN
+  - `evaluator_classification_s4.py`: for verifying MI-HGNN following the S4 property
+  - `train_classification_sample_eff.py`: for training MI-HGNN for the sample efficiency experiment
 
-For training and evaluating models on this classification task, use the `train_classification.py` and `evaluator_classification.py` files found in the `research` directory of this repository.
+### Commands for Training and Evaluating MS-HGNN
+**Training Examples**
+```bash
+python research/train_classification_msgn.py\
+    --seed 2\
+    --logger_project_name msgn_cls_k4\
+    --model_type heterogeneous_gnn_k4\
+    --symmetry_mode MorphSym\
+    --group_operator_path cfg/mini_cheetah-k4.yaml
 
-Our MI-HGNN models trained during this experiment can be found in the table below. For more details, see the `contact_experiment.csv` file in this directory. 
+python research/train_classification_msgn.py\
+    --seed 2\
+    --logger_project_name msgn_cls_c2\
+    --model_type heterogeneous_gnn_c2\
+    --symmetry_mode MorphSym\
+    --group_operator_path cfg/mini_cheetah-c2.yaml
 
-| Number of Layers | Hidden Sizes | Seed | State Accuracy (Test) | Model Name              |
-| ---------------- | ------------ | ---- |---------------------- | ----------------------- |
-| 8                | 128          |    0 | 0.874120593070984     | `gentle-morning-4`      |
-| 8                | 128          |    1 | 0.895811080932617     | `leafy-totem-5`         |
-| 8                | 128          |    2 | 0.868574500083923     | `different-oath-6`      |
-| 8                | 128          |    3 | 0.878039181232452     | `hopeful-mountain-7`    |
-| 8                | 128          |    4 | 0.855807065963745     | `revived-durian-8`      |
-| 8                | 128          |    5 | 0.875732064247131     | `robust-planet-9`       |
-| 8                | 128          |    6 | 0.883218884468079     | `super-microwave-10`    |
-| 8                | 128          |    7 | 0.880922436714172     | `valiant-dawn-11`       |
+python research/train_classification_msgn.py\
+    --seed 2\
+    --logger_project_name msgn_cls_k4\
+    --model_type heterogeneous_gnn_k4\
+    --symmetry_mode MorphSym\
+    --group_operator_path cfg/mini_cheetah-k4.yaml\
+    --sample_ratio 0.45
+
+python research/train_classification_msgn.py\
+    --seed 2\
+    --logger_project_name msgn_cls_c2\
+    --model_type heterogeneous_gnn_c2\
+    --symmetry_mode MorphSym\
+    --group_operator_path cfg/mini_cheetah-c2.yaml\
+    --sample_ratio 0.45
+```
+**Testing Examples**
+```bash
+python research/evaluator_classification_k4.py\
+    --MorphSym_version K4\
+    --symmetry_mode MorphSym\
+    --group_operator_path cfg/mini_cheetah-k4.yaml\
+    --path_to_checkpoint [PATH_TO_CHECKPOINT]
+
+python research/evaluator_classification_k4.py\
+    --MorphSym_version C2\
+    --group_operator_path cfg/mini_cheetah-c2.yaml\
+    --symmetry_mode MorphSym\
+    --path_to_checkpoint [PATH_TO_CHECKPOINT]
+```
+For the results of baseline models, see the repos:
+- [Morphology-Informed-HGNN](https://github.com/lunarlab-gatech/Morphology-Informed-HGNN) for MI-HGNN
+- [MorphoSymm-Replication](https://github.com/lunarlab-gatech/MorphoSymm-Replication) for CNN, CNN-Aug, ECNN
+
+### Checkpoint Models and Results
+Our MS-HGNN models trained during this experiment can be found in the table below. For more details, see the `contact_experiment.csv` file in this directory. 
+#### MS-HGNN (K4)
+| **Batch Size** | **Hidden Size** | **Seed** |   **Module Name**   | **State Accuracy (Test)** | **Legs-Avg F1** |
+|:--------------:|:---------------:|:--------:|:-------------------:|:-------------------------:|:---------------:|
+|       64       |       128       |     0    |    comic-night-11   |         0.86259830        |    0.93121755   |
+|       64       |       128       |     5    | glamorous-meadow-10 |         0.87613565        |    0.93821277   |
+|       30       |       128       |    42    |    comfy-shape-20   |         0.89072168        |    0.94599206   |
+|       64       |       128       |   3407   |     avid-moon-13    |         0.86968952        |    0.94219799   |
+
+#### MS-HGNN (C2)
+| **Batch Size** | **Hidden Size** | **Seed** | **Module Name** | **State Accuracy (Test)** | **Legs-Avg F1** |
+|:--------------:|:---------------:|:--------:|:---------------:|:-------------------------:|:---------------:|
+|       64       |       128       |     0    |   jolly-tree-2  |         0.84823000        |    0.92280016   |
+|       64       |       128       |     5    |  silver-night-6 |         0.84255379        |    0.91976107   |
+|       64       |       128       |    42    | morning-sound-8 |         0.86321157        |    0.93490676   |
+|       64       |       128       |   3407   | fearless-bush-9 |         0.87154531        |    0.93881258   |
+
+#### MS-HGNN (K4) Sample Efficiency
+All of the models are trained with the same hyperparameters, so the only difference is the training sample ratio. Batch_size is 64, hidden_size is 128, and seed is 3407.
+
+|   **model name**  | **training sample ratio** | **Avg-Leg F1** |
+|:-----------------:|:-------------------------:|:--------------:|
+|   zesty-water-5   |           0.0025          |      0.869     |
+|  clean-aardvark-7 |            0.05           |      0.897     |
+| effortless-dawn-6 |            0.1            |      0.913     |
+| dainty-universe-1 |            0.15           |      0.922     |
+| worthy-mountain-4 |           0.2125          |      0.919     |
+| vague-waterfall-2 |           0.425           |      0.939     |
+|   trim-planet-3   |           0.6375          |      0.935     |
+|    avid-moon-13   |            0.85           |      0.942     |
+
+
+#### MS-HGNN (C2) Sample Efficiency
+All of the models are trained with the same hyperparameters, so the only difference is the training sample ratio. Batch_size is 64, hidden_size is 128, and seed is 3407.
+
+|  **model name** | **training sample ratio** | **Avg-Leg F1** |
+|:---------------:|:-------------------------:|:--------------:|
+| summer-donkey-9 |           0.0025          |      0.760     |
+| breezy-monkey-1 |            0.05           |      0.893     |
+|   azure-sun-4   |            0.1            |      0.910     |
+|  elated-bird-5  |            0.15           |      0.923     |
+|  noble-galaxy-6 |           0.2125          |      0.926     |
+|  bright-tree-3  |           0.425           |      0.939     |
+|  autumn-oath-2  |           0.6375          |      0.935     |
+| fearless-bush-9 |            0.85           |      0.939     |
+
 
 The baseline models we compared to (ECNN, CNN-aug, CNN) were trained on this release: [MorphoSymm-Replication - Contact Detection](https://github.com/lunarlab-gatech/MorphoSymm-Replication/releases/tag/RepFigure3(a)). See that repository for information on accessing those model weights and generating Figure 3 (a).
 
