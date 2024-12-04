@@ -23,14 +23,28 @@ python research/train_classification_msgn.py\
 
 # Main Experiment 2: GRF Regression C2
 python research/train_regression-grf_msgn.py\
-    --seed 4\
-    --batch_size 32\
-    --num_layers 8\
-    --hidden_size 128\
-    --lr 0.0001\
-    --epochs 30\
-    --logger_project_name main_grf_c2\
-    --model_type heterogeneous_gnn_c2
+    --seed 10\
+    --logger_project_name main_grf_c2_d=3\
+    --grf_body_to_world_frame True\
+    --grf_dimension 3
+
+python research/train_regression-grf_msgn.py\
+    --seed 42\
+    --logger_project_name main_grf_c2_d=3\
+    --grf_body_to_world_frame True\
+    --grf_dimension 3
+
+python research/train_regression-grf_msgn.py\
+    --seed 3407\
+    --logger_project_name main_grf_c2_d=3\
+    --grf_body_to_world_frame True\
+    --grf_dimension 3
+   
+# 1D GRF
+# python research/train_regression-grf_msgn.py\
+#     --seed 3407\
+#     --grf_dimension 1\
+#     --logger_project_name main_grf_c2_d=1
 
 # Main Experiment 3: COM Regression S4
 python research/train_regression_com_msgn.py\
