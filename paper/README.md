@@ -135,6 +135,8 @@ For training and evaluating models on this regression task, use the following .p
   - `train_regression-grf.py`: for training MI-HGNN
   - `evaluator_regression-grf.py`: for evaluating MI-HGNN
 
+![Figure 2](./website_images/Figure_02.png)
+
 ### Commands for Training and Evaluating MS-HGNN (C2)
 **Training Examples**
 ```bash
@@ -197,3 +199,4 @@ All of the models are trained with the same hyperparameters, so the only differe
 |    42    |           serene-voice-2           |      8.07836671     |    9.74751079    |      8.7271707     |   10.2032946   | 8.98152898 |
 |   3407   |    peachy-cloud-3 -> rich-tree-8   |      8.09591778     |    9.68049382    |     8.81388802     |   10.3072839   | 9.00860565 |
 
+<img src="./website_images/Figure_01_b.png" width="50%" alt="Figure 1(b)">
