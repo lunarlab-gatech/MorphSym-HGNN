@@ -50,7 +50,15 @@ We would like to thank [Daniel Chase Butterfield](https://scholar.google.com/cit
 If you find our repository or our work useful, please cite the relevant publication:
 
 ```
-TBD
+@misc{xie2024morphologicalsymmetryequivariantheterogeneousgraphneural,
+      title={Morphological-Symmetry-Equivariant Heterogeneous Graph Neural Network for Robotic Dynamics Learning}, 
+      author={Fengze Xie and Sizhe Wei and Yue Song and Yisong Yue and Lu Gan},
+      year={2024},
+      eprint={2412.01297},
+      archivePrefix={arXiv},
+      primaryClass={cs.RO},
+      url={https://arxiv.org/abs/2412.01297}, 
+}
 ```
 
 ## Contact / Issues
