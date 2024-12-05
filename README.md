@@ -4,7 +4,7 @@ This repository implements a Morphological-Symmetry-Equivariant Heterogeneous Gr
 
 ![Figure 2](paper/teaser.png)
 
-For information on our method, see our [project page](https://lunarlab-gatech.github.io/MorphSym-HGNN/) and [paper(Coming Soon)]().
+For information on our method, see our [project page](https://lunarlab-gatech.github.io/MorphSym-HGNN/) and [paper](https://arxiv.org/abs/2412.01297).
 
 ## Installation
 To get started, setup a Conda Python environment with Python=3.11:
