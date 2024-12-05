@@ -2,16 +2,14 @@
 
 This directory provides information on replicating experiments in the [Morphological-Symmetry-Equivariant Heterogeneous Graph Neural Network for Robotic Dynamics Learning](https://arxiv.org/pdf/2412.01297) paper. It includes model weights, links to other necessary repositories, and instructions for generating figures.
 
-Whenever a specific trained model is referenced in this README (for example, `ancient-salad-5`), it will be highlighted as shown, and there will be a folder on Georgia Tech's [Dropbox]() with its name. Unless otherwise specified, the model weights used for the paper were those trained the longest (have highest `epoch=` number in their .ckpt file).
+Whenever a specific trained model is referenced in this README (for example, `ancient-salad-5`), it will be highlighted as shown, and there will be a folder on Georgia Tech's [Dropbox](https://www.dropbox.com/scl/fo/jr4792clrd3f075obxg1f/ABWSPzN5igR-znx55pOijIY?rlkey=yw7741ybrfgucf8rmsl5l34rf&st=xt2tfjfd&dl=0) with its name. Unless otherwise specified, the model weights used for the paper were those trained the longest (have highest `epoch=` number in their .ckpt file).
 
 ```bash
 mkdir ckpts && cd ckpts
-wget -O 'Classification Experiment.zip' [dropbox_link]
-wget -O 'Regression Experiment.zip' [dropbox_link]
+wget -O 'ckpts.zip' [dropbox_link]
 mkdir 'Classification Experiment' && mkdir 'Regression Experiment'
-unzip 'Classification Experiment.zip' -d 'Classification Experiment'
-unzip 'Regression Experiment.zip' -d 'Regression Experiment'
-rm 'Classification Experiment.zip' && rm 'Regression Experiment.zip'
+unzip 'ckpts.zip' -d 'ckpts'
+rm 'ckpts.zip'
 rm wget-log*
 cd ..
 ```
@@ -101,9 +99,9 @@ Our MS-HGNN models trained during this experiment can be found in the table belo
 #### MS-HGNN (K4) Sample Efficiency
 All of the models are trained with the same hyperparameters, so the only difference is the training sample ratio. Batch_size is 64, hidden_size is 128, and seed is 3407.
 
-|   **model name**  | **training sample ratio** | **Avg-Leg F1** |
+|   **Module Name**  | **Training Sample Ratio** | **Avg-Leg F1** |
 |:-----------------:|:-------------------------:|:--------------:|
-|   zesty-water-5   |           0.0025          |      0.869     |
+|   zesty-water-5   |            0.025          |      0.869     |
 |  clean-aardvark-7 |            0.05           |      0.897     |
 | effortless-dawn-6 |            0.1            |      0.913     |
 | dainty-universe-1 |            0.15           |      0.922     |
@@ -116,9 +114,9 @@ All of the models are trained with the same hyperparameters, so the only differe
 #### MS-HGNN (C2) Sample Efficiency
 All of the models are trained with the same hyperparameters, so the only difference is the training sample ratio. Batch_size is 64, hidden_size is 128, and seed is 3407.
 
-|  **model name** | **training sample ratio** | **Avg-Leg F1** |
+| **Module Name** | **Training Sample Ratio** | **Avg-Leg F1** |
 |:---------------:|:-------------------------:|:--------------:|
-| summer-donkey-9 |           0.0025          |      0.760     |
+| summer-donkey-9 |            0.025          |      0.760     |
 | breezy-monkey-1 |            0.05           |      0.893     |
 |   azure-sun-4   |            0.1            |      0.910     |
 |  elated-bird-5  |            0.15           |      0.923     |
@@ -127,90 +125,75 @@ All of the models are trained with the same hyperparameters, so the only differe
 |  autumn-oath-2  |           0.6375          |      0.935     |
 | fearless-bush-9 |            0.85           |      0.939     |
 
-
-The baseline models we compared to (ECNN, CNN-aug, CNN) were trained on this release: [MorphoSymm-Replication - Contact Detection](https://github.com/lunarlab-gatech/MorphoSymm-Replication/releases/tag/RepFigure3(a)). See that repository for information on accessing those model weights and generating Figure 3 (a).
-
-### Sample Efficiency Evaluation
-
-For training models for the sample efficiency experiment, use the `train_classification_sample_eff.py` file.
-
-Our MI-HGNN models trained for the sample efficiency figure can be found below. For more details, see the `contact_experiment_sample_eff.csv` file in this directory.
-
-| Training Percentage (%) | Model Name              |
-| ----------------------- | ----------------------- |
-|                  0.025  | `twilight-pond-9`       |
-|                  0.05   | `iconic-serenity-7`     |
-|                  0.1    | `daily-pine-6`          |
-|                  0.15   | `dry-wood-8`            |
-|                  0.2125 | `efficient-shadow-3`    |
-|                  0.425  | `smart-waterfall-2`     |
-|                  0.6375 | `treasured-moon-4`      |
-|                  0.85   | `atomic-waterfall-5`    |
-
-The baseline models we compared to (ECNN, CNN-aug, CNN) were trained on this release: [MorphoSymm-Replication - Contact Detection Sample Efficiency](https://github.com/lunarlab-gatech/MorphoSymm-Replication/releases/tag/RepFigure3(b)). See that repository for information on accessing those model weights and generating Figure 3 (b).
-
-### Abalation Study
-
-We conducted an abalation study to see how the model parameters affected performance, as shown in Table II in the paper. Here those values are associated with the model's name in the table below. For more details, including test accuracies, see the `contact_experiment_ablation.csv` file in this directory.
-
-| Number of Layers | Hidden Sizes | Model Name             |
-| ---------------- | ------------ | ---------------------- |
-| 4                | 5            | `prime-water-16`       |
-| 4                | 10           | `driven-shape-17`      |
-| 4                | 25           | `autumn-terrain-18`    |
-| 4                | 50           | `comfy-dawn-19`        |
-| 4                | 128          | `prime-butterfly-20`   |
-| 4                | 256          | `youthful-galaxy-21`   |
-| 8                | 50           | `exalted-mountain-22`  |
-| 8                | 128          | `serene-armadillo-23`  |
-| 8                | 256          | `playful-durian-12`    |
-| 12               | 50           | `twilight-armadillo-15`|
-| 12               | 128          | `sparkling-music-14`   |
-| 12               | 256          | `stoic-mountain-13`    |
-
-
 ## Ground Reaction Force Estimation (Regression) Experiment 
+### Files for Training and Evaluating MS-HGNN (C2)
+For training and evaluating models on this regression task, use the following .py files in the `research` directory of this repository for training and evaluating MS-HGNN:
+- MS-HGNN:
+  - `train_regression-grf_msgn.py`: for training MS-HGNN
+  - `evaluator_regression-grf_c2.py`: for evaluating MS-HGNN
+- Baseline models:
+  - `train_regression-grf.py`: for training MI-HGNN
+  - `evaluator_regression-grf.py`: for evaluating MI-HGNN
 
-For training and evaluating models on this regression task, use the `train_regression.py` and `evaluator_regression.py` files found in the `research` directory of this repository. Note that for the floating base dynamics (FBD) model, there is no training involved, and the `evaluator_regression_dynamics.py` file should be used instead.
+### Commands for Training and Evaluating MS-HGNN (C2)
+**Training Examples**
+```bash
+# 3D GRF
+python research/train_regression-grf_msgn.py\
+    --seed 3407\
+    --logger_project_name msgn_grf_c2_d=3\
+    --grf_body_to_world_frame True\
+    --grf_dimension 3
+   
+# 1D GRF (z-axis)
+python research/train_regression-grf_msgn.py\
+    --seed 3407\
+    --logger_project_name msgn_grf_c2_d=1\
+    --grf_dimension 1
+```
+**Testing Examples**
+```bash
+# d=3
+python research/evaluator_regression-grf_c2.py\
+    --path_to_checkpoint [PATH_TO_CHECKPOINT]\
+    --grf_body_to_world_frame 1\
+    --grf_dimension 3
 
-All of the models trained for this experiment can be found in the table below:
+# d=1
+python research/evaluator_regression-grf_c2.py\
+    --path_to_checkpoint [PATH_TO_CHECKPOINT]\
+    --test_only_on_z 1\
+    --grf_dimension 1
+```
 
-| Model Type | Model Name              |
-| ---------- | ----------------------- |
-|        MLP | `clear-haze-11`         |
-|        MLP | `cosmic-water-19`       |
-|        MLP | `dauntless-surf-15`     |
-|        MLP | `fast-hill-18`          |
-|        MLP | `gentle-thunder-16`     |
-|        MLP | `icy-gorge-12`          |
-|        MLP | `noble-dust-14`         |
-|        MLP | `restful-meadow-13`     |
-|    MI-HGNN | `amber-waterfall-25`    |
-|    MI-HGNN | `faithful-elevator-27`  |
-|    MI-HGNN | `feasible-valley-22`    |
-|    MI-HGNN | `hopeful-rain-21`       |
-|    MI-HGNN | `rare-sun-17`           |
-|    MI-HGNN | `smooth-galaxy-20`      |
-|    MI-HGNN | `twilight-bush-24`      |
-|    MI-HGNN | `wise-firebrand-23`     |
+### Checkpoint Models and Results
+#### MS-HGNN (C2) (3D GRF) and Baseline (MI-HGNN)
+All of the models are trained with the same hyperparameters, so the only difference is the seed. Batch_size is 64, hidden_size is 128. Results are caculated with root mean squared error (RMSE).
 
-After running the evaluation files, the data used to generate Table III can be found in the generated .csv files. Our generated .csv files are stored in this directory, and are named as follows:
+**MS-HGNN (C2) (3D GRF)**
+| **Seed** |    **Module Name**   | **Unseen Friction** | **Unseen Speed** | **Unseen Terrain** | **Unseen All** |  **Total** |
+|:--------:|:--------------------:|:-------------------:|:----------------:|:------------------:|:--------------:|:----------:|
+|     0    |     atomic-haze-1    |      6.32735555     |    7.65134468    |     7.17977061     |   8.53970181   | 7.22131269 |
+|    10    | treasured-universe-3 |      6.32653381     |    7.75987258    |     7.23529034     |   8.55396699   | 7.27300841 |
+|    42    |    helpful-gorge-6   |      6.33611576     |    7.73401231    |     7.26039316     |   8.71687377   | 7.29523419 |
+|   3407   |    glowing-snow-7    |      6.42951437     |    7.74001567    |     7.15844559     |    8.7108045   | 7.28281504 |
 
-- `regression_results_dynamics.csv`
-- `regression_results_hgnns.csv`
-- `regression_results_mlps.csv`
+**MI-HGNN (C2) (3D GRF)**
+| **Seed** |    **Module Name**   | **Unseen Friction** | **Unseen Speed** | **Unseen Terrain** | **Unseen All** |  **Total** |
+|:--------:|:--------------------:|:-------------------:|:----------------:|:------------------:|:--------------:|:----------:|
+|     0    |    rose-firefly-1    |      6.35884186     |    7.80886478    |     7.22587749     |   8.67109055   | 7.30427836 |
+|    10    |   denim-elevator-5   |      6.4380547      |    7.89594016    |     7.39217265     |   8.69735545   | 7.41076572 |
+|    42    | celestial-darkness-6 |      6.48433247     |    7.96542475    |     7.33168889     |   8.68058906   | 7.41812726 |
+|   3407   |     true-forest-7    |      6.46478239     |    7.87804687    |     7.38007744     |   8.78454428   | 7.41757872 |
 
-For the standard deviation, we calculated the "corrected sample standard deviation". For more details, see [LibreOffice Documentation](https://wiki.documentfoundation.org/Documentation/Calc_Functions/STDEV.S).
+#### MS-HGNN (C2) (1D GRF)
+All of the models are trained with the same hyperparameters, so the only difference is the seed. Batch_size is 64, hidden_size is 128. Results are caculated with root mean squared error (RMSE).
+> Note: There are two models for seed 0, 10, 3407. The reason is the model training process was killed by the system, so we retrained (continued training) the model with the same hyperparameters.
 
-Finally, Figure 5 is generated by running the `create_regression_plots.py` file, and is saved as `regression_evaluation.png`. The visualization of Figure 5 and Pinocchio visualization used in the MI-HGNN ICRA submission video is created by running `create_regression_plot_video.py`.
-
-### GRF Quad-SDK Dataset
-
-For this experiment, we used a dataset that we generated ourselves using Quad-SDK and Gazebo. Our modified fork that we used can be found here: [quad-sdk-fork](https://github.com/lunarlab-gatech/quad_sdk_fork). We generated a total of 21 sequences. The following table relates the dataset sequence name (in code) to the corresponding parameters used for that sequence:
-
-![GRF Dataset Sequences](grf_dataset_sequences.png)
-
-In each sequence, the operator loosely followed the high-level control instructions and timings seen below:
-
-<img src="grf_dataset_planned_control.png" alt="GRF Dataset Planned Control" width="150">
+| **Seed** |           **Module Name**          | **Unseen Friction** | **Unseen Speed** | **Unseen Terrain** | **Unseen All** |  **Total** |
+|:--------:|:----------------------------------:|:-------------------:|:----------------:|:------------------:|:--------------:|:----------:|
+|     0    |   devout-sea-5 -> olive-vortex-6   |      7.96614777     |     9.777163     |     8.73075152     |   10.0367891   | 8.94538854 |
+|    10    | astral-flower-4 -> hopeful-water-7 |      8.2155633      |    9.94217943    |     9.03350186     |   10.4336334   | 9.20425164 |
+|    42    |           serene-voice-2           |      8.07836671     |    9.74751079    |      8.7271707     |   10.2032946   | 8.98152898 |
+|   3407   |    peachy-cloud-3 -> rich-tree-8   |      8.09591778     |    9.68049382    |     8.81388802     |   10.3072839   | 9.00860565 |
 
