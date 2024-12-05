@@ -121,6 +121,23 @@ body {
   font-size: 0;
 }
 
+/* .results-carousel .item {
+  margin: 5px;
+  overflow: hidden;
+  padding: 20px;
+  font-size: 0;
+  height: 500px; 
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+} */
+
+.results-carousel .item img {
+  height: 400px; /* Set fixed height */
+  width: auto; /* Maintain aspect ratio */
+  object-fit: contain; /* Ensure image displays fully without distortion */
+}
+
 .results-carousel video {
   margin: 0;
 }
