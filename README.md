@@ -50,6 +50,11 @@ If you find our repository or our work useful, please cite the relevant publicat
 }
 ```
 
+## TODO
+- [ ] Code optimization
+- [ ] Support Solo-12 dataset more smoothly
+
+
 ## Contact / Issues
 
 For any issues with this repository, feel free to open an issue on GitHub. For other inquiries, please contact Fengze Xie (fxxie@caltech.edu), Sizhe Wei (swei@gatech.edu), or the Lunar Lab (https://sites.gatech.edu/lunarlab/).
