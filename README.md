@@ -14,6 +14,7 @@ conda activate ms-hgnn
 
 Then, install the library (and dependencies) with the following command:
 ```
+cd MorphSym-HGNN
 pip install .
 ```
 

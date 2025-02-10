@@ -47,7 +47,7 @@ MarkupSafe==2.1.5
 matplotlib==3.8.3
 matplotlib-inline==0.1.7
 meshcat==0.3.2
-mi_hgnn @ file:///home/dbutterfield3/Research/state-estimation-gnn
+ms_hgnn @ file:///home/swei303/Research/state-estimation-gnn  #TODO: change to the correct path
 mpmath==1.3.0
 multidict==6.0.5
 names==0.3.0
