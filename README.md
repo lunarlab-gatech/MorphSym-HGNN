@@ -1,5 +1,11 @@
+# Morphological-Symmetry-Equivariant Heterogeneous Graph Neural Network for Robotic Dynamics Learning
+
+*7th Annual Learning for Dynamics and Control Conference* (L4DC), 2025
+
+[Project Page](https://lunarlab-gatech.github.io/MorphSym-HGNN/) | [arXiv](https://arxiv.org/abs/2412.01297)
+
 # MS-HGNN for robotic dynamics learning
-This repository implements a Morphological-Symmetry-Equivariant Heterogeneous Graph Neural Network for Robotic Dynamics Learning (MS-HGNN) for robotic dynamics learning, that integrates robotic kinematic structures and morphological symmetries into a single graph network.
+This repository is the official repository for L4DC 2025 paper: **Morphological-Symmetry-Equivariant Heterogeneous Graph Neural Network for Robotic Dynamics Learning** (MS-HGNN), that integrates robotic kinematic structures and morphological symmetries into a single graph network.
 
 ![Figure 2](paper/teaser.png)
 
