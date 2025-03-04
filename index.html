@@ -27,29 +27,37 @@
 
   <title>MS-HGNN: Morphological-Symmetry-Equivariant Heterogeneous Graph Neural Network for Robotic Dynamics Learning</title>
   <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/lunarlab-gatech/MorphSym-HGNN/refs/heads/main/paper/website_images/favicon.ico">
-  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
-  rel="stylesheet">
+  <!-- <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+  rel="stylesheet"> -->
+  <link href="https://fonts.googleapis.com/css?family=Noto+Sans" rel="stylesheet">
 
   <link rel="stylesheet" href="static/css/bulma.min.css">
-  <link rel="stylesheet" href="static/css/bulma-carousel.min.css">
-  <link rel="stylesheet" href="static/css/bulma-slider.min.css">
-  <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
+  <!-- <link rel="stylesheet" href="static/css/bulma-carousel.min.css"> -->
+  <!-- <link rel="stylesheet" href="static/css/bulma-slider.min.css"> -->
   <link rel="stylesheet"
   href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
   <link rel="stylesheet" href="static/css/index.css">
 
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-  <script src="https://documentcloud.adobe.com/view-sdk/main.js"></script>
-  <script defer src="static/js/fontawesome.all.min.js"></script>
-  <script src="static/js/bulma-carousel.min.js"></script>
-  <script src="static/js/bulma-slider.min.js"></script>
-  <script src="static/js/index.js"></script>
+  <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script> -->
+  <!-- <script src="https://documentcloud.adobe.com/view-sdk/main.js"></script> -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <!-- <link rel="stylesheet" href="static/css/fontawesome.all.min.css"> -->
+  <!-- <script defer src="static/js/fontawesome.all.min.js"></script> -->
+  <!-- <script src="static/js/bulma-carousel.min.js"></script> -->
+  <!-- <script src="static/js/bulma-slider.min.js"></script> -->
+  <!-- <script src="static/js/index.js"></script> -->
   
   <!-- Table Sorting -->
   <link rel="stylesheet" href="static/css/table-styles.css">
   <script src="static/js/table-sort.js"></script>
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <!-- <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script> -->
+  <!-- 使用 jsDelivr CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.min.js"></script>
+  <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script> -->
 </head>
 <body>
 
@@ -187,13 +195,13 @@
           <div class="columns is-centered">
             <div class="column">
               <div class="content has-text-centered">
-                <img src="files/a1-C2.gif" alt="SOLO C2 Symmetry"/>
+                <img src="files/a1-C2-optimize.gif" alt="SOLO C2 Symmetry" loading="lazy"/>
                 <p class="caption">A1 robot demonstrating <span style="color: #8C96C6">\(\mathbb{C}_2\)</span> symmetry properties</p>
               </div>
             </div>
             <div class="column">
               <div class="content has-text-centered">
-                <img src="files/solo-K4.gif" alt="Mini Cheetah K4 Symmetry"/>
+                <img src="files/solo-K4-optimize.gif" alt="Mini Cheetah K4 Symmetry" loading="lazy"/>
                 <p class="caption">Mini-Cheetah exhibiting <span style="color: #6D016B">\(\mathbb{K}_4\)</span> symmetry properties</p>
               </div>
             </div>
@@ -213,9 +221,10 @@
           <div style="height: 100%; display: flex; flex-direction: column; justify-content: center;">
             <h2 class="title is-3 has-text-centered">Method Overview</h2>
             <div class="content has-text-centered">
-              <img src="https://github.com/lunarlab-gatech/MorphSym-HGNN/blob/main/paper/teaser.png?raw=true" 
+              <img src="files/teaser.jpg" 
                   alt="Method Overview"
-                  style="width: 100%; height: auto;"/>
+                  style="width: 100%; height: auto;"
+                  loading="lazy"/>
               <p class="caption">Overview of our MorphSym-HGNN architecture incorporating morphological symmetries for robotic dynamics learning.</p>
             </div>
           </div>
@@ -245,7 +254,7 @@
         </h3>
         <div style="margin-bottom: 2rem;">  <!-- 添加底部边距 -->
           <figure class="image">
-            <img src="files/Figure_02.png" alt="Figure 2" style="width: 100%; height: auto;">
+            <img src="files/Figure_02.jpg" alt="Figure 2" style="width: 100%; height: auto;" loading="lazy">
             <figcaption class="has-text-centered" style="margin-top: -0.5rem;">
               <b>Figure 2: Contact state detection results visualization.</b> Left: F1 score for each leg, averaged F1 score, and 16-state contact state accuracy, averaged over 4 random runs. The number of parameters for each method is also provided. Right: Averaged F1 score for models trained using various numbers of training samples. Our MS-HGNN ( <span style="color: #8C96C6">\(\mathbb{C}_2\)</span> & <span style="color: #6D016B">\(\mathbb{K}_4\)</span> ) achieve around 0.9 averaged F1-score trained with only 5% of the entire training set.
             </figcaption>
@@ -435,7 +444,7 @@
           <!-- 左侧图片列 -->
           <div class="column is-4">
             <figure class="image">
-              <img src="files/Figure_01_b.png" alt="Experimental Results">
+              <img src="files/Figure_01_b.jpg" alt="Experimental Results" loading="lazy">
               <figcaption><b>Figue 1(b). Ground reaction force estimation test RMSE on simulated A1 dataset.</b></figcaption>
             </figure>
           </div>
@@ -508,7 +517,7 @@
       </h3>
       <div style="margin-bottom: 2rem;">  <!-- 添加底部边距 -->
         <figure class="image">
-          <img src="files/Figure_03.png" alt="Figure 3" style="width: 100%; height: auto;">
+          <img src="files/Figure_03.jpg" alt="Figure 3" style="width: 100%; height: auto;" loading="lazy">
           <figcaption class="has-text-centered" style="margin-top: -0.5rem;">
             <b>Figure 3: Centroidal momentum estimation results on the synthetic Solo dataset.</b> Left: The test linear, angular cosine similarity, and MSE of each model's prediction, averaged over 4 random runs. Right: The linear cosine similarity for models of different sizes. Our MS-HGNN ( <span style="color: #8C96C6">\(\mathbb{C}_2\)</span> & <span style="color: #6D016B">\(\mathbb{K}_4\)</span> ) methods exhibit superior model efficiency without overfitting.
           </figcaption>
