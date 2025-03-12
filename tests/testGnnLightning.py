@@ -453,7 +453,7 @@ class TestGnnLightning(unittest.TestCase):
 
         # Setup a dummy dataloader so we can get a batch
         trainLoader: DataLoader = DataLoader(self.class_dataset_hgnn_3,
-                                    batch_size=4, shuffle=True, num_workers=1)
+                                    batch_size=4, shuffle=True, num_workers=0)
         
         # Extract a batch
         batch = None

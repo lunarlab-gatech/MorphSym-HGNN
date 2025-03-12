@@ -1169,7 +1169,7 @@ def train_model(
     limit_val_batches = None
     limit_test_batches = None
     limit_predict_batches = None
-    num_workers = 24
+    num_workers = 15
     persistent_workers = True
     if testing_mode:
         limit_train_batches = 10

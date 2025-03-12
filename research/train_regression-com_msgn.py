@@ -15,7 +15,7 @@ def main(seed,
          symmetry_operator=None,
          symmetry_mode='MorphSym',
          group_operator_path='cfg/solo-k4.yaml',
-         wandb_api_key = "eed5fa86674230b63649180cc343f14e1f1ace78"):
+         wandb_api_key = "a77eee4994ebb26974a4e170b6e0a4c519a45343"):
     # ================================= CHANGE THESE ===================================
 #     wandb_api_key = "eed5fa86674230b63649180cc343f14e1f1ace78"
     # ==================================================================================
