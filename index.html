@@ -122,10 +122,6 @@
               </div>
               
               <div class="is-size-5 publication-authors" style="color: #666;">
-                <!-- <div class="institution-row" style="display: flex; justify-content: center; gap: 2rem; margin-bottom: 0.5rem;">
-                  <span class="author-block"><sup>1</sup>California Institute of Technology</span>
-                  <span class="author-block"><sup>2</sup>Georgia Institute of Technology</span>
-                </div> -->
                 <div class="institution-row" style="display: flex; justify-content: center; align-items: center; gap: 3rem; margin-bottom: 0.5rem;">
                   <div class="institution-block" style="display: flex; align-items: center;">
                     <sup>1</sup>
@@ -141,7 +137,8 @@
                   <small><sup>*</sup>Indicates Equal Contribution</small>
                 </div>
 
-                <div class="is-size-5" style="color: #666;">Accepted to <a href="https://sites.google.com/umich.edu/l4dc2025" target="_blank">L4DC 2025</a></div>
+                <div class="is-size-5" style="color: #666;"><a href="https://sites.google.com/umich.edu/l4dc2025" target="_blank">L4DC 2025</a></div>
+                <div class="is-size-5" style="color: #666;"><a href="https://sairlab.org/icra25/" target="_blank">ICRA 2025 Workshop on Foundation Models and Neuro-Symbolic AI for Robotics</a></div>
               </div>
 
               <div class="column has-text-centered">
@@ -451,7 +448,25 @@
 
           <div class="column is-8">
             <b>Table 3. Estimation performance (RMSE) on simulated dataset. </b> Numerical results of Figure 1(b).
-            <div style="overflow-x: auto;">
+            
+            <table style="border-collapse:collapse;border-color:#ccc;border-spacing:0" class="tg"><thead><tr><th style="background-color:#f0f0f0;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal" rowspan="2">Test Sequence</th><th style="background-color:#f0f0f0;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal" colspan="2">1D GRF</th><th style="background-color:#f0f0f0;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal" colspan="2">3D GRF</th></tr>
+              <tr><th style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">MI-HGNN</th><th style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">MS-HGNN <span style="color:#000">(</span><span style="color:#8C96C6">\(\mathbb{C}_2\)</span><span style="color:#000">)</span></th>
+              <th style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">MI-HGNN</th><th style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">MS-HGNN (<span style="color:#6D016B">\(\mathbb{K}_2\)</span><span style="color:#000">)</span></th></tr>
+              </thead>
+              <tbody>
+              <tr><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">Unseen Friction</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">8.089 ± 0.102</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="font-weight:bold">7.850</span> ± 0.154</td>
+              <td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">6.437 ± 0.055</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="font-weight:bold">6.355</span> ± 0.050</td></tr>
+              <tr><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">Unseen Speed</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">9.787 ± 0.111</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="font-weight:bold">9.733</span> ± 0.142</td>
+              <td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">7.887 ± 0.064</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="font-weight:bold">7.721</span> ± 0.048</td></tr>
+              <tr><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">Unseen Terrain</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">8.826 ± 0.144</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="font-weight:bold">8.685</span> ± 0.136</td>
+              <td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">7.332 ± 0.076</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="font-weight:bold">7.208</span> ± 0.047</td></tr>
+              <tr><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">Unseen All</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">10.245 ± 0.168</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="font-weight:bold">10.137</span> ± 0.084</td>
+              <td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">8.708 ± 0.052</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="font-weight:bold">8.630</span> ± 0.097</td></tr>
+              <tr><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">Total</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">9.035 ± 0.116</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="font-weight:bold">8.899</span> ± 0.079</td>
+              <td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">7.388 ± 0.056</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="font-weight:bold">7.268</span> ± 0.032</td></tr>
+              </tbody></table>
+
+            <!-- <div style="overflow-x: auto;">
               <table class="tg center-table" style="text-align: center;"><thead>
                 <tr>
                   <th class="tg-c3ow" rowspan="3" style="text-align: center;">Test Sequence</th>
@@ -504,7 +519,7 @@
                   <td class="tg-cwhb" style="text-align: center;"><span style="font-weight:bold">7.268</span> ± 0.032</td>
                 </tr>
               </tbody></table>
-              </div>
+              </div> -->
           </div>
       </div>
     </div>
@@ -698,12 +713,14 @@
   <section class="section" id="BibTeX">
     <div class="container is-max-desktop content">
       <h2 class="title">BibTeX</h2>
-      <pre><code>@article{ms-hgnn,
-        title={{Morphological-Symmetry-Equivariant Heterogeneous Graph Neural Network for Robotic Dynamics Learning}}, 
-        author={Xie, Fengze and Wei, Sizhe and Song, Yue and Yue, Yisong and Gan, Lu},
-        year={2025},
-        journal={arXiv preprint arXiv: 2412.01297} 
-      }</code></pre>
+      <pre><code>
+        @article{ms-hgnn,
+          title={{Morphological-Symmetry-Equivariant Heterogeneous Graph Neural Network for Robotic Dynamics Learning}}, 
+          author={Xie, Fengze and Wei, Sizhe and Song, Yue and Yue, Yisong and Gan, Lu},
+          year={2025},
+          journal={arXiv preprint arXiv: 2412.01297} 
+        }
+      </code></pre>
     </div>
   </section>
   <!--End BibTex citation -->
