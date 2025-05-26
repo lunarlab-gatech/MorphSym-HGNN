@@ -71,8 +71,8 @@
     </div>
     <div class="navbar-menu">
       <div class="navbar-start" style="flex-grow: 1; justify-content: center;">
-        <a class="navbar-item" href="">
-        <span class="icon" href="https://sites.gatech.edu/lunarlab/">
+        <a class="navbar-item" href="https://sites.gatech.edu/lunarlab/">
+        <span class="icon">
             <i class="fas fa-home"></i>
         </span>
         </a>
@@ -138,7 +138,8 @@
                 </div>
 
                 <div class="is-size-5" style="color: #666;"><a href="https://sites.google.com/umich.edu/l4dc2025" target="_blank">L4DC 2025</a></div>
-                <div class="is-size-5" style="color: #666;"><a href="https://sairlab.org/icra25/" target="_blank">ICRA 2025 Workshop on Foundation Models and Neuro-Symbolic AI for Robotics</a></div>
+                <div class="is-size-5" style="color: #666;"><a href="https://sairlab.org/icra25/" target="_blank">ICRA 2025 Workshop: Foundation Models and Neuro-Symbolic AI for Robotics</a></div>
+                <div class="is-size-5" style="color: #666;"><a href="https://equisystems.github.io/" target="_blank">RSS 2025 Workshop: Equivariant Systems</a></div>
               </div>
 
               <div class="column has-text-centered">
@@ -209,6 +210,26 @@
   </section>
 
   <!-- Teaser and Abstract -->
+  <!-- Overview -->
+  <section class="section" id="overview">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-max-desktop">
+          <h2 class="title is-3">Overview of MS-HGNN</h2>
+          <div class="content has-text-centered">
+            <figure class="image">
+              <img src="files/overview.png" alt="Method Overview" style="width: 100%; height: auto;" loading="lazy">
+                <figcaption class="has-text-centered" style="margin-top: 1rem;">
+                  <!-- <b>Overall framework of our MorphSym-HGNN approach.</b> -->
+                </figcaption>
+              </figure>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  
   <section class="section" id="teaser-abstract">
     <div class="container is-max-desktop">
       <!-- 添加 is-vcentered 类到 columns div -->
@@ -233,7 +254,7 @@
             <h2 class="title is-3 has-text-centered">Abstract</h2>
             <div class="content has-text-justified">
               <p>
-                We present a morphological-symmetry-equivariant heterogeneous graph neural network, namely MS-HGNN, for robotic dynamics learning, that integrates robotic kinematic structures and morphological symmetries into a single graph network. These structural priors are embedded into the learning architecture as constraints, ensuring high generalizability, sample and model efficiency. The proposed MS-HGNN is a versatile and general architecture that is applicable to various multi-body dynamic systems and a wide range of dynamics learning problems. We formally prove the morphological-symmetry-equivariant property of our MS-HGNN and validate its effectiveness across multiple quadruped robot learning problems using both real-world and simulated data.
+                We propose MS-HGNN, a Morphological-Symmetry-Equivariant Heterogeneous Graph Neural Network for robotic dynamics learning, which integrates robotic kinematic structures and morphological symmetries into a unified graph network. By embedding these structural priors as inductive biases, MS-HGNN ensures high generalizability, sample and model efficiency. This architecture is versatile and broadly applicable to various multi-body dynamic systems and dynamics learning tasks. We prove the morphological-symmetry-equivariant property of MS-HGNN and demonstrate its effectiveness across multiple quadruped robot dynamics learning problems using real-world and simulated data.
               </p>
             </div>
           </div>
@@ -261,173 +282,68 @@
           </p> -->
         </div>
 
-        <b>Table 1: Contact state detection results on the real-world Mini-Cheetah dataset.</b> Numerical results of Figure 2 (left).
-        <table id="tg-UMSXl" class="tg center-table"><thead>
-          <tr>
-            <th class="tg-c3ow">Model</th>
-            <th class="tg-c3ow">Sym.</th>
-            <th class="tg-c3ow">Leg-LF \(F_1\) \(\uparrow\)</th>
-            <th class="tg-c3ow">Leg-LH \(F_1\) \(\uparrow\)</th>
-            <th class="tg-c3ow">Leg-RF \(F_1\) \(\uparrow\)</th>
-            <th class="tg-c3ow">Leg-RH \(F_1\) \(\uparrow\)</th>
-            <th class="tg-c3ow">Accuracy \(\uparrow\)</th>
-            <th class="tg-c3ow">\(F_1\) Score \(\uparrow\)</th>
-          </tr></thead>
-        <tbody>
-          <tr>
-            <td class="tg-c3ow">CNN</td>
-            <td class="tg-c3ow">-</td>
-            <td class="tg-c3ow">0.771 ± 0.013</td>
-            <td class="tg-c3ow">0.899 ± 0.003</td>
-            <td class="tg-c3ow">0.884 ± 0.014</td>
-            <td class="tg-c3ow">0.891 ± 0.024</td>
-            <td class="tg-c3ow">0.731 ± 0.013</td>
-            <td class="tg-c3ow">0.861 ± 0.004</td>
-          </tr>
-          <tr>
-            <td class="tg-c3ow">CNN-Aug</td>
-            <td class="tg-c3ow">\(\mathbb{C}_2\)</td>
-            <td class="tg-c3ow">0.854 ± 0.009</td>
-            <td class="tg-c3ow">0.896 ± 0.022</td>
-            <td class="tg-c3ow">0.835 ± 0.015</td>
-            <td class="tg-c3ow">0.906 ± 0.013</td>
-            <td class="tg-c3ow">0.778 ± 0.019</td>
-            <td class="tg-c3ow">0.873 ± 0.007</td>
-          </tr>
-          <tr>
-            <td class="tg-c3ow">ECNN</td>
-            <td class="tg-c3ow">\(\mathbb{C}_2\)</td>
-            <td class="tg-c3ow">0.884 ± 0.012</td>
-            <td class="tg-c3ow">0.887 ± 0.010</td>
-            <td class="tg-c3ow">0.853 ± 0.011</td>
-            <td class="tg-c3ow">0.860 ± 0.016</td>
-            <td class="tg-c3ow">0.788 ± 0.029</td>
-            <td class="tg-c3ow">0.871 ± 0.011</td>
-          </tr>
-          <tr>
-            <td class="tg-c3ow">MI-HGNN</td>
-            <td class="tg-c3ow">\(\mathbb{S}_4\)</td>
-            <td class="tg-c3ow"><span style="text-decoration:underline">0.932</span> ± 0.006</td>
-            <td class="tg-c3ow"><span style="text-decoration:underline">0.936</span> ± 0.010</td>
-            <td class="tg-c3ow"><span style="text-decoration:underline">0.927</span> ± 0.003</td>
-            <td class="tg-c3ow">0.928 ± 0.005</td>
-            <td class="tg-c3ow"><span style="text-decoration:underline">0.870</span> ± 0.010</td>
-            <td class="tg-c3ow"><span style="text-decoration:underline">0.931</span> ± 0.005</td>
-          </tr>
-          <tr>
-            <td class="tg-srkf">MS-HGNN</td>
-            <td class="tg-srkf">\(\mathbb{C}_2\)</td>
-            <td class="tg-srkf">0.928 ± 0.013</td>
-            <td class="tg-srkf">0.933 ± 0.011</td>
-            <td class="tg-srkf">0.913 ± 0.016</td>
-            <td class="tg-srkf"><span style="text-decoration:underline">0.937</span> ± 0.010</td>
-            <td class="tg-srkf">0.856 ± 0.013</td>
-            <td class="tg-srkf">0.929 ± 0.009</td>
-          </tr>
-          <tr>
-            <td class="tg-cwhb">MS-HGNN</td>
-            <td class="tg-cwhb">\(\mathbb{K}_4\)</td>
-            <td class="tg-cwhb"><span style="font-weight:bold">0.936</span> ± 0.008</td>
-            <td class="tg-cwhb"><span style="font-weight:bold">0.944</span> ± 0.006</td>
-            <td class="tg-cwhb"><span style="font-weight:bold">0.930</span> ± 0.011</td>
-            <td class="tg-cwhb"><span style="font-weight:bold">0.948</span> ± 0.006</td>
-            <td class="tg-cwhb"><span style="font-weight:bold">0.875</span> ± 0.012</td>
-            <td class="tg-cwhb"><span style="font-weight:bold">0.939</span> ± 0.006</td>
-          </tr>
-        </tbody></table>
+        <b>Table 1: Contact state detection performance</b> on the real-world Mini-Cheetah dataset. This table reports the numerical results corresponding to Fig. 2-left. Metrics include the mean\(\pm\)std of F1 score per leg, 16-state accuracy, and the averaged F1 score across 4 runs. <b>Bold</b> and <u>underlined</u> values indicate the best and second-best results, respectively.
         
-        <b>Table 2: Sample efficiency results on the real-world Mini-Cheetah contact dataset. The dataset comprises 634.6K training and validation samples.</b> Numerical results of Figure 2 (right).
-        <table class="tg"><thead>
-          <tr>
-            <th class="tg-c3ow" colspan="2"></th>
-            <th class="tg-c3ow" colspan="8" style="text-align: center !important;">Training Samples (%)</th>
-          </tr></thead>
-        <tbody>
-          <tr>
-            <td class="tg-c3ow">Model</td>
-            <td class="tg-c3ow">Sym</td>
-            <td class="tg-c3ow">2.50</td>
-            <td class="tg-c3ow">5.00</td>
-            <td class="tg-c3ow">10.00</td>
-            <td class="tg-c3ow">15.00</td>
-            <td class="tg-c3ow">21.25</td>
-            <td class="tg-c3ow">42.50</td>
-            <td class="tg-c3ow">63.75</td>
-            <td class="tg-c3ow">85.00</td>
-          </tr>
-          <tr>
-            <td class="tg-c3ow">CNN</td>
-            <td class="tg-c3ow">-</td>
-            <td class="tg-c3ow">0.745</td>
-            <td class="tg-c3ow">0.794</td>
-            <td class="tg-c3ow">0.831</td>
-            <td class="tg-c3ow">0.802</td>
-            <td class="tg-c3ow">0.811</td>
-            <td class="tg-c3ow">0.840</td>
-            <td class="tg-c3ow">0.850</td>
-            <td class="tg-c3ow">0.836</td>
-          </tr>
-          <tr>
-            <td class="tg-c3ow">CNN-Aug</td>
-            <td class="tg-c3ow">\(\mathbb{C}_2\)</td>
-            <td class="tg-c3ow">0.764</td>
-            <td class="tg-c3ow">0.851</td>
-            <td class="tg-c3ow">0.827</td>
-            <td class="tg-c3ow">0.859</td>
-            <td class="tg-c3ow">0.844</td>
-            <td class="tg-c3ow">0.829</td>
-            <td class="tg-c3ow">0.839</td>
-            <td class="tg-c3ow">0.881</td>
-          </tr>
-          <tr>
-            <td class="tg-c3ow">ECNN</td>
-            <td class="tg-c3ow"><span style="font-weight:400;font-style:normal">\(\mathbb{C}_2\)</span></td>
-            <td class="tg-c3ow">0.840</td>
-            <td class="tg-c3ow">0.841</td>
-            <td class="tg-c3ow">0.851</td>
-            <td class="tg-c3ow">0.843</td>
-            <td class="tg-c3ow">0.867</td>
-            <td class="tg-c3ow">0.877</td>
-            <td class="tg-c3ow">0.785</td>
-            <td class="tg-c3ow">0.881</td>
-          </tr>
-          <tr>
-            <td class="tg-c3ow">MI-HGNN</td>
-            <td class="tg-c3ow">\(\mathbb{S}_4 (G)\)</td>
-            <td class="tg-c3ow">0.872</td>
-            <td class="tg-c3ow">0.908</td>
-            <td class="tg-c3ow">0.926</td>
-            <td class="tg-c3ow">0.930</td>
-            <td class="tg-c3ow">0.937</td>
-            <td class="tg-c3ow">0.940</td>
-            <td class="tg-c3ow">0.932</td>
-            <td class="tg-c3ow">0.931</td>
-          </tr>
-          <tr>
-            <td class="tg-srkf">MS-HGNN</td>
-            <td class="tg-srkf"><span style="font-weight:400;font-style:normal">\(\mathbb{C}_2\)</span></td>
-            <td class="tg-srkf">0.760</td>
-            <td class="tg-srkf">0.893</td>
-            <td class="tg-srkf">0.910</td>
-            <td class="tg-srkf">0.923</td>
-            <td class="tg-srkf">0.926</td>
-            <td class="tg-srkf">0.939</td>
-            <td class="tg-srkf">0.935</td>
-            <td class="tg-srkf">0.939</td>
-          </tr>
-          <tr>
-            <td class="tg-cwhb">MS-HGNN</td>
-            <td class="tg-cwhb">\(\mathbb{K}_4\)</td>
-            <td class="tg-cwhb">0.869</td>
-            <td class="tg-cwhb">0.897</td>
-            <td class="tg-cwhb">0.913</td>
-            <td class="tg-cwhb">0.922</td>
-            <td class="tg-cwhb">0.919</td>
-            <td class="tg-cwhb">0.939</td>
-            <td class="tg-cwhb">0.935</td>
-            <td class="tg-cwhb">0.942</td>
-          </tr>
-        </tbody></table>
+        <table style="border-collapse:collapse;border-color:#ccc;border-spacing:0" class="tg"><thead>
+          <tr><th style="background-color:#f0f0f0;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">Model (# of Param.)</th><th style="background-color:#f0f0f0;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">Sym.</th><th style="background-color:#f0f0f0;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">Leg-LF F1 \(\uparrow\)</th>
+          <th style="background-color:#f0f0f0;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">Leg-LH F1 \(\uparrow\)</th><th style="background-color:#f0f0f0;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">Leg-RF F1 \(\uparrow\)</th><th style="background-color:#f0f0f0;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">Leg-RH F1 \(\uparrow\)</th>
+          <th style="background-color:#f0f0f0;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">State Acc \(\uparrow\)</th><th style="background-color:#f0f0f0;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">Legs-Avg F1 \(\uparrow\)</th></tr>
+          </thead>
+          <tbody>
+          <tr><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">CNN (10,855,440)</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">-</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.771 \(\pm\) 0.013</td>
+          <td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.899 \(\pm\) 0.003</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.884 \(\pm\) 0.014</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.891 \(\pm\) 0.024</td>
+          <td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.731 \(\pm\) 0.013</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.861 \(\pm\) 0.004</td></tr>
+          <tr><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">CNN-Aug (10,855,440)</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">\(\mathbb{C}_2\)</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.854 \(\pm\) 0.009</td>
+          <td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.896 \(\pm\) 0.022</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.835 \(\pm\) 0.015</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.906 \(\pm\) 0.013</td>
+          <td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.778 \(\pm\) 0.019</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.873 \(\pm\) 0.007</td></tr>
+          <tr><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">ECNN (5,614,770)</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">\(\mathbb{C}_2\)</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.884 \(\pm\) 0.012</td>
+          <td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.887 \(\pm\) 0.010</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.853 \(\pm\) 0.011</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.860 \(\pm\) 0.016</td>
+          <td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.788 \(\pm\) 0.029</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.871 \(\pm\) 0.011</td></tr>
+          <tr><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">MI-HGNN (1,585,282)</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">\(\mathbb{S}_4\)</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="text-decoration:underline">0.932</span> \(\pm\) 0.006</td>
+          <td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="text-decoration:underline">0.936</span> \(\pm\) 0.010</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="text-decoration:underline">0.927</span> \(\pm\) 0.003</td>
+          <td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.928 \(\pm\) 0.005</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="text-decoration:underline">0.870</span> \(\pm\) 0.010</td>
+          <td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="text-decoration:underline">0.931</span> \(\pm\) 0.005</td></tr>
+          <tr><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">MS-HGNN (2,407,810)</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="color:#8C96C6">\(\mathbb{C}_2\)</span></td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.928 \(\pm\) 0.013</td>
+          <td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.933 \(\pm\) 0.011</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.913 \(\pm\) 0.016</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="text-decoration:underline">0.937</span> \(\pm\) 0.010</td>
+          <td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.856 \(\pm\) 0.013</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.929 \(\pm\) 0.009</td></tr>
+          <tr><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">MS-HGNN (2,144,642)</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="color:#6D016B">\(\mathbb{K}_4\)</span></td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="font-weight:bold">0.936</span> \(\pm\) 0.008</td>
+          <td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="font-weight:bold">0.944</span> \(\pm\) 0.006</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="font-weight:bold">0.930</span> \(\pm\) 0.011</td>
+          <td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="font-weight:bold">0.948</span> \(\pm\) 0.006</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="font-weight:bold">0.875</span> \(\pm\) 0.012</td>
+          <td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="font-weight:bold">0.939</span> \(\pm\) 0.006</td></tr>
+          </tbody></table>
+
+        <b>Table 2. Sample efficiency analysis</b> on the real-world Mini-Cheetah contact dataset. The dataset includes 634.6K training and validation samples. This table presents the legs-averaged F1 scores when training on different proportions of the data. Results correspond to Fig. 2-right.
+        <table style="border-collapse:collapse;border-color:#ccc;border-spacing:0" class="tg"><thead><tr><th style="background-color:#f0f0f0;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal" rowspan="2">Model</th><th style="background-color:#f0f0f0;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal" rowspan="2">Sym.</th><th style="background-color:#f0f0f0;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal" colspan="8">Training Samples (%)</th></tr>
+          <tr><th style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">2.50</th><th style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">5.00</th><th style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">10.00</th>
+          <th style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">15.00</th><th style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">21.25</th><th style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">42.50</th>
+          <th style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">63.75</th><th style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">85.00</th></tr>
+          </thead>
+          <tbody>
+          <tr><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">CNN</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">-</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.745</td>
+          <td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.794</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.831</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.802</td>
+          <td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.811</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.840</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.850</td>
+          <td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.836</td></tr>
+          <tr><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">CNN-Aug</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">\(\mathbb{C}_2\)</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.764</td>
+          <td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.851</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.827</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.859</td>
+          <td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.844</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.829</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.839</td>
+          <td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.881</td></tr>
+          <tr><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">ECNN</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">\(\mathbb{C}_2\)</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.840</td>
+          <td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.841</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.851</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.843</td>
+          <td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.867</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.877</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.785</td>
+          <td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.881</td></tr>
+          <tr><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">MI-HGNN</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">\(\mathbb{S}_4\)</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.872</td>
+          <td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.908</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.926</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.930</td>
+          <td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.937</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.940</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.932</td>
+          <td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.931</td></tr>
+          <tr><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">MS-HGNN</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="color:#8C96C6">\(\mathbb{C}_2\)</span></td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.760</td>
+          <td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.893</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.910</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.923</td>
+          <td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.926</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.939</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.935</td>
+          <td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.939</td></tr>
+          <tr><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">MS-HGNN</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="color:#6D016B">\(\mathbb{K}_4\)</span></td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.869</td>
+          <td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.897</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.913</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.922</td>
+          <td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.919</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.939</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.935</td>
+          <td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.942</td></tr>
+          </tbody></table>
       </div>
     </div>
   </section>
@@ -447,7 +363,7 @@
           </div>
 
           <div class="column is-8">
-            <b>Table 3. Estimation performance (RMSE) on simulated dataset. </b> Numerical results of Figure 1(b).
+            <b>Table 3: Ground reaction force estimation</b> on the simulated A1 dataset. This table provides the numerical results corresponding to Fig. 1(b). The metric is the mean\(\pm\)std of the test RMSE over 4 runs. The best performance is highlighted in <b>bold</b>.
             
             <table style="border-collapse:collapse;border-color:#ccc;border-spacing:0" class="tg"><thead><tr><th style="background-color:#f0f0f0;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal" rowspan="2">Test Sequence</th><th style="background-color:#f0f0f0;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal" colspan="2">1D GRF</th><th style="background-color:#f0f0f0;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal" colspan="2">3D GRF</th></tr>
               <tr><th style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">MI-HGNN</th><th style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">MS-HGNN <span style="color:#000">(</span><span style="color:#8C96C6">\(\mathbb{C}_2\)</span><span style="color:#000">)</span></th>
@@ -465,61 +381,6 @@
               <tr><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">Total</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">9.035 ± 0.116</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="font-weight:bold">8.899</span> ± 0.079</td>
               <td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">7.388 ± 0.056</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="font-weight:bold">7.268</span> ± 0.032</td></tr>
               </tbody></table>
-
-            <!-- <div style="overflow-x: auto;">
-              <table class="tg center-table" style="text-align: center;"><thead>
-                <tr>
-                  <th class="tg-c3ow" rowspan="3" style="text-align: center;">Test Sequence</th>
-                  <th class="tg-c3ow" colspan="4" style="text-align: center;">Test RMSE \(\downarrow\)</th>
-                </tr>
-                <tr>
-                  <th class="tg-c3ow" colspan="2" style="text-align: center;">Z-GRF (1D)</th>
-                  <th class="tg-c3ow" colspan="2" style="text-align: center;">GRF (3D)</th>
-                </tr>
-                <tr>
-                  <th class="tg-c3ow" style="text-align: center;">MI-HGNN</th>
-                  <th class="tg-srkf" style="text-align: center;">MS-HGNN (\(\mathbb{C}_2\))</th>
-                  <th class="tg-c3ow" style="text-align: center;">MI-HGNN</th>
-                  <th class="tg-cwhb" style="text-align: center;">MS-HGNN (\(\mathbb{C}_2\))</th>
-                </tr></thead>
-              <tbody>
-                <tr>
-                  <td class="tg-0pky" style="text-align: center;">Unseen Friction</td>
-                  <td class="tg-c3ow" style="text-align: center;">8.089 ± 0.102</td>
-                  <td class="tg-srkf" style="text-align: center;"><span style="font-weight:bold">7.850</span> ± 0.154</td>
-                  <td class="tg-c3ow" style="text-align: center;">6.437 ± 0.055</td>
-                  <td class="tg-cwhb" style="text-align: center;"><span style="font-weight:bold">6.355</span> ± 0.050</td>
-                </tr>
-                <tr>
-                  <td class="tg-0pky" style="text-align: center;">Unseen Speed</td>
-                  <td class="tg-c3ow" style="text-align: center;">9.787 ± 0.111</td>
-                  <td class="tg-srkf" style="text-align: center;"><span style="font-weight:bold">9.733</span> ± 0.142</td>
-                  <td class="tg-c3ow" style="text-align: center;">7.887 ± 0.064</td>
-                  <td class="tg-cwhb" style="text-align: center;"><span style="font-weight:bold">7.721</span> ± 0.048</td>
-                </tr>
-                <tr>
-                  <td class="tg-0pky" style="text-align: center;">Unseen Terrain</td>
-                  <td class="tg-c3ow" style="text-align: center;">8.826 ± 0.144</td>
-                  <td class="tg-srkf" style="text-align: center;"><span style="font-weight:bold">8.685</span> ± 0.136</td>
-                  <td class="tg-c3ow" style="text-align: center;">7.332 ± 0.076</td>
-                  <td class="tg-cwhb" style="text-align: center;"><span style="font-weight:bold">7.208</span> ± 0.047</td>
-                </tr>
-                <tr>
-                  <td class="tg-0pky" style="text-align: center;">Unseen All</td>
-                  <td class="tg-c3ow" style="text-align: center;">10.245 ± 0.168</td>
-                  <td class="tg-srkf" style="text-align: center;"><span style="font-weight:bold">10.137</span> ± 0.084</td>
-                  <td class="tg-c3ow" style="text-align: center;">8.708 ± 0.052</td>
-                  <td class="tg-cwhb" style="text-align: center;"><span style="font-weight:bold">8.630</span> ± 0.097</td>
-                </tr>
-                <tr>
-                  <td class="tg-0pky" style="text-align: center;">Total</td>
-                  <td class="tg-c3ow" style="text-align: center;">9.035 ± 0.116</td>
-                  <td class="tg-srkf" style="text-align: center;"><span style="font-weight:bold">8.899</span> ± 0.079</td>
-                  <td class="tg-c3ow" style="text-align: center;">7.388 ± 0.056</td>
-                  <td class="tg-cwhb" style="text-align: center;"><span style="font-weight:bold">7.268</span> ± 0.032</td>
-                </tr>
-              </tbody></table>
-              </div> -->
           </div>
       </div>
     </div>
@@ -538,173 +399,70 @@
           </figcaption>
         </figure>
 
-        <b>Table 4. Centroidal momentum estimation results on the synthetic Solo dataset.</b> Numerical results of Figure 3 (left).
-        <table id="tg-HGGsB" class="tg"><thead>
-          <tr>
-            <th class="tg-0pky">Model</th>
-            <th class="tg-c3ow">\(\mathbb{G}\)</th>
-            <th class="tg-c3ow">Lin. Cos. Sim. \(\uparrow\)</th>
-            <th class="tg-c3ow">Ang. Cos. Sim. \(\uparrow\)</th>
-            <th class="tg-c3ow">Test MSE \(\downarrow\)</th>
-            <th class="tg-c3ow">\(\mathbb{G}\)</th>
-            <th class="tg-c3ow">Lin. Cos. Sim. \(\uparrow\)</th>
-            <th class="tg-c3ow">Ang. Cos. Sim. \(\uparrow\)</th>
-            <th class="tg-c3ow">Test MSE \(\downarrow\)</th>
-          </tr></thead>
-        <tbody>
-          <tr>
-            <td class="tg-0pky">MLP</td>
-            <td class="tg-c3ow">-</td>
-            <td class="tg-c3ow">0.9617 ± 0.0036</td>
-            <td class="tg-c3ow">0.9523 ± 0.0032</td>
-            <td class="tg-c3ow">0.0499 ± 0.0037</td>
-            <td class="tg-c3ow">-</td>
-            <td class="tg-c3ow">0.9617 ± 0.0036</td>
-            <td class="tg-c3ow">0.9523 ± 0.0032</td>
-            <td class="tg-c3ow">0.0499 ± 0.0037</td>
-          </tr>
-          <tr>
-            <td class="tg-0pky">MLP-Aug</td>
-            <td class="tg-c3ow">\(\mathbb{C}_2\)</td>
-            <td class="tg-c3ow"><span style="text-decoration:underline">0.9639</span> ± 0.0026</td>
-            <td class="tg-c3ow"><span style="text-decoration:underline">0.9535</span> ± 0.0029</td>
-            <td class="tg-c3ow"><span style="text-decoration:underline">0.0478</span> ± 0.0020</td>
-            <td class="tg-c3ow">\(\mathbb{K}_4\)</td>
-            <td class="tg-c3ow">0.9647 ± 0.0023</td>
-            <td class="tg-c3ow">0.9549 ± 0.0023</td>
-            <td class="tg-c3ow">0.0472 ± 0.0014</td>
-          </tr>
-          <tr>
-            <td class="tg-0pky">EMLP</td>
-            <td class="tg-c3ow">\(\mathbb{C}_2\)</td>
-            <td class="tg-c3ow">0.9610 ± 0.0039</td>
-            <td class="tg-c3ow">0.9528 ± 0.0051</td>
-            <td class="tg-c3ow">0.0503 ± 0.0053</td>
-            <td class="tg-c3ow">\(\mathbb{K}_4\)</td>
-            <td class="tg-c3ow"><span style="text-decoration:underline">0.9673</span> ± 0.0045</td>
-            <td class="tg-c3ow"><span style="text-decoration:underline">0.9580</span> ± 0.0032</td>
-            <td class="tg-c3ow"><span style="text-decoration:underline">0.0435</span> ± 0.0048</td>
-          </tr>
-          <!-- <tr>
-            <td class="tg-0pky">MI-HGNN</td>
-            <td class="tg-c3ow">\(\mathbb{S}_4\)</td>
-            <td class="tg-c3ow">0.9301 ± 0.0017</td>
-            <td class="tg-c3ow">0.5173 ± 0.0016</td>
-            <td class="tg-c3ow">0.3421 ± 0.0009</td>
-            <td class="tg-c3ow">\(\mathbb{S}_4\)</td>
-            <td class="tg-c3ow">0.9301 ± 0.0017</td>
-            <td class="tg-c3ow">0.5173 ± 0.0016</td>
-            <td class="tg-c3ow">0.3421 ± 0.0009</td>
-          </tr> -->
-          <tr>
-            <td class="tg-0pky">MS-HGNN</td>
-            <td class="tg-srkf">\(\mathbb{C}_2\)</td>
-            <td class="tg-srkf"><span style="font-weight:bold">0.9903</span> ± 0.0001</td>
-            <td class="tg-srkf"><span style="font-weight:bold">0.9804</span> ± 0.0015</td>
-            <td class="tg-srkf"><span style="font-weight:bold">0.0161</span> ± 0.0006</td>
-            <td class="tg-cwhb">\(\mathbb{K}_4\)</td>
-            <td class="tg-cwhb"><span style="font-weight:bold">0.9877</span> ± 0.0007</td>
-            <td class="tg-cwhb"><span style="font-weight:bold">0.9799</span> ± 0.0010</td>
-            <td class="tg-cwhb"><span style="font-weight:bold">0.0189</span> ± 0.0007</td>
-          </tr>
-        </tbody></table>
+        <b>Table 4. Centroidal momentum estimation results</b> on the synthetic Solo dataset. This table reports the numerical results corresponding to Fig. 3-left. Evaluation metrics include linear cosine similarity, angular cosine similarity, and test MSE (mean\(\pm\)std over 4 runs). <b>Bold</b> and <u>underlined</u> indicate the best and second-best results, respectively.
+        <table style="border-collapse:collapse;border-color:#ccc;border-spacing:0" class="tg"><thead>
+          <tr><th style="background-color:#f0f0f0;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">Model</th><th style="background-color:#f0f0f0;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">Sym.</th><th style="background-color:#f0f0f0;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">Lin. Cos. Sim. \(\uparrow\)</th>
+          <th style="background-color:#f0f0f0;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">Ang. Cos. Sim. \(\uparrow\)</th><th style="background-color:#f0f0f0;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">Test MSE \(\downarrow\)</th></tr>
+          </thead>
+          <tbody>
+          <tr><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">MLP</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">-</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9617 \(\pm\) 0.0036</td>
+          <td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9523 \(\pm\) 0.0032</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.0499 \(\pm\) 0.0037</td></tr>
+          <tr><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">MLP-Aug</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">\(\mathbb{C}_2\)</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9639 \(\pm\) 0.0026</td>
+          <td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9535 \(\pm\) 0.0029</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.0478 \(\pm\) 0.0020</td></tr>
+          <tr><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">MLP-Aug</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">\(\mathbb{K}_4\)</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9647 \(\pm\) 0.0023</td>
+          <td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9549 \(\pm\) 0.0023</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.0472 \(\pm\) 0.0014</td></tr>
+          <tr><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">EMLP</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">\(\mathbb{C}_2\)</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9610 \(\pm\) 0.0039</td>
+          <td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9528 \(\pm\) 0.0051</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.0503 \(\pm\) 0.0053</td></tr>
+          <tr><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">EMLP</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">\(\mathbb{K}_4\)</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9673 \(\pm\) 0.0045</td>
+          <td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9580 \(\pm\) 0.0032</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.0435 \(\pm\) 0.0048</td></tr>
+          <tr><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">MI-HGNN</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">\(\mathbb{S}_4\)</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9301 \(\pm\) 0.0017</td>
+          <td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.5173 \(\pm\) 0.0016</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.3421 \(\pm\) 0.0009</td></tr>
+          <tr><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">MS-HGNN</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="color:#8C96C6">\(\mathbb{C}_2\)</span></td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="font-weight:bold">0.9903</span> \(\pm\) 0.0001</td>
+          <td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="font-weight:bold">0.9804</span> \(\pm\) 0.0015</td><td style="background-color:#f9f9f9;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="font-weight:bold">0.0161</span> \(\pm\) 0.0006</td></tr>
+          <tr><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">MS-HGNN</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="color:#6D016B">\(\mathbb{K}_4\)</span></td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="text-decoration:underline">0.9877</span> \(\pm\) 0.0007</td>
+          <td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="text-decoration:underline">0.9799</span> \(\pm\) 0.0010</td><td style="background-color:#fff;border-bottom-width:1px;border-color:inherit;border-style:solid;border-top-width:1px;border-width:0px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"><span style="text-decoration:underline">0.0189</span> \(\pm\) 0.0007</td></tr>
+          </tbody></table>
 
-        <b>Table 5. Model size and performance comparison on the synthetic Solo dataset.</b> Numerical results of Figure 3 (right).
-        <table class="tg"><thead>
-          <tr>
-            <th class="tg-7btt" style="text-align: center !important;">Method</th>
-            <th class="tg-7btt" colspan="8" style="text-align: center !important;"># of Parameters / Lin. Cos. Sim. \(\uparrow\)</th>
-          </tr></thead>
-        <tbody>
-          <tr>
-            <td class="tg-pb0m">MLP</td>
-            <td class="tg-pb0m">10,310 / 0.9147</td>
-            <td class="tg-pb0m">36,998 / 0.9631</td>
-            <td class="tg-pb0m">- / -</td>
-            <td class="tg-pb0m">139,526 / 0.9737</td>
-            <td class="tg-pb0m">- / -</td>
-            <td class="tg-pb0m">- / -</td>
-            <td class="tg-pb0m">541,190 / 0.9643</td>
-            <td class="tg-pb0m">- / -</td>
-          </tr>
-          <tr>
-            <td class="tg-pb0m">MLP-Aug (\(\mathbb{C}_2\))</td>
-            <td class="tg-pb0m">10,310 / 0.9170</td>
-            <td class="tg-pb0m">36,998 / 0.9660</td>
-            <td class="tg-pb0m">- / -</td>
-            <td class="tg-pb0m">139,526 / 0.9802</td>
-            <td class="tg-pb0m">- / -</td>
-            <td class="tg-pb0m">- / -</td>
-            <td class="tg-pb0m">541,190 / 0.9839</td>
-            <td class="tg-pb0m">- / -</td>
-          </tr>
-          <tr>
-            <td class="tg-pb0m">EMLP (\(\mathbb{C}_2\))</td>
-            <td class="tg-pb0m">- / -</td>
-            <td class="tg-pb0m">36,992 / 0.9640</td>
-            <td class="tg-pb0m">- / -</td>
-            <td class="tg-pb0m">139,520 / 0.9843</td>
-            <td class="tg-pb0m">- / -</td>
-            <td class="tg-pb0m">- / -</td>
-            <td class="tg-pb0m">541,184 / 0.9865</td>
-            <td class="tg-pb0m">- / -</td>
-          </tr>
-          <tr>
-            <td class="tg-h58n">MS-HGNN (\(\mathbb{C}_2\))</td>
-            <td class="tg-h58n">13,478 / 0.9448</td>
-            <td class="tg-h58n">26,150 / 0.9558</td>
-            <td class="tg-h58n">52,550 / 0.9746</td>
-            <td class="tg-h58n">102,470 / 0.9870</td>
-            <td class="tg-h58n">207,494 / 0.9903</td>
-            <td class="tg-h58n">405,638 / 0.9945</td>
-            <td class="tg-h58n">464,838 / 0.9940</td>
-            <td class="tg-h58n">824,582 / 0.9959</td>
-          </tr>
-          <tr>
-            <td class="tg-pb0m">MI-HGNN (\(\mathbb{S}_4\))</td>
-            <td class="tg-pb0m">12,934 / 0.8864</td>
-            <td class="tg-pb0m">25,478 / 0.9136</td>
-            <td class="tg-pb0m">50,438 / 0.9213</td>
-            <td class="tg-pb0m">100,102 / 0.9297</td>
-            <td class="tg-pb0m">199,174 / 0.9275</td>
-            <td class="tg-pb0m">223,878 / 0.9325</td>
-            <td class="tg-pb0m">396,806 / 0.9319</td>
-            <td class="tg-pb0m">791,558 / 0.9276</td>
-          </tr>
-          <tr>
-            <td class="tg-pb0m">MLP-Aug (\(\mathbb{K}_4\))</td>
-            <td class="tg-pb0m">10,310 / 0.9199</td>
-            <td class="tg-pb0m">36,998 / 0.9644</td>
-            <td class="tg-pb0m">- / -</td>
-            <td class="tg-pb0m">- / -</td>
-            <td class="tg-pb0m">- / -</td>
-            <td class="tg-pb0m">- / -</td>
-            <td class="tg-pb0m">541,190 / 0.9843</td>
-            <td class="tg-pb0m">- / -</td>
-          </tr>
-          <tr>
-            <td class="tg-pb0m">EMLP (\(\mathbb{K}_4\))</td>
-            <td class="tg-pb0m">- / -</td>
-            <td class="tg-pb0m">36,992 / 0.9718</td>
-            <td class="tg-pb0m">- / -</td>
-            <td class="tg-pb0m">139,520 / 0.9868</td>
-            <td class="tg-pb0m">- / -</td>
-            <td class="tg-pb0m">- / -</td>
-            <td class="tg-pb0m">541,184 / 0.9910</td>
-            <td class="tg-pb0m">- / -</td>
-          </tr>
-          <tr>
-            <td class="tg-347t">MS-HGNN (\(\mathbb{K}_4\))</td>
-            <td class="tg-347t">11,366 / 0.9240</td>
-            <td class="tg-347t">21,926 / 0.9505</td>
-            <td class="tg-347t">44,230 / 0.9675</td>
-            <td class="tg-347t">85,830 / 0.9854</td>
-            <td class="tg-347t">174,470 / 0.9875</td>
-            <td class="tg-347t">339,590 / 0.9935</td>
-            <td class="tg-347t">390,726 / 0.9915</td>
-            <td class="tg-347t">692,998 / 0.9936</td>
-          </tr>
-        </tbody></table>
+        <b>Table 5. Model efficiency comparison between MI-HGNN and MS-HGNN</b> on the CoM momentum estimation task. This table shows the first part of the numerical results in Fig. 3-right, reporting linear cosine similarity with varying parameter counts.
+        <table style="border-collapse:collapse;border-color:#ccc;border-spacing:0" class="tg"><thead>
+          <tr><th style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"># of Param.</th><th style="background-color:#f0f0f0;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">MI-HGNN</th><th style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"># of Param.</th>
+          <th style="background-color:#f0f0f0;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">MS-HGNN (<span style="color:#8C96C6">\(\mathbb{C}_2\)</span>)</th><th style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"># of Param.</th><th style="background-color:#f0f0f0;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">MS-HGNN (<span style="color:#6D016B">\(\mathbb{K}_4\)</span>)</th></tr>
+          </thead>
+          <tbody>
+          <tr><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">12,934</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.8864</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">13,478</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9448</td>
+          <td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">11,366</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9240</td></tr>
+          <tr><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">25,478</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9136</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">26,150</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9558</td>
+          <td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">21,926</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9505</td></tr>
+          <tr><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">50,438</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9213</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">52,550</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9746</td>
+          <td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">44,230</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9675</td></tr>
+          <tr><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">100,102</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9297</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">102,470</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9870</td>
+          <td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">85,830</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9854</td></tr>
+          <tr><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">199,174</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9275</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">207,494</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9903</td>
+          <td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">174,470</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9875</td></tr>
+          <tr><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">223,878</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9325</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">405,638</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9945</td>
+          <td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">339,590</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9935</td></tr>
+          <tr><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">396,806</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9319</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">464,838</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9940</td>
+          <td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">390,726</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9915</td></tr>
+          <tr><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">791,558</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9276</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">824,582</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9959</td>
+          <td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">692,998</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9936</td></tr>
+          </tbody></table>
+        
+        <b>Table 6. Model efficiency comparison of MLP, MLP-Aug, and EMLP</b> on the CoM momentum estimation task. This table presents the second part of the numerical results in Fig. 3-right, showing linear cosine similarity across different architectures and symmetry configurations.
+          <table style="border-collapse:collapse;border-color:#ccc;border-spacing:0" class="tg"><thead>
+            <tr><th style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"># of Param.</th><th style="background-color:#f0f0f0;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">MLP</th><th style="background-color:#f0f0f0;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">MLP-Aug (\(\mathbb{C}_2\))</th>
+            <th style="background-color:#f0f0f0;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">MLP-Aug (\(\mathbb{K}_4\))</th><th style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal"># of Param.</th><th style="background-color:#f0f0f0;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">EMLP (\(\mathbb{C}_2\))</th>
+            <th style="background-color:#f0f0f0;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">EMLP (\(\mathbb{K}_4\))</th></tr>
+            </thead>
+            <tbody>
+            <tr><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">10,310</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9147</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9170</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9199</td>
+            <td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">-</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">-</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">-</td></tr>
+            <tr><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">36,998</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9631</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9660</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9644</td>
+            <td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">36,992</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9640</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9718</td></tr>
+            <tr><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">139,526</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9737</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9802</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">-</td>
+            <td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">139,520</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9843</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9868</td></tr>
+            <tr><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">541,190</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9643</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9839</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9843</td>
+            <td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">541,184</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9865</td><td style="background-color:#fff;border-color:inherit;border-style:solid;border-width:1px;color:#333;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:center;vertical-align:top;word-break:normal">0.9910</td></tr>
+            </tbody></table>
       </div>
     </div>
   </section>
