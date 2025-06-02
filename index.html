@@ -40,7 +40,8 @@
 
   <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script> -->
   <!-- <script src="https://documentcloud.adobe.com/view-sdk/main.js"></script> -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"> -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
   <!-- <link rel="stylesheet" href="static/css/fontawesome.all.min.css"> -->
   <!-- <script defer src="static/js/fontawesome.all.min.js"></script> -->
   <!-- <script src="static/js/bulma-carousel.min.js"></script> -->
@@ -144,14 +145,25 @@
 
               <div class="column has-text-centered">
                 <div class="publication-links">
+                  <!-- Paper link -->
+                  <span class="link-block">
+                    <a href="https://proceedings.mlr.press/v283/xie25a.html" target="_blank"
+                    class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="fas fa-file-pdf"></i>
+                    </span>
+                    <span>PMLR</span>
+                    </a>
+                  </span>
+
                   <!-- Arxiv PDF link -->
                   <span class="link-block">
                     <a href="https://arxiv.org/pdf/2412.01297" target="_blank"
                     class="external-link button is-normal is-rounded is-dark">
                     <span class="icon">
-                      <i class="fas fa-file-pdf"></i>
+                      <i class="ai ai-arxiv"></i>
                     </span>
-                    <span>Paper</span>
+                    <span>arXiv</span>
                     </a>
                   </span>
 
@@ -166,14 +178,14 @@
                     </a>
                   </span>
 
-                  <!-- ArXiv abstract Link -->
+                  <!-- Twitter Link -->
                   <span class="link-block">
-                    <a href="https://arxiv.org/abs/2412.01297" target="_blank"
+                    <a href="https://twitter.com/lunarlab_gatech/status/1928525671589900429" target="_blank"
                     class="external-link button is-normal is-rounded is-dark">
                     <span class="icon">
-                      <i class="ai ai-arxiv"></i>
+                      <i class="fa-brands fa-x-twitter"></i>
                     </span>
-                    <span>arXiv</span>
+                    <span>Twitter</span>
                   </a>
                 </span>
               </div>
@@ -229,7 +241,6 @@
       </div>
     </section>
 
-  
   <section class="section" id="teaser-abstract">
     <div class="container is-max-desktop">
       <!-- 添加 is-vcentered 类到 columns div -->
@@ -482,6 +493,20 @@
     </div>
   </section>
   <!--End BibTex citation -->
+
+  <!-- PDF of poster -->
+  <section class="section" id="poster">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-max-desktop">
+          <!-- <h2 class="title is-3">Poster</h2> -->
+          <div class="content has-text-centered">
+            <iframe src="files/poster.pdf" style="width: 100%; height: 800px;"></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <footer class="footer" style="padding: 1.5rem;">
     <div class="container">
