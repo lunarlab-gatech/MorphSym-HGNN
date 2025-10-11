@@ -14,10 +14,11 @@ def main(seed,
          model_type='heterogeneous_gnn_k4_com',
          symmetry_operator=None,
          symmetry_mode='MorphSym',
-         group_operator_path='cfg/solo-k4.yaml',
-         wandb_api_key = "eed5fa86674230b63649180cc343f14e1f1ace78"):
+         group_operator_path='cfg/solo-k4.yaml'):
     # ================================= CHANGE THESE ===================================
-#     wandb_api_key = "eed5fa86674230b63649180cc343f14e1f1ace78"
+    wandb_api_key = os.getenv('WANDB_API_KEY')
+        if wandb_api_key is None:
+            raise ValueError("Please set WANDB_API_KEY in ~/.bashrc. export WANDB_API_KEY='your_api_key_here'")
     # ==================================================================================
 
     # Define model information
@@ -83,7 +84,6 @@ if __name__ == '__main__':
     # Model parameters
     parser.add_argument('--model_type', type=str, default='heterogeneous_gnn_s4_com', help='Model type, options: heterogeneous_gnn_s4_com, heterogeneous_gnn_k4_com')
     parser.add_argument('--group_operator_path', type=str, default='cfg/solo-k4.yaml', help='cfg/solo-k4.yaml or cfg/solo-c2.yaml')
-    parser.add_argument('--wandb_api_key', type=str, default='eed5fa86674230b63649180cc343f14e1f1ace78', help="Check your key at https://wandb.ai/authorize",)
     args = parser.parse_args()
 
     print(f"args: {args}")
@@ -96,5 +96,4 @@ if __name__ == '__main__':
          epochs=args.epochs,
          logger_project_name=args.logger_project_name,
          model_type=args.model_type,
-         group_operator_path=args.group_operator_path,
-         wandb_api_key=args.wandb_api_key)
+         group_operator_path=args.group_operator_path)

@@ -19,7 +19,9 @@ def main(seed,
          grf_dimension=1,
          ckpt_path=None):
     # ================================= CHANGE THESE ===================================
-    wandb_api_key = "eed5fa86674230b63649180cc343f14e1f1ace78"
+    wandb_api_key = os.getenv('WANDB_API_KEY')
+	if wandb_api_key is None:
+		raise ValueError("Please set WANDB_API_KEY in ~/.bashrc. export WANDB_API_KEY='your_api_key_here'")
     # ==================================================================================
 
     # Define model information
